@@ -16,11 +16,13 @@
 | MLB | MLB Stats API | ESPN |
 | NHL | NHL 공개 API | ESPN |
 | NBA, NFL | ESPN | (없음: NBA 공식 CDN은 서버 접근 차단, balldontlie는 키 필요) |
+| LCK, LoL 퍼스트 스탠드, MSI, 월드 챔피언십 | LoL Esports 비공식 API (사이트 공개 키) | (없음: PandaScore는 키 필요) |
 | KBO 리그, KBL | 관리자 수동 입력 (CSV·화면) | — |
 
 대회·팀 추가는 `data/seed/*.json`(파일명 순서대로 합쳐짐)에 항목을 넣고 `npm run db:setup`을 실행하면 됩니다.
 F1은 팀 대신 시리즈 하나(`f1` 팀)를 선택하고, 세션은 제목(`match.title`)이 있는 이벤트로 저장됩니다.
 ESPN의 미국 리그 팀 ID는 종목끼리 겹치므로 `nba:1`처럼 리그를 붙여 저장합니다.
+LoL Esports 일정에는 팀 ID가 없어 팀 약칭(`T1`, `GEN`)을 소스 팀 ID로 씁니다. 국제대회의 해외 팀은 자동 생성됩니다.
 국내 컵대회는 `soccer/eng.fa|eng.1`처럼 팀 목록을 가져올 리그를 함께 적어, 우리 리그 팀의 컵 일정만 받습니다.
 컵대회는 우리 팀이 아직 합류하지 않으면(추첨 전) 0건이 정상이라 실패로 보지 않습니다.
 시드에 없는 상대팀이 주 소스에 나오면 원문 이름으로 자동 생성되고(`team.needs_review = true`), 팀 선택 목록에는 나오지 않습니다.
@@ -93,3 +95,4 @@ Actions는 매시간 돕니다. 대회별로 마지막 전체 수집 후 11시�
 - Jolpica F1 API (데이터 라이선스 CC BY-NC-SA 4.0), OpenF1
 - MLB Stats API (© MLB Advanced Media, 개인·비상업 이용), NHL 공개 API
 - ESPN (비공식 엔드포인트)
+- LoL Esports (Riot Games, 비공식 엔드포인트)

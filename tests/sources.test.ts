@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { espn, espnTeamId, monthRange, parseEspnEvent } from "@/collector/sources/espn";
 import { gpKo, parseJolpica, parseOpenF1 } from "@/collector/sources/f1";
+import { parseLolEvent } from "@/collector/sources/lolesports";
 import { parseMlb } from "@/collector/sources/mlb";
 import { parseNhlGame } from "@/collector/sources/nhl";
 import { upsertMatches } from "@/collector/upsert";
@@ -92,6 +93,40 @@ describe("F1", () => {
         { title: "미국 GP 예선", n: 2 },
       ]);
     });
+  });
+});
+
+describe("LoL (lolesports)", () => {
+  it("팀 약칭을 ID로, TBD는 대진 미정, 라운드에 경기 방식을 붙인다", () => {
+    const base = {
+      startTime: "2026-10-23T17:00:00Z",
+      state: "unstarted",
+      type: "match",
+      blockName: "스위스",
+      match: {
+        id: "115660540726095005",
+        teams: [
+          { name: "Gen.G Esports", code: "GEN" },
+          { name: "Invictus Gaming", code: "IG" },
+        ],
+        strategy: { type: "bestOf", count: 1 },
+      },
+    };
+    expect(parseLolEvent(base)).toMatchObject({
+      externalId: "115660540726095005",
+      season: "2026",
+      roundLabel: "스위스 · 단판",
+      home: { externalId: "GEN" },
+      away: { externalId: "IG" },
+      status: "scheduled",
+    });
+    const tbd = parseLolEvent({
+      ...base,
+      blockName: "결승",
+      match: { ...base.match, teams: [{ name: "TBD", code: "TBD" }, { name: "TBD", code: "TBD" }], strategy: { type: "bestOf", count: 5 } },
+    });
+    expect(tbd).toMatchObject({ home: null, away: null, status: "draw_pending", roundLabel: "결승 · 5판 3선승" });
+    expect(parseLolEvent({ ...base, type: "show" })).toBeNull();
   });
 });
 

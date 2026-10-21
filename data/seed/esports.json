@@ -1,0 +1,24 @@
+{
+  "competitions": [
+    { "slug": "lck", "sport": "esports", "name_ko": "LCK", "type": "esports", "display_order": 20,
+      "sources": [{ "source": "lolesports", "external_id": "98767991310872058" }] },
+    { "slug": "lol-first-stand", "sport": "esports", "name_ko": "LoL 퍼스트 스탠드", "type": "intl", "display_order": 21,
+      "sources": [{ "source": "lolesports", "external_id": "113464388705111224" }] },
+    { "slug": "msi", "sport": "esports", "name_ko": "MSI", "type": "intl", "display_order": 22,
+      "sources": [{ "source": "lolesports", "external_id": "98767991325878492" }] },
+    { "slug": "worlds", "sport": "esports", "name_ko": "LoL 월드 챔피언십", "type": "intl", "display_order": 23,
+      "sources": [{ "source": "lolesports", "external_id": "98767975604431411" }] }
+  ],
+  "teams": [
+    { "slug": "lck-t1", "sport": "esports", "competition": "lck", "name_ko": "T1", "short_ko": "T1", "name_en": "T1", "aliases": ["SK Telecom T1"], "refs": { "lolesports": "T1" } },
+    { "slug": "lck-gen", "sport": "esports", "competition": "lck", "name_ko": "젠지", "short_ko": "젠지", "name_en": "Gen.G Esports", "aliases": ["Gen.G"], "refs": { "lolesports": "GEN" } },
+    { "slug": "lck-hle", "sport": "esports", "competition": "lck", "name_ko": "한화생명e스포츠", "short_ko": "한화생명", "name_en": "Hanwha Life Esports", "aliases": ["HLE"], "refs": { "lolesports": "HLE" } },
+    { "slug": "lck-kt", "sport": "esports", "competition": "lck", "name_ko": "kt 롤스터", "short_ko": "KT", "name_en": "kt Rolster", "aliases": [], "refs": { "lolesports": "KT" } },
+    { "slug": "lck-dk", "sport": "esports", "competition": "lck", "name_ko": "디플러스 기아", "short_ko": "DK", "name_en": "Dplus KIA", "aliases": ["Dplus", "DWG KIA"], "refs": { "lolesports": "DK" } },
+    { "slug": "lck-ns", "sport": "esports", "competition": "lck", "name_ko": "농심 레드포스", "short_ko": "농심", "name_en": "Nongshim RedForce", "aliases": ["NONGSHIM RED FORCE"], "refs": { "lolesports": "NS" } },
+    { "slug": "lck-bfx", "sport": "esports", "competition": "lck", "name_ko": "BNK 피어엑스", "short_ko": "BFX", "name_en": "BNK FEARX", "aliases": ["FearX"], "refs": { "lolesports": "BFX" } },
+    { "slug": "lck-bro", "sport": "esports", "competition": "lck", "name_ko": "한진 브리온", "short_ko": "브리온", "name_en": "HANJIN BRION", "aliases": ["OKSavingsBank BRION", "BRION"], "refs": { "lolesports": "BRO" } },
+    { "slug": "lck-krx", "sport": "esports", "competition": "lck", "name_ko": "키움 DRX", "short_ko": "DRX", "name_en": "KIWOOM DRX", "aliases": ["DRX"], "refs": { "lolesports": "KRX" } },
+    { "slug": "lck-dns", "sport": "esports", "competition": "lck", "name_ko": "DN 수퍼스", "short_ko": "DN", "name_en": "DN SOOPers", "aliases": ["DN Freecs", "Kwangdong Freecs"], "refs": { "lolesports": "DNS" } }
+  ]
+}

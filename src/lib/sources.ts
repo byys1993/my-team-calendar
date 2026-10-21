@@ -26,6 +26,11 @@ export const SOURCE_CREDITS: Record<string, { label: string; url: string; text: 
     url: "https://www.nhl.com/",
     text: "NHL 일정: NHL.com",
   },
+  lolesports: {
+    label: "LoL Esports",
+    url: "https://lolesports.com/",
+    text: "LoL 일정: LoL Esports (Riot Games)",
+  },
   manual: {
     label: "수동 입력",
     url: "https://www.koreabaseball.com/",

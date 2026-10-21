@@ -166,7 +166,7 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
                     <div className="dday">{days !== null ? dDayLabel(days) : ""}</div>
                     <div className="next-vs">
                       {v.side ? `vs ${v.opponent} ` : v.opponent}
-                      {v.side && <span className={`side side-${v.side}`}>{v.side}</span>}
+                      {v.side && v.side !== "vs" && <span className={`side side-${v.side}`}>{v.side}</span>}
                     </div>
                     <div className="next-when">
                       {dateLabel(matchDateKey(v.match))} {matchTimeLabel(v.match)}

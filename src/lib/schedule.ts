@@ -30,6 +30,7 @@ export interface Catalog {
 export interface ScheduleMatch {
   id: string;
   competition: string;
+  sport: string;
   roundLabel: string | null;
   title: string | null; // 이벤트형(F1 등)일 때 '호주 GP 결승'
   home: string | null; // team slug
@@ -94,6 +95,7 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[]): Promise<S
   const rows = await db.query<{
     id: string;
     competition: string;
+    sport: string;
     round_label: string | null;
     title: string | null;
     home: string | null;
@@ -106,12 +108,13 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[]): Promise<S
     venue: string | null;
     is_neutral: boolean;
   }>(
-    `select m.id, c.slug as competition, m.round_label, m.title, h.slug as home, a.slug as away,
+    `select m.id, c.slug as competition, s.slug as sport, m.round_label, m.title, h.slug as home, a.slug as away,
        coalesce(h.short_ko, h.name_ko, m.home_placeholder) as home_label,
        coalesce(a.short_ko, a.name_ko, m.away_placeholder) as away_label,
        m.start_at, to_char(m.date_only, 'YYYY-MM-DD') as date_only, m.status, m.venue, m.is_neutral
      from match m
      join competition c on c.id = m.competition_id
+     join sport s on s.id = c.sport_id
      left join team h on h.id = m.home_team_id
      left join team a on a.id = m.away_team_id
      where (h.slug = any(string_to_array($1, ',')) or a.slug = any(string_to_array($1, ',')))
@@ -122,6 +125,7 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[]): Promise<S
   return rows.map((r) => ({
     id: r.id,
     competition: r.competition,
+    sport: r.sport,
     roundLabel: r.round_label,
     title: r.title,
     home: r.home,

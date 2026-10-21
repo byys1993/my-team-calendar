@@ -20,7 +20,8 @@ export interface MatchView {
   match: ScheduleMatch;
   team: string; // 이 경기를 보여주는 기준 팀 (선택 순서상 먼저인 팀)
   color: string;
-  side: "홈" | "원정" | "중립" | null; // 이벤트형이면 null
+  // 이벤트형(F1)이면 null, 홈·원정이 없는 e스포츠는 'vs' (배지 없이 'vs 상대')
+  side: "홈" | "원정" | "중립" | "vs" | null;
   opponent: string; // 이벤트형이면 제목
 }
 
@@ -35,7 +36,8 @@ export function viewOf(m: ScheduleMatch, selections: Selection[], onlyEnabled = 
       match: m,
       team: s.slug,
       color: PALETTE[s.color],
-      side: m.isNeutral ? "중립" : isHome ? "홈" : "원정",
+      // e스포츠는 홈·원정이 없으니 'vs 상대'만 보여준다
+      side: m.sport === "esports" ? "vs" : m.isNeutral ? "중립" : isHome ? "홈" : "원정",
       opponent: isHome ? m.awayLabel : m.homeLabel,
     };
   }
