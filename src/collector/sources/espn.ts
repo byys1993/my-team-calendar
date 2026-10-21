@@ -58,7 +58,7 @@ export function parseEspnEvent(e: EspnEvent, path = "soccer/eng.1"): SourceMatch
   // season.type: 1 프리시즌, 2 정규시즌, 3 포스트시즌
   const note = c.notes?.[0]?.headline;
   const roundLabel = isSoccer(path)
-    ? null
+    ? (note ?? null)
     : e.season?.type === 3
       ? (note ?? "포스트시즌")
       : (note ?? (e.week?.number ? `${e.week.number}주차` : null));
@@ -111,10 +111,13 @@ export function espn(fetcher: Fetcher = fetch, opts: { delayMs?: number; now?: (
     return [...byId.values()];
   }
 
-  async function soccer(path: string): Promise<SourceMatch[]> {
+  // 'soccer/eng.fa|eng.1' 처럼 팀 목록을 가져올 리그를 따로 줄 수 있다.
+  // 컵대회는 참가팀 목록이 비어 있거나(추첨 전) 하부리그 팀까지 수백 개라, 우리가 다루는 리그 팀만 본다.
+  async function soccer(externalId: string): Promise<SourceMatch[]> {
+    const [path, teamsFrom] = externalId.split("|");
     const teams = await getJson<{ sports: { leagues: { teams: { team: { id: string } }[] }[] }[] }>(
       fetcher,
-      `${BASE}/${path}/teams`,
+      teamsFrom ? `${BASE}/soccer/${teamsFrom}/teams` : `${BASE}/${path}/teams`,
     );
     const ids = teams.sports[0]?.leagues[0]?.teams.map((t) => t.team.id) ?? [];
     const byId = new Map<string, SourceMatch>();

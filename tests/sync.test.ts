@@ -39,6 +39,20 @@ describe("syncCompetition", () => {
     expect(st.last_success_at).not.toBeNull();
   });
 
+  it("컵대회는 우리 팀이 아직 합류하지 않아 0건이어도 성공으로 본다", async () => {
+    const empty: SourceAdapter = { source: "espn", fetchMatches: async () => [] };
+    const league = await syncCompetition(db, { id: eplId, slug: "epl", postseason: false, type: "league" }, {
+      "football-data": empty,
+      espn: empty,
+    });
+    expect(league.ok).toBe(false);
+    const cup = await syncCompetition(db, { id: eplId, slug: "epl", postseason: false, type: "cup" }, {
+      "football-data": empty,
+      espn: empty,
+    });
+    expect(cup.ok).toBe(true);
+  });
+
   it("모든 소스가 실패하면 마지막 성공 시각을 바꾸지 않는다", async () => {
     const broken: SourceAdapter = {
       source: "espn",

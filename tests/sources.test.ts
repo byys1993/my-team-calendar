@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { espnTeamId, monthRange, parseEspnEvent } from "@/collector/sources/espn";
+import { espn, espnTeamId, monthRange, parseEspnEvent } from "@/collector/sources/espn";
 import { gpKo, parseJolpica, parseOpenF1 } from "@/collector/sources/f1";
 import { parseMlb } from "@/collector/sources/mlb";
 import { parseNhlGame } from "@/collector/sources/nhl";
@@ -219,6 +219,39 @@ describe("ESPN 미국 리그", () => {
       ],
     };
     expect(parseEspnEvent(flex, "football/nfl")).toMatchObject({ status: "time_tbd", dateOnly: "2027-01-16" });
+  });
+
+  it("축구 컵대회는 '컵|리그' 형식이면 리그 팀 목록으로 컵 일정을 받는다", async () => {
+    const urls: string[] = [];
+    const fetcher = async (url: string) => {
+      urls.push(url);
+      const body = url.endsWith("/teams")
+        ? { sports: [{ leagues: [{ teams: [{ team: { id: "359" } }] }] }] }
+        : {
+            events: [
+              {
+                id: "1",
+                date: "2026-10-27T19:45Z",
+                competitions: [
+                  {
+                    notes: [{ headline: "Fourth Round" }],
+                    competitors: [
+                      { homeAway: "home", team: { id: "999", displayName: "Fleetwood Town" } },
+                      { homeAway: "away", team: { id: "359", displayName: "Arsenal" } },
+                    ],
+                  },
+                ],
+              },
+            ],
+          };
+      return new Response(JSON.stringify(body));
+    };
+    const [m] = await espn(fetcher, { delayMs: 0 }).fetchMatches("soccer/eng.league_cup|eng.1");
+    expect(urls).toEqual([
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/teams",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.league_cup/teams/359/schedule?fixture=true",
+    ]);
+    expect(m).toMatchObject({ roundLabel: "Fourth Round", away: { externalId: "359" } });
   });
 
   it("월 단위 조회 범위", () => {

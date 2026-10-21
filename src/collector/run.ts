@@ -12,6 +12,7 @@ export interface CompetitionRow {
   id: number;
   slug: string;
   postseason: boolean;
+  type?: string;
 }
 
 export interface SyncOutcome {
@@ -76,8 +77,11 @@ export async function syncCompetition(
         mode === "recent" && adapter.fetchRecent
           ? await adapter.fetchRecent(ref.external_id)
           : await adapter.fetchMatches(ref.external_id);
-      // 시즌 전체가 0건이면 응답 이상이다 (최근 며칠은 0건일 수 있음)
-      if (mode === "full" && matches.length === 0) throw new Error("경기 0건 (응답 이상으로 간주)");
+      // 리그 시즌 전체가 0건이면 응답 이상이다.
+      // 최근 며칠, 그리고 우리 팀이 아직 합류하지 않은(추첨 전) 컵대회는 0건일 수 있다.
+      if (mode === "full" && c.type !== "cup" && matches.length === 0) {
+        throw new Error("경기 0건 (응답 이상으로 간주)");
+      }
       const r = await db.tx((t) => upsertMatches(t, c.id, ref.source, matches, { autoCreateTeams: !isFallback }));
       await db.query(
         `update sync_run set finished_at = now(), ok = true, fetched = $2, inserted = $3, updated = $4, skipped = $5,
@@ -108,7 +112,7 @@ export async function syncAll(
 ): Promise<SyncOutcome[]> {
   const log = opts.log ?? (() => {});
   const comps = await db.query<CompetitionRow>(
-    "select id, slug, postseason from competition where feed = 'auto' order by id",
+    "select id, slug, postseason, type from competition where feed = 'auto' order by id",
   );
   const results: SyncOutcome[] = [];
   for (const c of comps) {
