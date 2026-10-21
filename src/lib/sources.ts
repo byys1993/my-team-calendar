@@ -31,10 +31,15 @@ export const SOURCE_CREDITS: Record<string, { label: string; url: string; text: 
     url: "https://lolesports.com/",
     text: "LoL 일정: LoL Esports (Riot Games)",
   },
+  kbo: {
+    label: "KBO",
+    url: "https://www.koreabaseball.com/",
+    text: "KBO 리그 일정: KBO 공식 홈페이지",
+  },
   manual: {
     label: "수동 입력",
-    url: "https://www.koreabaseball.com/",
-    text: "KBO·KBL 일정: 각 연맹 발표 일정을 운영자가 직접 입력",
+    url: "https://www.kbl.or.kr/",
+    text: "KBL 일정: KBL 발표 일정을 운영자가 직접 입력",
   },
   espn: {
     label: "ESPN",

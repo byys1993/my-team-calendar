@@ -1,19 +1,20 @@
 {
   "competitions": [
-    { "slug": "kbo", "sport": "baseball", "name_ko": "KBO 리그", "type": "league", "feed": "manual", "display_order": 10 },
+    { "slug": "kbo", "sport": "baseball", "name_ko": "KBO 리그", "type": "league", "display_order": 10,
+      "sources": [{ "source": "kbo", "external_id": "1" }] },
     { "slug": "kbl", "sport": "basketball", "name_ko": "KBL", "type": "league", "feed": "manual", "display_order": 10 }
   ],
   "teams": [
-    { "slug": "kbo-lg", "sport": "baseball", "competition": "kbo", "name_ko": "LG 트윈스", "short_ko": "LG", "name_en": "LG Twins", "aliases": ["LG"], "refs": { "manual": "kbo-lg" } },
-    { "slug": "kbo-doosan", "sport": "baseball", "competition": "kbo", "name_ko": "두산 베어스", "short_ko": "두산", "name_en": "Doosan Bears", "aliases": ["OB"], "refs": { "manual": "kbo-doosan" } },
-    { "slug": "kbo-ssg", "sport": "baseball", "competition": "kbo", "name_ko": "SSG 랜더스", "short_ko": "SSG", "name_en": "SSG Landers", "aliases": ["SK"], "refs": { "manual": "kbo-ssg" } },
-    { "slug": "kbo-kiwoom", "sport": "baseball", "competition": "kbo", "name_ko": "키움 히어로즈", "short_ko": "키움", "name_en": "Kiwoom Heroes", "aliases": ["WO"], "refs": { "manual": "kbo-kiwoom" } },
-    { "slug": "kbo-kt", "sport": "baseball", "competition": "kbo", "name_ko": "KT 위즈", "short_ko": "KT", "name_en": "KT Wiz", "aliases": ["KT"], "refs": { "manual": "kbo-kt" } },
-    { "slug": "kbo-samsung", "sport": "baseball", "competition": "kbo", "name_ko": "삼성 라이온즈", "short_ko": "삼성", "name_en": "Samsung Lions", "aliases": ["SS"], "refs": { "manual": "kbo-samsung" } },
-    { "slug": "kbo-nc", "sport": "baseball", "competition": "kbo", "name_ko": "NC 다이노스", "short_ko": "NC", "name_en": "NC Dinos", "aliases": ["NC"], "refs": { "manual": "kbo-nc" } },
-    { "slug": "kbo-kia", "sport": "baseball", "competition": "kbo", "name_ko": "KIA 타이거즈", "short_ko": "KIA", "name_en": "KIA Tigers", "aliases": ["HT", "기아"], "refs": { "manual": "kbo-kia" } },
-    { "slug": "kbo-lotte", "sport": "baseball", "competition": "kbo", "name_ko": "롯데 자이언츠", "short_ko": "롯데", "name_en": "Lotte Giants", "aliases": ["LT"], "refs": { "manual": "kbo-lotte" } },
-    { "slug": "kbo-hanwha", "sport": "baseball", "competition": "kbo", "name_ko": "한화 이글스", "short_ko": "한화", "name_en": "Hanwha Eagles", "aliases": ["HH"], "refs": { "manual": "kbo-hanwha" } },
+    { "slug": "kbo-lg", "sport": "baseball", "competition": "kbo", "name_ko": "LG 트윈스", "short_ko": "LG", "name_en": "LG Twins", "aliases": ["LG"], "refs": { "kbo": "LG" } },
+    { "slug": "kbo-doosan", "sport": "baseball", "competition": "kbo", "name_ko": "두산 베어스", "short_ko": "두산", "name_en": "Doosan Bears", "aliases": ["OB"], "refs": { "kbo": "OB" } },
+    { "slug": "kbo-ssg", "sport": "baseball", "competition": "kbo", "name_ko": "SSG 랜더스", "short_ko": "SSG", "name_en": "SSG Landers", "aliases": ["SK"], "refs": { "kbo": "SK" } },
+    { "slug": "kbo-kiwoom", "sport": "baseball", "competition": "kbo", "name_ko": "키움 히어로즈", "short_ko": "키움", "name_en": "Kiwoom Heroes", "aliases": ["WO"], "refs": { "kbo": "WO" } },
+    { "slug": "kbo-kt", "sport": "baseball", "competition": "kbo", "name_ko": "KT 위즈", "short_ko": "KT", "name_en": "KT Wiz", "aliases": ["KT"], "refs": { "kbo": "KT" } },
+    { "slug": "kbo-samsung", "sport": "baseball", "competition": "kbo", "name_ko": "삼성 라이온즈", "short_ko": "삼성", "name_en": "Samsung Lions", "aliases": ["SS"], "refs": { "kbo": "SS" } },
+    { "slug": "kbo-nc", "sport": "baseball", "competition": "kbo", "name_ko": "NC 다이노스", "short_ko": "NC", "name_en": "NC Dinos", "aliases": ["NC"], "refs": { "kbo": "NC" } },
+    { "slug": "kbo-kia", "sport": "baseball", "competition": "kbo", "name_ko": "KIA 타이거즈", "short_ko": "KIA", "name_en": "KIA Tigers", "aliases": ["HT", "기아"], "refs": { "kbo": "HT" } },
+    { "slug": "kbo-lotte", "sport": "baseball", "competition": "kbo", "name_ko": "롯데 자이언츠", "short_ko": "롯데", "name_en": "Lotte Giants", "aliases": ["LT"], "refs": { "kbo": "LT" } },
+    { "slug": "kbo-hanwha", "sport": "baseball", "competition": "kbo", "name_ko": "한화 이글스", "short_ko": "한화", "name_en": "Hanwha Eagles", "aliases": ["HH"], "refs": { "kbo": "HH" } },
 
     { "slug": "kbl-sk", "sport": "basketball", "competition": "kbl", "name_ko": "서울 SK 나이츠", "short_ko": "SK", "name_en": "Seoul SK Knights", "aliases": [], "refs": { "manual": "kbl-sk" } },
     { "slug": "kbl-lg", "sport": "basketball", "competition": "kbl", "name_ko": "창원 LG 세이커스", "short_ko": "LG", "name_en": "Changwon LG Sakers", "aliases": [], "refs": { "manual": "kbl-lg" } },

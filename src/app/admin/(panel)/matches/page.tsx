@@ -1,12 +1,8 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { listManualMatches, toKst } from "@/lib/manual/admin";
+import { loadManualCompetitions } from "@/lib/manual/import";
 import { STATUS_LABEL_ADMIN } from "../statusLabels";
-
-const LEAGUES = [
-  { slug: "kbo", name: "KBO" },
-  { slug: "kbl", name: "KBL" },
-];
 
 function shiftMonth(month: string, delta: number): string {
   const [y, m] = month.split("-").map(Number);
@@ -20,9 +16,12 @@ export default async function MatchesPage({
   searchParams: Promise<{ league?: string; month?: string; saved?: string; deleted?: string }>;
 }) {
   const sp = await searchParams;
-  const league = LEAGUES.some((l) => l.slug === sp.league) ? sp.league! : "kbo";
+  const db = getDb();
+  // 수동 입력 대회만 (현재 KBL. KBO 는 공식 사이트에서 자동 수집)
+  const leagues = (await loadManualCompetitions(db)).map((c) => ({ slug: c.slug, name: c.slug.toUpperCase() }));
+  const league = leagues.find((l) => l.slug === sp.league)?.slug ?? leagues[0]?.slug ?? "kbl";
   const month = /^\d{4}-\d{2}$/.test(sp.month ?? "") ? sp.month! : toKst(new Date()).date.slice(0, 7);
-  const matches = await listManualMatches(getDb(), league, month);
+  const matches = await listManualMatches(db, league, month);
   const href = (l: string, m: string) => `/admin/matches?league=${l}&month=${m}`;
 
   return (
@@ -32,7 +31,7 @@ export default async function MatchesPage({
       {sp.deleted && <p className="ok-box">삭제했습니다.</p>}
       <div className="admin-toolbar">
         <div className="tabs">
-          {LEAGUES.map((l) => (
+          {leagues.map((l) => (
             <Link key={l.slug} href={href(l.slug, month)} className={l.slug === league ? "tab active" : "tab"}>
               {l.name}
             </Link>

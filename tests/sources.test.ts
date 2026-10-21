@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { espn, espnTeamId, monthRange, parseEspnEvent } from "@/collector/sources/espn";
 import { gpKo, parseJolpica, parseOpenF1 } from "@/collector/sources/f1";
+import { markConditional, parseKboMonth, type KboGame } from "@/collector/sources/kbo";
 import { parseLolEvent } from "@/collector/sources/lolesports";
 import { parseMlb } from "@/collector/sources/mlb";
 import { parseNhlGame } from "@/collector/sources/nhl";
@@ -127,6 +128,84 @@ describe("LoL (lolesports)", () => {
     });
     expect(tbd).toMatchObject({ home: null, away: null, status: "draw_pending", roundLabel: "결승 · 5판 3선승" });
     expect(parseLolEvent({ ...base, type: "show" })).toBeNull();
+  });
+});
+
+describe("KBO 공식 사이트", () => {
+  // 실제 응답(2026-04, 2026-10 포스트시즌)에서 가져온 줄 형태
+  const cell = (Text: string, Class: string | null = null) => ({ Text, Class });
+  const link = (id: string) => cell(`<a href='/Schedule/GameCenter/Main.aspx?gameDate=${id.slice(0, 8)}&gameId=${id}&section=REVIEW'>리뷰</a>`, "relay");
+  const play = (away: string, home: string) => cell(`<span>${away}</span><em><span>vs</span></em><span>${home}</span>`, "play");
+
+  it("원정 vs 홈 순서, 날짜 이어 쓰기, 공식 경기 ID, 우천취소, 이동일", () => {
+    const rows = [
+      { row: [cell("04.09(목)", "day"), cell("<b>18:30</b>", "time"), play("키움", "두산"), cell("", "relay"), cell(""), cell("SPO-2T"), cell(""), cell("잠실"), cell("우천취소")] },
+      { row: [cell("<b>18:30</b>", "time"), play("KIA", "LG"), link("20260409HTLG0"), cell(""), cell("KN-T"), cell(""), cell("잠실2"), cell("-")] },
+      { row: [cell("04.10(금)", "day"), cell(""), cell(""), cell(""), cell(""), cell(""), cell(""), cell(""), cell("이동일")] },
+    ];
+    const [rain, game] = parseKboMonth({ rows }, 2026, false);
+    expect(rain).toMatchObject({
+      externalId: "20260409WOOB0",
+      home: { externalId: "OB" },
+      away: { externalId: "WO" },
+      status: "postponed",
+      venue: "잠실",
+    });
+    expect(game).toMatchObject({
+      externalId: "20260409HTLG0",
+      startAt: "2026-04-09T09:30:00.000Z",
+      home: { externalId: "LG", name: "LG" },
+      away: { externalId: "HT", name: "KIA" },
+      status: "scheduled",
+      roundLabel: null,
+    });
+    expect(parseKboMonth({ rows }, 2026, false)).toHaveLength(2);
+  });
+
+  it("포스트시즌은 비고의 라운드를 쓰고, 더블헤더는 끝자리 번호로 구분한다", () => {
+    const rows = [
+      { row: [cell("10.14(수)", "day"), cell("<b>18:30</b>", "time"), play("두산", "LG"), cell("", "relay"), cell(""), cell(""), cell(""), cell("잠실"), cell("WC 1차전")] },
+      { row: [cell("<b>14:00</b>", "time"), play("두산", "LG"), cell("", "relay"), cell(""), cell(""), cell(""), cell("잠실"), cell("WC 2차전")] },
+    ];
+    const [g1, g2] = parseKboMonth({ rows }, 2026, true);
+    expect(g1).toMatchObject({ externalId: "20261014OBLG1", roundLabel: "WC 1차전" });
+    expect(g2).toMatchObject({ externalId: "20261014OBLG2", roundLabel: "WC 2차전" });
+  });
+
+  it("5전 3선승에서 아직 필요 없는 4·5차전은 '진출 시', 2승 1패가 되면 4차전은 확정", () => {
+    const game = (no: number, winner: string | null): KboGame => ({
+      externalId: `po${no}`,
+      season: "2026",
+      roundLabel: `PO ${no}차전`,
+      home: { externalId: "SS", name: "삼성" },
+      away: { externalId: "HT", name: "KIA" },
+      startAt: `2026-10-${24 + no}T09:30:00.000Z`,
+      status: "scheduled",
+      winner,
+    });
+    const before = markConditional([1, 2, 3, 4, 5].map((n) => game(n, null)));
+    expect(before.map((g) => g.status)).toEqual(["scheduled", "scheduled", "scheduled", "conditional", "conditional"]);
+    const after = markConditional([game(1, "SS"), game(2, "HT"), game(3, "SS"), game(4, null), game(5, null)]);
+    expect(after.map((g) => g.status).slice(3)).toEqual(["scheduled", "conditional"]);
+    // 와일드카드(2경기): 2차전은 1차전 결과에 달려 있다
+    const wc = markConditional([1, 2].map((n) => ({ ...game(n, null), roundLabel: `WC ${n}차전` })));
+    expect(wc.map((g) => g.status)).toEqual(["scheduled", "conditional"]);
+  });
+
+  it("끝난 경기의 승리 팀을 점수 표시에서 읽는다", () => {
+    const rows = [
+      {
+        row: [
+          cell("10.17(토)", "day"),
+          cell("<b>14:00</b>", "time"),
+          cell('<span>LG</span><em><span class="lose">1</span><span>vs</span><span class="win">5</span></em><span>KIA</span>', "play"),
+          cell(""),
+          cell("광주"),
+          cell("-"),
+        ],
+      },
+    ];
+    expect(parseKboMonth({ rows }, 2026, true)[0].winner).toBe("HT");
   });
 });
 

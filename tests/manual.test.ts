@@ -28,7 +28,7 @@ describe("CSV 읽기", () => {
   });
 });
 
-describe("KBO·KBL 가져오기", () => {
+describe("KBL 가져오기 (수동 입력)", () => {
   let db: Db & { close(): Promise<void> };
   beforeEach(async () => {
     db = await createMemoryDb();
@@ -37,94 +37,89 @@ describe("KBO·KBL 가져오기", () => {
   });
   afterEach(() => db.close());
 
+  it("수동 입력 대회는 KBL 뿐이다 (KBO 는 자동 수집)", async () => {
+    expect((await loadManualCompetitions(db)).map((c) => c.slug)).toEqual(["kbl"]);
+  });
+
   it("예시 CSV는 오류 없이 읽히고 한국 시간을 UTC로 바꾼다", async () => {
     const comps = await loadManualCompetitions(db);
-    for (const f of ["kbo_sample.csv", "kbl_sample.csv"]) {
-      const text = decodeCsv(new Uint8Array(await readFile(`public/samples/${f}`)));
-      const parsed = parseImport(text, comps);
-      expect(parsed.errors, f).toEqual([]);
-      expect(parsed.rows).toBeGreaterThan(0);
-    }
-    const kbo = comps.find((c) => c.slug === "kbo")!;
-    const parsed = parseImport(
-      decodeCsv(new Uint8Array(await readFile("public/samples/kbo_sample.csv"))),
-      comps,
-    );
-    const [first, , tbd, , ks1, ks1Samsung] = parsed.byCompetition.get(kbo.id)!;
+    const kbl = comps.find((c) => c.slug === "kbl")!;
+    const parsed = parseImport(decodeCsv(new Uint8Array(await readFile("public/samples/kbl_sample.csv"))), comps);
+    expect(parsed.errors).toEqual([]);
+    const [first, , tbd, final] = parsed.byCompetition.get(kbl.id)!;
     expect(first).toMatchObject({
-      externalId: "kbo:2027-0327-LG-DOOSAN",
-      season: "2027",
-      startAt: "2027-03-27T05:00:00.000Z",
-      home: { externalId: "kbo-lg" },
-      away: { externalId: "kbo-doosan" },
+      externalId: "kbl:2026-1101-SK-LG",
+      season: "2026-27",
+      startAt: "2026-11-01T05:00:00.000Z",
+      home: { externalId: "kbl-sk" },
+      away: { externalId: "kbl-lg" },
       status: "scheduled",
     });
-    expect(tbd).toMatchObject({ startAt: null, dateOnly: "2027-03-28", status: "time_tbd" });
-    expect(ks1).toMatchObject({ away: null, awayPlaceholder: "플레이오프 승자", status: "scheduled" });
-    expect(ks1Samsung).toMatchObject({ home: null, homePlaceholder: "LG", status: "conditional" });
+    expect(tbd).toMatchObject({ startAt: null, dateOnly: "2026-11-02", status: "time_tbd", home: { externalId: "kbl-jkj" } });
+    expect(final).toMatchObject({ season: "2026-27", away: null, awayPlaceholder: "4강 승자", status: "scheduled" });
   });
 
   it("잘못된 줄은 줄 번호와 함께 모두 알려준다", async () => {
     const csv = [
       HEADER,
-      "k1,KBO,2027-02-30,18:30,LG,두산,,,,,", // 없는 날짜
-      "k2,KBO,2027-04-01,25:00,LG,두산,,,,,", // 잘못된 시간
-      "k3,KBO,2027-04-01,18:30,LG,베어스팀,,,,,", // 없는 팀
-      "k4,KBO,2027-04-01,18:30,LG,LG,,,,,", // 같은 팀
-      "k5,MLB,2027-04-01,18:30,LG,두산,,,,,", // 다른 리그
-      "k6,KBO,2027-04-01,18:30,LG,두산,몰라,,,,", // 상태
-      "k6,KBO,2027-04-02,18:30,LG,두산,,,,,", // 키 중복
-      "k8,KBO,2027-4-3,18:30,,,,,,,", // 팀 없음
+      "k1,KBL,2027-02-30,18:30,SK,LG,,,,,", // 없는 날짜
+      "k2,KBL,2027-01-01,25:00,SK,LG,,,,,", // 잘못된 시간
+      "k3,KBL,2027-01-01,18:30,SK,나이츠팀,,,,,", // 없는 팀
+      "k4,KBL,2027-01-01,18:30,SK,SK,,,,,", // 같은 팀
+      "k5,KBO,2027-01-01,18:30,SK,LG,,,,,", // 수동 입력 대회가 아님
+      "k6,KBL,2027-01-01,18:30,SK,LG,몰라,,,,", // 상태
+      "k6,KBL,2027-01-02,18:30,SK,LG,,,,,", // 키 중복
+      "k8,KBL,2027-1-3,18:30,,,,,,,", // 팀 없음
     ].join("\n");
     const { errors, rows } = parseImport(csv, await loadManualCompetitions(db));
     expect(rows).toBe(0);
     expect(errors.map((e) => e.line)).toEqual([2, 3, 4, 5, 6, 7, 8, 9]);
   });
 
-  it("같은 game_key 로 다시 올리면 같은 경기 ID로 날짜만 바뀐다 (우천 순연)", async () => {
+  it("같은 game_key 로 다시 올리면 같은 경기 ID로 날짜만 바뀐다", async () => {
     const comps = await loadManualCompetitions(db);
-    const kbo = comps.find((c) => c.slug === "kbo")!;
-    const load = (date: string, status = "확정") =>
-      parseImport(`${HEADER}\nrain,KBO,${date},18:30,LG,두산,${status},정규시즌,,,잠실`, comps).byCompetition.get(kbo.id)!;
-    await saveManualMatches(db, kbo.id, load("2027-04-10"));
-    const [before] = await listManualMatches(db, "kbo", "2027-04");
-    const r = await saveManualMatches(db, kbo.id, load("2027-04-11"));
+    const kbl = comps.find((c) => c.slug === "kbl")!;
+    const load = (date: string) =>
+      parseImport(`${HEADER}\nmove,KBL,${date},19:00,SK,LG,확정,정규리그,,,잠실학생`, comps).byCompetition.get(kbl.id)!;
+    await saveManualMatches(db, kbl.id, load("2027-01-10"));
+    const [before] = await listManualMatches(db, "kbl", "2027-01");
+    const r = await saveManualMatches(db, kbl.id, load("2027-01-11"));
     expect(r).toMatchObject({ inserted: 0, updated: 1 });
-    const [after] = await listManualMatches(db, "kbo", "2027-04");
+    const [after] = await listManualMatches(db, "kbl", "2027-01");
     expect(after.id).toBe(before.id);
-    expect(after).toMatchObject({ date: "2027-04-11", time: "18:30", sequence: 1, gameKey: "rain" });
+    expect(after).toMatchObject({ date: "2027-01-11", time: "19:00", sequence: 1, gameKey: "move" });
 
     const [st] = await db.query<{ last_source: string }>(
       "select last_source from competition_status where competition_id = $1",
-      [kbo.id],
+      [kbl.id],
     );
     expect(st.last_source).toBe("manual");
   });
 
   it("관리자 화면 수정: 시간을 지우면 시간 미정, 장소를 비우면 지운다", async () => {
     const comps = await loadManualCompetitions(db);
-    const kbo = comps.find((c) => c.slug === "kbo")!;
+    const kbl = comps.find((c) => c.slug === "kbl")!;
     await saveManualMatches(
       db,
-      kbo.id,
-      parseImport(`${HEADER}\ng1,KBO,2027-05-05,14:00,KIA,롯데,,어린이날,,,광주`, comps).byCompetition.get(kbo.id)!,
+      kbl.id,
+      parseImport(`${HEADER}\ng1,KBL,2027-01-05,14:00,KCC,DB,,정규리그,,,부산`, comps).byCompetition.get(kbl.id)!,
     );
-    const [m] = await listManualMatches(db, "kbo", "2027-05");
+    const [m] = await listManualMatches(db, "kbl", "2027-01");
     await updateManualMatch(db, m.id, {
       gameKey: "g1",
-      league: "kbo",
-      date: "2027-05-06",
+      league: "kbl",
+      date: "2027-01-06",
       time: null,
-      home: "kbo-kia",
-      away: "kbo-lotte",
+      home: "kbl-kcc",
+      away: "kbl-db",
       status: "scheduled",
-      round: "어린이날",
+      round: "정규리그",
       homePlaceholder: null,
       awayPlaceholder: null,
       venue: null,
     });
     const after = await getManualMatch(db, m.id);
-    expect(after).toMatchObject({ date: "2027-05-06", time: null, status: "time_tbd", venue: null, sequence: 1 });
+    expect(after).toMatchObject({ date: "2027-01-06", time: null, status: "time_tbd", venue: null, sequence: 1 });
   });
 });
 

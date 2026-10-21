@@ -17,12 +17,16 @@
 | NHL | NHL 공개 API | ESPN |
 | NBA, NFL | ESPN | (없음: NBA 공식 CDN은 서버 접근 차단, balldontlie는 키 필요) |
 | LCK, LoL 퍼스트 스탠드, MSI, 월드 챔피언십 | LoL Esports 비공식 API (사이트 공개 키) | (없음: PandaScore는 키 필요) |
-| KBO 리그, KBL | 관리자 수동 입력 (CSV·화면) | — |
+| KBO 리그 (정규시즌·포스트시즌) | KBO 공식 홈페이지 일정 화면 데이터 | (없음) |
+| KBL | 관리자 수동 입력 (CSV·화면) | — |
 
 대회·팀 추가는 `data/seed/*.json`(파일명 순서대로 합쳐짐)에 항목을 넣고 `npm run db:setup`을 실행하면 됩니다.
 F1은 팀 대신 시리즈 하나(`f1` 팀)를 선택하고, 세션은 제목(`match.title`)이 있는 이벤트로 저장됩니다.
 ESPN의 미국 리그 팀 ID는 종목끼리 겹치므로 `nba:1`처럼 리그를 붙여 저장합니다.
 LoL Esports 일정에는 팀 ID가 없어 팀 약칭(`T1`, `GEN`)을 소스 팀 ID로 씁니다. 국제대회의 해외 팀은 자동 생성됩니다.
+KBO는 공식 경기 ID(`20261025HTSS0`)를 그대로 쓰고, 우천취소 경기는 원래 날짜에 &lsquo;연기&rsquo;로 남습니다
+(KBO가 재편성 경기를 새 경기로 발표하므로 그 경기는 새 ID로 추가됩니다). 포스트시즌에서 시리즈가 먼저 끝나면 열리지 않는
+경기(예: 5전 3선승의 4·5차전)는 지금까지의 승패로 계산해 &lsquo;진출 시&rsquo;로 표시합니다.
 국내 컵대회는 `soccer/eng.fa|eng.1`처럼 팀 목록을 가져올 리그를 함께 적어, 우리 리그 팀의 컵 일정만 받습니다.
 컵대회는 우리 팀이 아직 합류하지 않으면(추첨 전) 0건이 정상이라 실패로 보지 않습니다.
 시드에 없는 상대팀이 주 소스에 나오면 원문 이름으로 자동 생성되고(`team.needs_review = true`), 팀 선택 목록에는 나오지 않습니다.
@@ -40,12 +44,12 @@ npm run dev                    # http://localhost:3000
 
 `npm test`는 메모리 DB로 수집기(ID 유지, 대체 소스 전환, 갱신 주기)와 CSV 가져오기를 검증합니다.
 
-## KBO·KBL 관리자 (`/admin`)
+## KBL 관리자 (`/admin`)
 
 환경변수 `ADMIN_PASSWORD`를 설정하면 켜집니다(비워 두면 꺼짐). 로그인은 7일 유지되고, 비밀번호를 바꾸면 모든 로그인이 풀립니다.
 
-- **CSV 올리기**: 시즌 전체 일정을 한 번에 올립니다. 예시는 `public/samples/kbo_sample.csv`, `kbl_sample.csv`
-  (사이트의 `/samples/...`에서도 받을 수 있음). 엑셀에서 &lsquo;CSV UTF-8&rsquo; 또는 기본 CSV(CP949)로 저장해도 됩니다.
+- **CSV 올리기**: 시즌 전체 일정을 한 번에 올립니다. 예시는 `public/samples/kbl_sample.csv`
+  (사이트의 `/samples/kbl_sample.csv`에서도 받을 수 있음). KBO는 자동 수집이라 여기서 다루지 않습니다. 엑셀에서 &lsquo;CSV UTF-8&rsquo; 또는 기본 CSV(CP949)로 저장해도 됩니다.
   - 열: `game_key, league, date, time, home, away, status, round, home_placeholder, away_placeholder, venue`
   - 시각은 **한국 시간**. 시간을 비우면 시간 미정. 상태: 확정·미정·진출시·추첨대기·연기·취소
   - **같은 `game_key`로 다시 올리면 같은 경기(같은 고유 ID)를 고칩니다.** 파일에 없는 기존 경기는 지우지 않습니다.
@@ -96,3 +100,4 @@ Actions는 매시간 돕니다. 대회별로 마지막 전체 수집 후 11시�
 - MLB Stats API (© MLB Advanced Media, 개인·비상업 이용), NHL 공개 API
 - ESPN (비공식 엔드포인트)
 - LoL Esports (Riot Games, 비공식 엔드포인트)
+- KBO 공식 홈페이지 (일정 화면 데이터, 비공식 이용)
