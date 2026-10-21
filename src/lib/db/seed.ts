@@ -10,6 +10,7 @@ interface Catalog {
     name_ko: string;
     type: string;
     feed?: "auto" | "manual";
+    display_order?: number;
     sources?: { source: string; external_id: string }[];
   }[];
   teams: {
@@ -49,11 +50,12 @@ export async function seed(db: Db, catalog: Catalog): Promise<void> {
     }
     for (const c of catalog.competitions) {
       const [{ id }] = await t.query<{ id: number }>(
-        `insert into competition (sport_id, slug, name_ko, type, feed)
-         values ((select id from sport where slug = $1), $2, $3, $4, $5)
-         on conflict (slug) do update set name_ko = excluded.name_ko, type = excluded.type, feed = excluded.feed
+        `insert into competition (sport_id, slug, name_ko, type, feed, display_order)
+         values ((select id from sport where slug = $1), $2, $3, $4, $5, $6)
+         on conflict (slug) do update set name_ko = excluded.name_ko, type = excluded.type, feed = excluded.feed,
+           display_order = excluded.display_order
          returning id`,
-        [c.sport, c.slug, c.name_ko, c.type, c.feed ?? "auto"],
+        [c.sport, c.slug, c.name_ko, c.type, c.feed ?? "auto", c.display_order ?? 100],
       );
       await t.query("delete from competition_source_ref where competition_id = $1", [id]);
       for (const [i, src] of (c.sources ?? []).entries()) {

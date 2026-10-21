@@ -59,7 +59,7 @@ export async function getCatalog(db: Db): Promise<Catalog> {
       `select c.slug, c.name_ko, s.slug as sport, c.type, st.last_success_at, st.last_source
        from competition c join sport s on s.id = c.sport_id
        left join competition_status st on st.competition_id = c.id
-       order by c.id`,
+       order by c.display_order, c.id`,
     ),
     db.query<{ slug: string; name_ko: string; short_ko: string | null; sport: string; competition: string | null }>(
       `select t.slug, t.name_ko, t.short_ko, s.slug as sport, c.slug as competition

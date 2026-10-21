@@ -16,6 +16,7 @@
 | MLB | MLB Stats API | ESPN |
 | NHL | NHL 공개 API | ESPN |
 | NBA, NFL | ESPN | (없음: NBA 공식 CDN은 서버 접근 차단, balldontlie는 키 필요) |
+| KBO 리그, KBL | 관리자 수동 입력 (CSV·화면) | — |
 
 대회·팀 추가는 `data/seed/*.json`(파일명 순서대로 합쳐짐)에 항목을 넣고 `npm run db:setup`을 실행하면 됩니다.
 F1은 팀 대신 시리즈 하나(`f1` 팀)를 선택하고, 세션은 제목(`match.title`)이 있는 이벤트로 저장됩니다.
@@ -35,7 +36,24 @@ npm run sync -- --force        # 일정 수집
 npm run dev                    # http://localhost:3000
 ```
 
-`npm test`는 메모리 DB로 수집기(ID 유지, 대체 소스 전환, 갱신 주기)를 검증합니다.
+`npm test`는 메모리 DB로 수집기(ID 유지, 대체 소스 전환, 갱신 주기)와 CSV 가져오기를 검증합니다.
+
+## KBO·KBL 관리자 (`/admin`)
+
+환경변수 `ADMIN_PASSWORD`를 설정하면 켜집니다(비워 두면 꺼짐). 로그인은 7일 유지되고, 비밀번호를 바꾸면 모든 로그인이 풀립니다.
+
+- **CSV 올리기**: 시즌 전체 일정을 한 번에 올립니다. 예시는 `public/samples/kbo_sample.csv`, `kbl_sample.csv`
+  (사이트의 `/samples/...`에서도 받을 수 있음). 엑셀에서 &lsquo;CSV UTF-8&rsquo; 또는 기본 CSV(CP949)로 저장해도 됩니다.
+  - 열: `game_key, league, date, time, home, away, status, round, home_placeholder, away_placeholder, venue`
+  - 시각은 **한국 시간**. 시간을 비우면 시간 미정. 상태: 확정·미정·진출시·추첨대기·연기·취소
+  - **같은 `game_key`로 다시 올리면 같은 경기(같은 고유 ID)를 고칩니다.** 파일에 없는 기존 경기는 지우지 않습니다.
+  - 한 줄이라도 오류가 있으면 아무것도 저장하지 않고, 줄 번호와 이유를 보여줍니다.
+- **경기 수정**: 리그·월별 목록 → 경기 단위로 날짜·시간·상태·팀·장소 수정(우천 순연 등), 추가, 삭제.
+  일정이 바뀌면 `sequence`가 올라갑니다(추후 ICS 변경 알림용).
+- **포스트시즌 &lsquo;진출 시&rsquo; 경기**: 확정 팀(예: 정규시즌 1위)은 상대를 비우고 &lsquo;플레이오프 승자&rsquo;처럼 표시 문구를 쓴 경기 하나,
+  진출 후보 팀은 각자 상태 &lsquo;진출 시&rsquo;인 경기를 하나씩 만듭니다. 결과가 나오면 확정 팀 경기의 상대를 채우고 후보 경기는 삭제합니다.
+- **팀 이름**: 컵대회·유럽대항전에서 자동 생성된 영어 이름 팀에 한국어 이름을 붙입니다.
+- **현황**: 대회별 경기 수·마지막 업데이트와 최근 수집 실패를 봅니다.
 
 ## 구조
 
@@ -48,6 +66,8 @@ npm run dev                    # http://localhost:3000
 | `src/collector/run.ts` | 갱신 주기 판단, 대체 소스 전환, 실행 기록 |
 | `src/lib/schedule.ts` | 사이트가 DB를 읽는 쿼리 |
 | `src/components/` | 팀 선택, 월간 달력, 다가오는 경기, D-day |
+| `src/lib/manual/` | KBO·KBL CSV 읽기·검증·저장, 관리자 화면용 조회·수정 |
+| `src/app/admin/` | 관리자 화면 (로그인, CSV, 경기 수정, 팀 이름) |
 
 ### 팀 이름 통일
 
@@ -65,7 +85,7 @@ Actions는 매시간 돕니다. 대회별로 마지막 전체 수집 후 11시�
 1. **Supabase**에서 프로젝트를 만들고 Connection string(Transaction pooler, 포트 6543)을 복사합니다.
 2. **GitHub** 저장소 Settings → Secrets에 `DATABASE_URL`과 `FOOTBALL_DATA_API_KEY`를 넣습니다.
    Actions 탭에서 `sync-schedules`를 `force`로 한 번 실행합니다.
-3. **Vercel**에서 저장소를 가져오고 환경변수 `DATABASE_URL`을 넣습니다.
+3. **Vercel**에서 저장소를 가져오고 환경변수 `DATABASE_URL`과 `ADMIN_PASSWORD`(길고 무작위로)를 넣습니다.
 
 ## 데이터 출처
 

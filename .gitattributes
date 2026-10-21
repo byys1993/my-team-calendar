@@ -1,2 +1,4 @@
 * text=auto eol=lf
 *.ico binary
+# 엑셀용 예시 CSV 는 BOM·CRLF 를 그대로 둔다
+*.csv -text

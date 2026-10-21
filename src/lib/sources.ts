@@ -26,6 +26,11 @@ export const SOURCE_CREDITS: Record<string, { label: string; url: string; text: 
     url: "https://www.nhl.com/",
     text: "NHL 일정: NHL.com",
   },
+  manual: {
+    label: "수동 입력",
+    url: "https://www.koreabaseball.com/",
+    text: "KBO·KBL 일정: 각 연맹 발표 일정을 운영자가 직접 입력",
+  },
   espn: {
     label: "ESPN",
     url: "https://www.espn.com/",
