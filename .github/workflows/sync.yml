@@ -1,0 +1,36 @@
+name: sync-schedules
+
+on:
+  schedule:
+    # 매시 7분 (정각 혼잡 회피). 대회별 실제 갱신 여부는 scripts/sync.ts 가 판단한다:
+    # 경기 당일·포스트시즌은 매시간, 평상시는 12시간마다.
+    - cron: "7 * * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "주기와 상관없이 전부 수집"
+        type: boolean
+        default: false
+
+concurrency:
+  group: sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run db:setup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - run: npm run sync -- ${{ inputs.force && '--force' || '' }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}

@@ -1,0 +1,36 @@
+{
+  "name": "my-team-calendar",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "db:local": "pglite-server --db=.data/pglite --port=5433 --max-connections=16",
+    "db:setup": "tsx scripts/db-setup.ts",
+    "sync": "tsx scripts/sync.ts"
+  },
+  "dependencies": {
+    "next": "15.5.28",
+    "postgres": "^3.4.9",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
+    "@electric-sql/pglite-socket": "^0.2.13",
+    "@eslint/eslintrc": "^3",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^18.0.8",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.28",
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.0.5"
+  }
+}

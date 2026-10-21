@@ -1,0 +1,45 @@
+{
+  "sports": [
+    { "slug": "soccer", "name_ko": "축구" },
+    { "slug": "motorsport", "name_ko": "모터스포츠" },
+    { "slug": "baseball", "name_ko": "야구" },
+    { "slug": "basketball", "name_ko": "농구" },
+    { "slug": "american-football", "name_ko": "미식축구" },
+    { "slug": "hockey", "name_ko": "아이스하키" },
+    { "slug": "esports", "name_ko": "e스포츠" }
+  ],
+  "competitions": [
+    {
+      "slug": "epl",
+      "sport": "soccer",
+      "name_ko": "프리미어리그",
+      "type": "league",
+      "sources": [
+        { "source": "football-data", "external_id": "PL" },
+        { "source": "espn", "external_id": "soccer/eng.1" }
+      ]
+    }
+  ],
+  "teams": [
+    { "slug": "arsenal", "sport": "soccer", "competition": "epl", "name_ko": "아스널", "short_ko": "아스널", "name_en": "Arsenal", "aliases": [], "refs": { "espn": "359" } },
+    { "slug": "aston-villa", "sport": "soccer", "competition": "epl", "name_ko": "애스턴 빌라", "short_ko": "빌라", "name_en": "Aston Villa", "aliases": [], "refs": { "espn": "362" } },
+    { "slug": "bournemouth", "sport": "soccer", "competition": "epl", "name_ko": "본머스", "short_ko": "본머스", "name_en": "Bournemouth", "aliases": ["AFC Bournemouth"], "refs": { "espn": "349" } },
+    { "slug": "brentford", "sport": "soccer", "competition": "epl", "name_ko": "브렌트퍼드", "short_ko": "브렌트퍼드", "name_en": "Brentford", "aliases": [], "refs": { "espn": "337" } },
+    { "slug": "brighton", "sport": "soccer", "competition": "epl", "name_ko": "브라이턴", "short_ko": "브라이턴", "name_en": "Brighton & Hove Albion", "aliases": ["Brighton", "Brighton Hove"], "refs": { "espn": "331" } },
+    { "slug": "chelsea", "sport": "soccer", "competition": "epl", "name_ko": "첼시", "short_ko": "첼시", "name_en": "Chelsea", "aliases": [], "refs": { "espn": "363" } },
+    { "slug": "coventry", "sport": "soccer", "competition": "epl", "name_ko": "코번트리 시티", "short_ko": "코번트리", "name_en": "Coventry City", "aliases": ["Coventry"], "refs": { "espn": "388" } },
+    { "slug": "crystal-palace", "sport": "soccer", "competition": "epl", "name_ko": "크리스털 팰리스", "short_ko": "팰리스", "name_en": "Crystal Palace", "aliases": [], "refs": { "espn": "384" } },
+    { "slug": "everton", "sport": "soccer", "competition": "epl", "name_ko": "에버턴", "short_ko": "에버턴", "name_en": "Everton", "aliases": [], "refs": { "espn": "368" } },
+    { "slug": "fulham", "sport": "soccer", "competition": "epl", "name_ko": "풀럼", "short_ko": "풀럼", "name_en": "Fulham", "aliases": [], "refs": { "espn": "370" } },
+    { "slug": "hull-city", "sport": "soccer", "competition": "epl", "name_ko": "헐 시티", "short_ko": "헐", "name_en": "Hull City", "aliases": ["Hull"], "refs": { "espn": "306" } },
+    { "slug": "ipswich", "sport": "soccer", "competition": "epl", "name_ko": "입스위치 타운", "short_ko": "입스위치", "name_en": "Ipswich Town", "aliases": ["Ipswich"], "refs": { "espn": "373" } },
+    { "slug": "leeds", "sport": "soccer", "competition": "epl", "name_ko": "리즈 유나이티드", "short_ko": "리즈", "name_en": "Leeds United", "aliases": ["Leeds"], "refs": { "espn": "357" } },
+    { "slug": "liverpool", "sport": "soccer", "competition": "epl", "name_ko": "리버풀", "short_ko": "리버풀", "name_en": "Liverpool", "aliases": [], "refs": { "espn": "364" } },
+    { "slug": "man-city", "sport": "soccer", "competition": "epl", "name_ko": "맨체스터 시티", "short_ko": "맨시티", "name_en": "Manchester City", "aliases": ["Man City"], "refs": { "espn": "382" } },
+    { "slug": "man-utd", "sport": "soccer", "competition": "epl", "name_ko": "맨체스터 유나이티드", "short_ko": "맨유", "name_en": "Manchester United", "aliases": ["Man United", "Man Utd"], "refs": { "espn": "360" } },
+    { "slug": "newcastle", "sport": "soccer", "competition": "epl", "name_ko": "뉴캐슬 유나이티드", "short_ko": "뉴캐슬", "name_en": "Newcastle United", "aliases": ["Newcastle"], "refs": { "espn": "361" } },
+    { "slug": "nottingham-forest", "sport": "soccer", "competition": "epl", "name_ko": "노팅엄 포리스트", "short_ko": "노팅엄", "name_en": "Nottingham Forest", "aliases": ["Nott'm Forest", "Nottingham"], "refs": { "espn": "393" } },
+    { "slug": "sunderland", "sport": "soccer", "competition": "epl", "name_ko": "선덜랜드", "short_ko": "선덜랜드", "name_en": "Sunderland", "aliases": [], "refs": { "espn": "366" } },
+    { "slug": "tottenham", "sport": "soccer", "competition": "epl", "name_ko": "토트넘 홋스퍼", "short_ko": "토트넘", "name_en": "Tottenham Hotspur", "aliases": ["Tottenham", "Spurs"], "refs": { "espn": "367" } }
+  ]
+}
