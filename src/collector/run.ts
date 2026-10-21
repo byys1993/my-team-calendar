@@ -67,7 +67,7 @@ export async function syncCompetition(
       if (!adapter) throw new Error(`등록되지 않은 소스: ${ref.source}`);
       const matches = await adapter.fetchMatches(ref.external_id);
       if (matches.length === 0) throw new Error("경기 0건 (응답 이상으로 간주)");
-      const r = await db.tx((t) => upsertMatches(t, c.id, ref.source, matches));
+      const r = await db.tx((t) => upsertMatches(t, c.id, ref.source, matches, { autoCreateTeams: !isFallback }));
       await db.query(
         `update sync_run set finished_at = now(), ok = true, fetched = $2, inserted = $3, updated = $4, skipped = $5,
            error = $6 where id = $1`,

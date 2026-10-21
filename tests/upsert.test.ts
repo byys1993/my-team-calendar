@@ -103,6 +103,21 @@ describe("upsertMatches", () => {
     expect(unmapped).toEqual([{ raw_name: "Unknown Rovers FC" }]);
   });
 
+  it("주 소스에서는 처음 보는 상대팀을 검토 필요 상태로 만들어 경기를 저장한다", async () => {
+    const r = await upsertMatches(
+      db,
+      eplId,
+      "football-data",
+      [fdMatch({ externalId: "10", away: { externalId: "999", name: "Unknown Rovers FC", shortName: "Rovers" } })],
+      { autoCreateTeams: true },
+    );
+    expect(r).toMatchObject({ inserted: 1, skipped: 0, unmapped: [] });
+    const [team] = await db.query<{ slug: string; name_ko: string; needs_review: boolean }>(
+      "select slug, name_ko, needs_review from team where needs_review",
+    );
+    expect(team).toEqual({ slug: "football-data-999", name_ko: "Unknown Rovers FC", needs_review: true });
+  });
+
   it("대진 미정 경기는 팀 없이 저장한다", async () => {
     const r = await upsertMatches(db, eplId, "football-data", [
       fdMatch({ externalId: "77", away: null, awayPlaceholder: "미정", status: "draw_pending" }),

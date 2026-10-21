@@ -35,6 +35,7 @@ class TeamResolver {
     private db: Db,
     private competitionId: number,
     private source: string,
+    private autoCreate: boolean,
   ) {}
 
   async resolve(team: SourceTeam): Promise<number | null> {
@@ -43,7 +44,8 @@ class TeamResolver {
       "select team_id from team_source_ref where source = $1 and external_id = $2",
       [this.source, team.externalId],
     );
-    const teamId = ref?.team_id ?? (await this.autoMatch(team));
+    const teamId =
+      ref?.team_id ?? (await this.autoMatch(team)) ?? (this.autoCreate ? await this.create(team) : null);
     if (teamId == null) {
       await this.db.query(
         `insert into unmapped_team (source, external_id, raw_name, competition_id) values ($1, $2, $3, $4)
@@ -87,6 +89,29 @@ class TeamResolver {
     for (const set of this.byName.values()) set.delete(teamId);
     return teamId;
   }
+
+  // 시드에 없는 상대팀(컵대회 하부리그 팀 등)을 원문 이름으로 만든다. 팀 선택 목록에는 나오지 않고,
+  // needs_review 로 표시해 나중에 한국어 이름을 채운다. 대체 소스에서는 중복 팀이 생길 수 있어 쓰지 않는다.
+  private async create(team: SourceTeam): Promise<number> {
+    const slug = `${this.source}-${team.externalId}`.toLowerCase().replace(/[^a-z0-9-]+/g, "-");
+    const [{ id }] = await this.db.query<{ id: number }>(
+      `insert into team (sport_id, slug, name_ko, short_ko, name_en, needs_review)
+       values ((select sport_id from competition where id = $1), $2, $3, $4, $3, true)
+       on conflict (slug) do update set name_en = excluded.name_en
+       returning id`,
+      [this.competitionId, slug, team.name, team.shortName ?? null],
+    );
+    await this.db.query(
+      `insert into team_source_ref (team_id, source, external_id, raw_name) values ($1, $2, $3, $4)
+       on conflict do nothing`,
+      [id, this.source, team.externalId, team.name],
+    );
+    await this.db.query("delete from unmapped_team where source = $1 and external_id = $2", [
+      this.source,
+      team.externalId,
+    ]);
+    return id;
+  }
 }
 
 function sameTime(a: Date | null, b: string | null): boolean {
@@ -105,9 +130,10 @@ export async function upsertMatches(
   competitionId: number,
   source: string,
   matches: SourceMatch[],
+  opts: { autoCreateTeams?: boolean } = {},
 ): Promise<UpsertResult> {
   const result: UpsertResult = { inserted: 0, updated: 0, skipped: 0, unmapped: [] };
-  const teams = new TeamResolver(db, competitionId, source);
+  const teams = new TeamResolver(db, competitionId, source, opts.autoCreateTeams ?? false);
 
   for (const m of matches) {
     if (!m.startAt && !m.dateOnly) {

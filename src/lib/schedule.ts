@@ -63,7 +63,7 @@ export async function getCatalog(db: Db): Promise<Catalog> {
     db.query<{ slug: string; name_ko: string; short_ko: string | null; sport: string; competition: string | null }>(
       `select t.slug, t.name_ko, t.short_ko, s.slug as sport, c.slug as competition
        from team t join sport s on s.id = t.sport_id
-       left join competition c on c.id = t.primary_competition_id
+       join competition c on c.id = t.primary_competition_id
        order by t.name_ko`,
     ),
   ]);

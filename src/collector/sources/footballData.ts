@@ -50,8 +50,15 @@ export function parseFootballData(json: { matches: FdMatch[] }): SourceMatch[] {
   return json.matches.map((m) => {
     const home = team(m.homeTeam);
     const away = team(m.awayTeam);
+    const stage = STAGE_KO[m.stage] ?? m.stage;
     const roundLabel =
-      m.stage === "REGULAR_SEASON" ? (m.matchday ? `${m.matchday}라운드` : null) : (STAGE_KO[m.stage] ?? m.stage);
+      m.stage === "REGULAR_SEASON"
+        ? m.matchday
+          ? `${m.matchday}라운드`
+          : null
+        : (m.stage === "LEAGUE_STAGE" || m.stage === "GROUP_STAGE") && m.matchday
+          ? `${stage} ${m.matchday}차전`
+          : stage;
     let status = STATUS[m.status] ?? "scheduled";
     if ((!home || !away) && status !== "cancelled") status = "draw_pending";
     return {

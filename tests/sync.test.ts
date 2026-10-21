@@ -89,16 +89,18 @@ describe("소스 파서", () => {
       homeTeam: { id: 57, name: "Arsenal FC", shortName: "Arsenal" },
       awayTeam: { id: 62, name: "Everton FC", shortName: "Everton" },
     };
-    const [a, b, c] = parseFootballData({
+    const [a, b, c, d] = parseFootballData({
       matches: [
         { ...base, id: 1, status: "TIMED" },
         { ...base, id: 2, status: "SCHEDULED" },
         { ...base, id: 3, status: "TIMED", stage: "FINAL", awayTeam: { id: null, name: null } },
+        { ...base, id: 4, status: "TIMED", stage: "LEAGUE_STAGE", matchday: 3 },
       ],
     });
     expect(a).toMatchObject({ status: "scheduled", season: "2026", roundLabel: "9라운드" });
     expect(b.status).toBe("time_tbd");
     expect(c).toMatchObject({ status: "draw_pending", away: null, roundLabel: "결승" });
+    expect(d.roundLabel).toBe("리그 페이즈 3차전");
   });
 
   it("ESPN: 실제 응답 구조를 변환한다", () => {
