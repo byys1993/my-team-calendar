@@ -88,10 +88,13 @@ Actions는 매시간 돕니다. 대회별로 마지막 전체 수집 후 11시�
 
 ## 배포 (무료)
 
-1. **Supabase**에서 프로젝트를 만들고 Connection string(Transaction pooler, 포트 6543)을 복사합니다.
+자세한 단계는 [docs/DEPLOY.md](docs/DEPLOY.md)를 보세요. 요약:
+
+1. **Supabase**(서울 리전)에서 프로젝트를 만들고 Connection string(Transaction pooler, 포트 6543)을 복사합니다.
 2. **GitHub** 저장소 Settings → Secrets에 `DATABASE_URL`과 `FOOTBALL_DATA_API_KEY`를 넣습니다.
-   Actions 탭에서 `sync-schedules`를 `force`로 한 번 실행합니다.
+   Actions 탭에서 `sync-schedules`를 `force`로 한 번 실행합니다 (DB 표 생성 + 첫 수집).
 3. **Vercel**에서 저장소를 가져오고 환경변수 `DATABASE_URL`과 `ADMIN_PASSWORD`(길고 무작위로)를 넣습니다.
+   서버 리전은 `vercel.json`에서 서울(`icn1`)로 맞춰 두었습니다.
 
 ## 데이터 출처
 
