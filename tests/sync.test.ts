@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { isDue, syncCompetition } from "@/collector/run";
+import { dueMode, syncCompetition } from "@/collector/run";
 import { footballData, parseFootballData } from "@/collector/sources/footballData";
-import { parseEspnEvent } from "@/collector/sources/espnSoccer";
+import { parseEspnEvent } from "@/collector/sources/espn";
 import type { SourceAdapter } from "@/collector/types";
 import type { Db } from "@/lib/db";
 import { espnMatch, setupDb } from "./helpers";
@@ -57,24 +57,43 @@ describe("syncCompetition", () => {
   });
 });
 
-describe("isDue", () => {
+describe("dueMode", () => {
   const comp = () => ({ id: eplId, slug: "epl", postseason: false });
 
-  it("평상시에는 12시간 주기, 경기 당일에는 1시간 주기", async () => {
+  it("전체 수집은 12시간 주기, 경기 당일에는 매시간 최근 일정만", async () => {
     const now = new Date("2026-10-20T12:00:00Z");
-    expect(await isDue(db, comp(), now)).toBe(true);
-    await db.query("insert into competition_status (competition_id, last_attempt_at) values ($1, $2)", [
-      eplId,
-      new Date("2026-10-20T10:00:00Z").toISOString(),
-    ]);
-    expect(await isDue(db, comp(), now)).toBe(false); // 2시간 경과, 경기 없음
-    expect(await isDue(db, comp(), new Date("2026-10-20T22:00:00Z"))).toBe(true); // 12시간 경과
+    expect(await dueMode(db, comp(), now)).toBe("full");
+    const tenAm = new Date("2026-10-20T10:00:00Z").toISOString();
+    await db.query(
+      "insert into competition_status (competition_id, last_attempt_at, last_full_at) values ($1, $2, $2)",
+      [eplId, tenAm],
+    );
+    expect(await dueMode(db, comp(), now)).toBeNull(); // 2시간 경과, 경기 없음
+    expect(await dueMode(db, comp(), new Date("2026-10-20T22:00:00Z"))).toBe("full"); // 12시간 경과
 
     await db.query(
       "insert into match (competition_id, season, start_at) values ($1, '2026', '2026-10-20T19:00:00Z')",
       [eplId],
     );
-    expect(await isDue(db, comp(), now)).toBe(true); // 오늘 경기가 있으니 1시간 주기
+    expect(await dueMode(db, comp(), now)).toBe("recent"); // 오늘 경기가 있으니 매시간
+    expect(await dueMode(db, comp(), new Date("2026-10-20T10:30:00Z"))).toBeNull(); // 직전 시도 30분 전
+  });
+
+  it("최근 수집은 fetchRecent 를 쓰고 전체 수집 시각은 바꾸지 않는다", async () => {
+    let recentCalls = 0;
+    const adapter: SourceAdapter = {
+      source: "football-data",
+      fetchMatches: async () => [],
+      fetchRecent: async () => {
+        recentCalls++;
+        return [];
+      },
+    };
+    const r = await syncCompetition(db, comp(), { "football-data": adapter }, "recent");
+    expect(r.ok).toBe(true);
+    expect(recentCalls).toBe(1);
+    const [st] = await db.query<{ last_full_at: Date | null }>("select last_full_at from competition_status");
+    expect(st.last_full_at).toBeNull();
   });
 });
 

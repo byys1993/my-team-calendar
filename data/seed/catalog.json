@@ -20,7 +20,17 @@
     { "slug": "ligue-1", "sport": "soccer", "name_ko": "리그 1", "type": "league",
       "sources": [{ "source": "football-data", "external_id": "FL1" }, { "source": "espn", "external_id": "soccer/fra.1" }] },
     { "slug": "ucl", "sport": "soccer", "name_ko": "UEFA 챔피언스리그", "type": "cup",
-      "sources": [{ "source": "football-data", "external_id": "CL" }, { "source": "espn", "external_id": "soccer/uefa.champions" }] }
+      "sources": [{ "source": "football-data", "external_id": "CL" }, { "source": "espn", "external_id": "soccer/uefa.champions" }] },
+    { "slug": "f1", "sport": "motorsport", "name_ko": "F1", "type": "motorsport",
+      "sources": [{ "source": "jolpica", "external_id": "current" }, { "source": "openf1", "external_id": "current" }] },
+    { "slug": "nba", "sport": "basketball", "name_ko": "NBA", "type": "league",
+      "sources": [{ "source": "espn", "external_id": "basketball/nba" }] },
+    { "slug": "mlb", "sport": "baseball", "name_ko": "MLB", "type": "league",
+      "sources": [{ "source": "mlb", "external_id": "1" }, { "source": "espn", "external_id": "baseball/mlb" }] },
+    { "slug": "nfl", "sport": "american-football", "name_ko": "NFL", "type": "league",
+      "sources": [{ "source": "espn", "external_id": "football/nfl" }] },
+    { "slug": "nhl", "sport": "hockey", "name_ko": "NHL", "type": "league",
+      "sources": [{ "source": "nhl", "external_id": "nhl" }, { "source": "espn", "external_id": "hockey/nhl" }] }
   ],
   "teams": [
     { "slug": "arsenal", "sport": "soccer", "competition": "epl", "name_ko": "아스널", "short_ko": "아스널", "name_en": "Arsenal", "aliases": [], "refs": { "football-data": "57", "espn": "359" } },
@@ -138,6 +148,8 @@
     { "slug": "viking", "sport": "soccer", "competition": "ucl", "name_ko": "바이킹 FK", "short_ko": "바이킹", "name_en": "Viking FK", "aliases": [], "refs": { "football-data": "5720", "espn": "510" } },
     { "slug": "bodo-glimt", "sport": "soccer", "competition": "ucl", "name_ko": "보되/글림트", "short_ko": "보되", "name_en": "Bodø/Glimt", "aliases": ["Bodo/Glimt"], "refs": { "football-data": "5721", "espn": "2980" } },
     { "slug": "slovan-bratislava", "sport": "soccer", "competition": "ucl", "name_ko": "슬로반 브라티슬라바", "short_ko": "슬로반", "name_en": "Slovan Bratislava", "aliases": [], "refs": { "football-data": "7509", "espn": "521" } },
-    { "slug": "sabah", "sport": "soccer", "competition": "ucl", "name_ko": "사바흐 FK", "short_ko": "사바흐", "name_en": "Sabah FK", "aliases": [], "refs": { "football-data": "10233", "espn": "21922" } }
+    { "slug": "sabah", "sport": "soccer", "competition": "ucl", "name_ko": "사바흐 FK", "short_ko": "사바흐", "name_en": "Sabah FK", "aliases": [], "refs": { "football-data": "10233", "espn": "21922" } },
+
+    { "slug": "f1", "sport": "motorsport", "competition": "f1", "name_ko": "F1 그랑프리", "short_ko": "F1", "name_en": "Formula 1", "aliases": [], "refs": { "jolpica": "f1", "openf1": "f1" } }
   ]
 }

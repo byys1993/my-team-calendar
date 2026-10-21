@@ -81,7 +81,8 @@ export function MonthCalendar({ year, month, todayKey, selectedKey, byDay, teamS
                   >
                     <span className="chip-time">{matchTimeLabel(v.match).replace("시간 미정", "미정")}</span>
                     <span className="chip-text">
-                      {teamShort(v.team)} vs {v.opponent}
+                      {teamShort(v.team)} {v.side ? "vs " : ""}
+                      {v.opponent}
                     </span>
                   </span>
                 ))}

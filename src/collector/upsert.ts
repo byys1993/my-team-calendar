@@ -13,6 +13,7 @@ interface MatchRow {
   id: string;
   season: string;
   round_label: string | null;
+  title: string | null;
   home_team_id: number | null;
   away_team_id: number | null;
   home_placeholder: string | null;
@@ -24,8 +25,12 @@ interface MatchRow {
   is_neutral: boolean;
 }
 
-// 대체 소스 경기와 기존 경기를 같은 경기로 볼 최대 시각 차이 (연기 경기 포함)
-const CROSS_SOURCE_WINDOW_DAYS = 120;
+// 대체 소스 경기와 기존 경기를 같은 경기로 볼 최대 시각 차이.
+// 축구는 같은 대진이 시즌에 한 번뿐이라 연기 경기까지 넓게 보고,
+// 같은 팀끼리 며칠 연속 붙는 미국 리그(시리즈)는 좁게 본다.
+const CROSS_SOURCE_WINDOW_DAYS: Record<string, number> = { soccer: 120, default: 1.5 };
+// 이벤트형(F1 세션)은 같은 주말의 다른 세션과 섞이지 않도록 2시간 이내만 같은 것으로 본다.
+const EVENT_WINDOW_DAYS = 2 / 24;
 
 class TeamResolver {
   private cache = new Map<string, number | null>();
@@ -134,6 +139,11 @@ export async function upsertMatches(
 ): Promise<UpsertResult> {
   const result: UpsertResult = { inserted: 0, updated: 0, skipped: 0, unmapped: [] };
   const teams = new TeamResolver(db, competitionId, source, opts.autoCreateTeams ?? false);
+  const [{ sport }] = await db.query<{ sport: string }>(
+    "select s.slug as sport from competition c join sport s on s.id = c.sport_id where c.id = $1",
+    [competitionId],
+  );
+  const windowDays = CROSS_SOURCE_WINDOW_DAYS[sport] ?? CROSS_SOURCE_WINDOW_DAYS.default;
 
   for (const m of matches) {
     if (!m.startAt && !m.dateOnly) {
@@ -154,6 +164,7 @@ export async function upsertMatches(
     const next = {
       season: m.season,
       round_label: m.roundLabel ?? null,
+      title: m.title ?? null,
       home_team_id: homeId,
       away_team_id: awayId,
       home_placeholder: m.home ? null : (m.homePlaceholder ?? null),
@@ -165,14 +176,17 @@ export async function upsertMatches(
       is_neutral: m.isNeutral ?? false,
     };
 
-    const existing = await findExisting(db, competitionId, source, m.externalId, homeId, awayId, m.startAt);
+    const isEvent = homeId != null && !m.away && !!next.title;
+    const existing = await findExisting(db, competitionId, source, m.externalId, homeId, awayId, m.startAt,
+      isEvent ? EVENT_WINDOW_DAYS : windowDays, isEvent);
     if (!existing) {
       const [{ id }] = await db.query<{ id: string }>(
-        `insert into match (competition_id, season, round_label, home_team_id, away_team_id, home_placeholder,
+        `insert into match (competition_id, season, round_label, title, home_team_id, away_team_id, home_placeholder,
            away_placeholder, start_at, date_only, status, venue, is_neutral)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) returning id`,
-        [competitionId, next.season, next.round_label, next.home_team_id, next.away_team_id, next.home_placeholder,
-          next.away_placeholder, next.start_at, next.date_only, next.status, next.venue, next.is_neutral],
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning id`,
+        [competitionId, next.season, next.round_label, next.title, next.home_team_id, next.away_team_id,
+          next.home_placeholder, next.away_placeholder, next.start_at, next.date_only, next.status, next.venue,
+          next.is_neutral],
       );
       await linkSource(db, id, source, m.externalId);
       result.inserted++;
@@ -184,6 +198,7 @@ export async function upsertMatches(
     // 소스가 장소·라운드를 주지 않으면 기존 값을 지우지 않는다.
     const venue = next.venue ?? row.venue;
     const roundLabel = next.round_label ?? row.round_label;
+    const title = next.title ?? row.title;
     const scheduleChanged =
       !sameTime(row.start_at, next.start_at) ||
       !sameDate(row.date_only, next.date_only) ||
@@ -194,6 +209,7 @@ export async function upsertMatches(
     const otherChanged =
       row.season !== next.season ||
       row.round_label !== roundLabel ||
+      row.title !== title ||
       row.home_placeholder !== next.home_placeholder ||
       row.away_placeholder !== next.away_placeholder ||
       row.is_neutral !== next.is_neutral;
@@ -202,11 +218,11 @@ export async function upsertMatches(
     await db.query(
       `update match set season = $2, round_label = $3, home_team_id = $4, away_team_id = $5, home_placeholder = $6,
          away_placeholder = $7, start_at = $8, date_only = $9, status = $10, venue = $11, is_neutral = $12,
-         sequence = sequence + $13, updated_at = now()
+         sequence = sequence + $13, title = $14, updated_at = now()
        where id = $1`,
       [row.id, next.season, roundLabel, next.home_team_id, next.away_team_id, next.home_placeholder,
         next.away_placeholder, next.start_at, next.date_only, next.status, venue, next.is_neutral,
-        scheduleChanged ? 1 : 0],
+        scheduleChanged ? 1 : 0, title],
     );
     result.updated++;
   }
@@ -228,6 +244,8 @@ async function findExisting(
   homeId: number | null,
   awayId: number | null,
   startAt: string | null,
+  windowDays: number,
+  isEvent: boolean,
 ): Promise<{ row: MatchRow; linked: boolean } | null> {
   const [byRef] = await db.query<MatchRow>(
     `select m.* from match m join match_source_ref r on r.match_id = m.id
@@ -235,19 +253,21 @@ async function findExisting(
     [source, externalId],
   );
   if (byRef) return { row: byRef, linked: true };
-  if (homeId == null || awayId == null) return null;
+  if (homeId == null || (awayId == null && !isEvent)) return null;
+  // 이벤트는 시각이 있어야 같은 세션을 가릴 수 있다
+  if (isEvent && !startAt) return null;
 
   // 다른 소스로 이미 저장된 같은 대진: 같은 대회·홈·원정이고 이 소스와는 아직 연결되지 않은 경기 중 시각이 가장 가까운 것
   const [byTeams] = await db.query<MatchRow>(
     `select m.* from match m
-     where m.competition_id = $1 and m.home_team_id = $2 and m.away_team_id = $3
+     where m.competition_id = $1 and m.home_team_id = $2 and m.away_team_id is not distinct from $3
        and not exists (select 1 from match_source_ref r where r.match_id = m.id and r.source = $4)
        and ($5::timestamptz is null or m.start_at is null
-            or abs(extract(epoch from (m.start_at - $5::timestamptz))) < $6 * 86400)
+            or abs(extract(epoch from (m.start_at - $5::timestamptz))) < $6::float8 * 86400)
      order by case when $5::timestamptz is null or m.start_at is null then 0
                    else abs(extract(epoch from (m.start_at - $5::timestamptz))) end
      limit 1`,
-    [competitionId, homeId, awayId, source, startAt, CROSS_SOURCE_WINDOW_DAYS],
+    [competitionId, homeId, awayId, source, startAt, windowDays],
   );
   return byTeams ? { row: byTeams, linked: false } : null;
 }

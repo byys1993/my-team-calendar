@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Db } from "./types";
 
@@ -24,8 +24,17 @@ interface Catalog {
   }[];
 }
 
-export async function loadCatalog(file = path.join(process.cwd(), "data", "seed", "catalog.json")): Promise<Catalog> {
-  return JSON.parse(await readFile(file, "utf8")) as Catalog;
+// data/seed/*.json 을 파일명 순서대로 합친다 (catalog.json = 종목·대회·축구, 그 외는 종목별 팀)
+export async function loadCatalog(dir = path.join(process.cwd(), "data", "seed")): Promise<Catalog> {
+  const merged: Catalog = { sports: [], competitions: [], teams: [] };
+  const files = (await readdir(dir)).filter((f) => f.endsWith(".json")).sort();
+  for (const f of files) {
+    const part = JSON.parse(await readFile(path.join(dir, f), "utf8")) as Partial<Catalog>;
+    merged.sports.push(...(part.sports ?? []));
+    merged.competitions.push(...(part.competitions ?? []));
+    merged.teams.push(...(part.teams ?? []));
+  }
+  return merged;
 }
 
 // 시드 파일 내용을 DB에 반영한다. 여러 번 실행해도 안전하며, 시드에 없는 데이터는 지우지 않는다.

@@ -31,6 +31,7 @@ export interface ScheduleMatch {
   id: string;
   competition: string;
   roundLabel: string | null;
+  title: string | null; // 이벤트형(F1 등)일 때 '호주 GP 결승'
   home: string | null; // team slug
   away: string | null;
   homeLabel: string;
@@ -94,6 +95,7 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[]): Promise<S
     id: string;
     competition: string;
     round_label: string | null;
+    title: string | null;
     home: string | null;
     away: string | null;
     home_label: string | null;
@@ -104,7 +106,7 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[]): Promise<S
     venue: string | null;
     is_neutral: boolean;
   }>(
-    `select m.id, c.slug as competition, m.round_label, h.slug as home, a.slug as away,
+    `select m.id, c.slug as competition, m.round_label, m.title, h.slug as home, a.slug as away,
        coalesce(h.short_ko, h.name_ko, m.home_placeholder) as home_label,
        coalesce(a.short_ko, a.name_ko, m.away_placeholder) as away_label,
        m.start_at, to_char(m.date_only, 'YYYY-MM-DD') as date_only, m.status, m.venue, m.is_neutral
@@ -121,6 +123,7 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[]): Promise<S
     id: r.id,
     competition: r.competition,
     roundLabel: r.round_label,
+    title: r.title,
     home: r.home,
     away: r.away,
     homeLabel: r.home_label ?? "미정",

@@ -11,8 +11,14 @@
 | 대회 | 주 소스 | 대체 소스 |
 |---|---|---|
 | 프리미어리그, 라리가, 분데스리가, 세리에 A, 리그 1, UEFA 챔피언스리그 | football-data.org | ESPN |
+| F1 (결승·예선·스프린트) | Jolpica F1 | OpenF1 |
+| MLB | MLB Stats API | ESPN |
+| NHL | NHL 공개 API | ESPN |
+| NBA, NFL | ESPN | (없음: NBA 공식 CDN은 서버 접근 차단, balldontlie는 키 필요) |
 
-대회·팀 추가는 `data/seed/catalog.json`에 항목을 넣고 `npm run db:setup`을 실행하면 됩니다.
+대회·팀 추가는 `data/seed/*.json`(파일명 순서대로 합쳐짐)에 항목을 넣고 `npm run db:setup`을 실행하면 됩니다.
+F1은 팀 대신 시리즈 하나(`f1` 팀)를 선택하고, 세션은 제목(`match.title`)이 있는 이벤트로 저장됩니다.
+ESPN의 미국 리그 팀 ID는 종목끼리 겹치므로 `nba:1`처럼 리그를 붙여 저장합니다.
 시드에 없는 상대팀이 주 소스에 나오면 원문 이름으로 자동 생성되고(`team.needs_review = true`), 팀 선택 목록에는 나오지 않습니다.
 
 ## 로컬 실행
@@ -47,8 +53,9 @@ npm run dev                    # http://localhost:3000
 
 ### 갱신 주기
 
-Actions는 매시간 돌고, 대회별로 `±18시간 안에 경기가 있거나 competition.postseason = true`이면 매시간,
-아니면 마지막 시도 후 11시간 30분이 지났을 때만 수집합니다.
+Actions는 매시간 돕니다. 대회별로 마지막 전체 수집 후 11시간 30분이 지났으면 **시즌 전체**를 받고,
+그 사이 `±18시간 안에 경기가 있거나 competition.postseason = true`이면 매시간 **최근 며칠 일정만** 받습니다
+(수집기의 `fetchRecent`, 없으면 전체). 요청 제한이 있는 무료 API를 아끼기 위한 구조입니다.
 
 ## 배포 (무료)
 
@@ -60,4 +67,6 @@ Actions는 매시간 돌고, 대회별로 `±18시간 안에 경기가 있거나
 ## 데이터 출처
 
 - Football data provided by the Football-Data.org API (표기 의무)
-- ESPN (비공식 엔드포인트, 대체 소스)
+- Jolpica F1 API (데이터 라이선스 CC BY-NC-SA 4.0), OpenF1
+- MLB Stats API (© MLB Advanced Media, 개인·비상업 이용), NHL 공개 API
+- ESPN (비공식 엔드포인트)

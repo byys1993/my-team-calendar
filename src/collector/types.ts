@@ -11,6 +11,8 @@ export interface SourceMatch {
   externalId: string;
   season: string;
   roundLabel?: string | null;
+  // 이벤트형 경기(F1 등)는 home 에 시리즈 팀, away 는 null, title 에 '호주 GP 결승' 같은 제목을 넣는다.
+  title?: string | null;
   home: SourceTeam | null;
   away: SourceTeam | null;
   homePlaceholder?: string | null;
@@ -26,7 +28,10 @@ export interface SourceMatch {
 export interface SourceAdapter {
   source: string;
   // externalId: competition_source_ref.external_id (예: football-data 'PL', espn 'soccer/eng.1')
+  // 리그·시즌 전체 일정 (12시간마다)
   fetchMatches(externalId: string): Promise<SourceMatch[]>;
+  // 경기 당일 매시간 수집용: 최근 며칠 일정만. 없으면 fetchMatches 를 쓴다.
+  fetchRecent?(externalId: string): Promise<SourceMatch[]>;
 }
 
 export type Fetcher = (url: string, init?: RequestInit) => Promise<Response>;
