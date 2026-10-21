@@ -118,6 +118,38 @@ describe("upsertMatches", () => {
     expect(team).toEqual({ slug: "football-data-999", name_ko: "Unknown Rovers FC", needs_review: true });
   });
 
+  it("경기가 많아도 질의 수는 일정하다 (멀리 있는 DB 대비)", async () => {
+    let queries = 0;
+    const counting: Db = {
+      query: (text, params) => {
+        queries++;
+        return db.query(text, params);
+      },
+      tx: (fn) => db.tx((t) => fn({ query: (q, p) => (queries++, t.query(q, p)), tx: t.tx })),
+    };
+    const many = (n: number, hour: number) =>
+      Array.from({ length: n }, (_, i) =>
+        fdMatch({
+          externalId: `bulk-${i}`,
+          startAt: new Date(Date.UTC(2026, 8, 1, hour) + i * 86_400_000).toISOString(),
+        }),
+      );
+    // 처음 저장 (팀 자동 연결 포함)
+    const first = await upsertMatches(counting, eplId, "football-data", many(1500, 14));
+    expect(first.inserted).toBe(1500);
+    expect(queries).toBeLessThan(20);
+    // 변경 없음
+    queries = 0;
+    expect(await upsertMatches(counting, eplId, "football-data", many(1500, 14))).toMatchObject({ inserted: 0, updated: 0 });
+    expect(queries).toBeLessThan(10);
+    // 전부 시각 변경 → 같은 ID로 갱신, sequence +1
+    queries = 0;
+    expect(await upsertMatches(counting, eplId, "football-data", many(1500, 16))).toMatchObject({ updated: 1500 });
+    expect(queries).toBeLessThan(10);
+    const [{ n }] = await db.query<{ n: number }>("select count(*)::int as n from match where sequence = 1");
+    expect(n).toBe(1500);
+  });
+
   it("대진 미정 경기는 팀 없이 저장한다", async () => {
     const r = await upsertMatches(db, eplId, "football-data", [
       fdMatch({ externalId: "77", away: null, awayPlaceholder: "미정", status: "draw_pending" }),

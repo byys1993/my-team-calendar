@@ -19,7 +19,8 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # 전체 수집(외부 API 호출 포함)은 3~5분. 외부 API가 느린 날을 대비해 여유를 둔다.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -1,6 +1,11 @@
+import { randomUUID } from "node:crypto";
 import type { Db } from "@/lib/db";
 import { normalizeName } from "./normalize";
 import type { SourceMatch, SourceTeam } from "./types";
+
+// 수집 서버(GitHub Actions, 미국)와 DB(서울) 사이는 질의 한 번에 0.2초 안팎이 걸린다.
+// 경기마다 질의하면 시즌 전체(수천 경기)에 수십 분이 걸리므로, 기존 데이터를 한 번에 읽고
+// 신규·변경분을 묶어서(jsonb_to_recordset) 저장한다. 대회 하나에 질의 열 번 안팎이다.
 
 export interface UpsertResult {
   inserted: number;
@@ -25,15 +30,20 @@ interface MatchRow {
   is_neutral: boolean;
 }
 
+// 저장할 새 값 (시각은 ISO 문자열)
+type NextRow = Omit<MatchRow, "id" | "start_at" | "date_only"> & { start_at: string | null; date_only: string | null };
+
 // 대체 소스 경기와 기존 경기를 같은 경기로 볼 최대 시각 차이.
 // 축구는 같은 대진이 시즌에 한 번뿐이라 연기 경기까지 넓게 보고,
 // 같은 팀끼리 며칠 연속 붙는 미국 리그(시리즈)는 좁게 본다.
 const CROSS_SOURCE_WINDOW_DAYS: Record<string, number> = { soccer: 120, default: 1.5 };
 // 이벤트형(F1 세션)은 같은 주말의 다른 세션과 섞이지 않도록 2시간 이내만 같은 것으로 본다.
 const EVENT_WINDOW_DAYS = 2 / 24;
+// 한 번에 묶어 보낼 행 수
+const CHUNK = 1000;
 
 class TeamResolver {
-  private cache = new Map<string, number | null>();
+  private known?: Map<string, number | null>;
   private byName?: Map<string, Set<number>>;
 
   constructor(
@@ -44,13 +54,17 @@ class TeamResolver {
   ) {}
 
   async resolve(team: SourceTeam): Promise<number | null> {
-    if (this.cache.has(team.externalId)) return this.cache.get(team.externalId)!;
-    const [ref] = await this.db.query<{ team_id: number }>(
-      "select team_id from team_source_ref where source = $1 and external_id = $2",
-      [this.source, team.externalId],
-    );
-    const teamId =
-      ref?.team_id ?? (await this.autoMatch(team)) ?? (this.autoCreate ? await this.create(team) : null);
+    if (!this.known) {
+      // 이 소스의 팀 매핑 전체를 한 번에 읽는다
+      const rows = await this.db.query<{ external_id: string; team_id: number }>(
+        "select external_id, team_id from team_source_ref where source = $1",
+        [this.source],
+      );
+      this.known = new Map(rows.map((r) => [r.external_id, r.team_id]));
+    }
+    if (this.known.has(team.externalId)) return this.known.get(team.externalId)!;
+    // 처음 보는 팀만 아래에서 개별 질의한다 (드물다)
+    const teamId = (await this.autoMatch(team)) ?? (this.autoCreate ? await this.create(team) : null);
     if (teamId == null) {
       await this.db.query(
         `insert into unmapped_team (source, external_id, raw_name, competition_id) values ($1, $2, $3, $4)
@@ -58,7 +72,7 @@ class TeamResolver {
         [this.source, team.externalId, team.name, this.competitionId],
       );
     }
-    this.cache.set(team.externalId, teamId);
+    this.known.set(team.externalId, teamId);
     return teamId;
   }
 
@@ -129,6 +143,16 @@ function sameDate(a: string | Date | null, b: string | null): boolean {
   return (left ?? null) === (b ?? null);
 }
 
+const timeOf = (s: string | Date | null) => (s ? new Date(s).getTime() : null);
+
+async function inChunks<T>(rows: T[], run: (json: string) => Promise<unknown>): Promise<void> {
+  for (let i = 0; i < rows.length; i += CHUNK) await run(JSON.stringify(rows.slice(i, i + CHUNK)));
+}
+
+const MATCH_COLUMNS = `season text, round_label text, title text, home_team_id int, away_team_id int,
+  home_placeholder text, away_placeholder text, start_at timestamptz, date_only date, status text, venue text,
+  is_neutral boolean`;
+
 // 소스 경기 목록을 저장한다. 같은 경기는 기존 ID를 그대로 두고 내용만 갱신한다.
 export async function upsertMatches(
   db: Db,
@@ -145,7 +169,12 @@ export async function upsertMatches(
   );
   const windowDays = CROSS_SOURCE_WINDOW_DAYS[sport] ?? CROSS_SOURCE_WINDOW_DAYS.default;
 
-  for (const m of matches) {
+  // 같은 소스 경기 ID가 두 번 오면 마지막 것만 쓴다
+  const unique = [...new Map(matches.map((m) => [m.externalId, m])).values()];
+
+  // 1. 팀 매핑
+  const prepared: { m: SourceMatch; next: NextRow }[] = [];
+  for (const m of unique) {
     if (!m.startAt && !m.dateOnly) {
       result.skipped++;
       continue;
@@ -160,42 +189,77 @@ export async function upsertMatches(
       result.skipped++;
       continue;
     }
+    prepared.push({
+      m,
+      next: {
+        season: m.season,
+        round_label: m.roundLabel ?? null,
+        title: m.title ?? null,
+        home_team_id: homeId,
+        away_team_id: awayId,
+        home_placeholder: m.home ? null : (m.homePlaceholder ?? null),
+        away_placeholder: m.away ? null : (m.awayPlaceholder ?? null),
+        start_at: m.startAt,
+        date_only: m.dateOnly ?? null,
+        status: m.status,
+        venue: m.venue ?? null,
+        is_neutral: m.isNeutral ?? false,
+      },
+    });
+  }
 
-    const next = {
-      season: m.season,
-      round_label: m.roundLabel ?? null,
-      title: m.title ?? null,
-      home_team_id: homeId,
-      away_team_id: awayId,
-      home_placeholder: m.home ? null : (m.homePlaceholder ?? null),
-      away_placeholder: m.away ? null : (m.awayPlaceholder ?? null),
-      start_at: m.startAt,
-      date_only: m.dateOnly ?? null,
-      status: m.status,
-      venue: m.venue ?? null,
-      is_neutral: m.isNeutral ?? false,
-    };
+  // 2. 이 소스로 이미 저장된 경기를 한 번에 읽는다
+  const linkedRows = await db.query<MatchRow & { external_id: string }>(
+    `select m.*, r.external_id from match_source_ref r join match m on m.id = r.match_id
+     where r.source = $1 and r.external_id in (select jsonb_array_elements_text($2::text::jsonb))`,
+    [source, JSON.stringify(prepared.map((p) => p.m.externalId))],
+  );
+  const byExternal = new Map(linkedRows.map((r) => [r.external_id, r]));
 
-    const isEvent = homeId != null && !m.away && !!next.title;
-    const existing = await findExisting(db, competitionId, source, m.externalId, homeId, awayId, m.startAt,
-      isEvent ? EVENT_WINDOW_DAYS : windowDays, isEvent);
-    if (!existing) {
-      const [{ id }] = await db.query<{ id: string }>(
-        `insert into match (competition_id, season, round_label, title, home_team_id, away_team_id, home_placeholder,
-           away_placeholder, start_at, date_only, status, venue, is_neutral)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning id`,
-        [competitionId, next.season, next.round_label, next.title, next.home_team_id, next.away_team_id,
-          next.home_placeholder, next.away_placeholder, next.start_at, next.date_only, next.status, next.venue,
-          next.is_neutral],
-      );
-      await linkSource(db, id, source, m.externalId);
+  // 3. 다른 소스로만 저장된 같은 경기 후보 (대체 소스 전환·복귀 시). 필요할 때만 한 번 읽는다.
+  let candidates: MatchRow[] | null = null;
+  const claimed = new Set<string>();
+  async function findCandidate(next: NextRow, isEvent: boolean): Promise<MatchRow | null> {
+    if (next.home_team_id == null || (next.away_team_id == null && !isEvent)) return null;
+    if (isEvent && !next.start_at) return null;
+    candidates ??= await db.query<MatchRow>(
+      `select m.* from match m where m.competition_id = $1
+         and not exists (select 1 from match_source_ref r where r.match_id = m.id and r.source = $2)`,
+      [competitionId, source],
+    );
+    const limit = (isEvent ? EVENT_WINDOW_DAYS : windowDays) * 86_400_000;
+    const t = timeOf(next.start_at);
+    let best: { row: MatchRow; diff: number } | null = null;
+    for (const c of candidates) {
+      if (claimed.has(c.id) || c.home_team_id !== next.home_team_id || c.away_team_id !== next.away_team_id) continue;
+      const ct = timeOf(c.start_at);
+      const diff = t == null || ct == null ? 0 : Math.abs(ct - t);
+      if (diff >= limit) continue;
+      if (!best || diff < best.diff) best = { row: c, diff };
+    }
+    if (best) claimed.add(best.row.id);
+    return best?.row ?? null;
+  }
+
+  // 4. 신규·연결·변경 분류
+  const inserts: Record<string, unknown>[] = [];
+  const links: { match_id: string; external_id: string }[] = [];
+  const updates: Record<string, unknown>[] = [];
+  for (const { m, next } of prepared) {
+    const isEvent = next.home_team_id != null && !m.away && !!next.title;
+    let row: MatchRow | null = byExternal.get(m.externalId) ?? null;
+    if (!row) {
+      row = await findCandidate(next, isEvent);
+      if (row) links.push({ match_id: row.id, external_id: m.externalId });
+    }
+    if (!row) {
+      const id = randomUUID();
+      inserts.push({ id, ...next });
+      links.push({ match_id: id, external_id: m.externalId });
       result.inserted++;
       continue;
     }
-
-    const { row, linked } = existing;
-    if (!linked) await linkSource(db, row.id, source, m.externalId);
-    // 소스가 장소·라운드를 주지 않으면 기존 값을 지우지 않는다.
+    // 소스가 장소·라운드·제목을 주지 않으면 기존 값을 지우지 않는다.
     const venue = next.venue ?? row.venue;
     const roundLabel = next.round_label ?? row.round_label;
     const title = next.title ?? row.title;
@@ -214,60 +278,39 @@ export async function upsertMatches(
       row.away_placeholder !== next.away_placeholder ||
       row.is_neutral !== next.is_neutral;
     if (!scheduleChanged && !otherChanged) continue;
-
-    await db.query(
-      `update match set season = $2, round_label = $3, home_team_id = $4, away_team_id = $5, home_placeholder = $6,
-         away_placeholder = $7, start_at = $8, date_only = $9, status = $10, venue = $11, is_neutral = $12,
-         sequence = sequence + $13, title = $14, updated_at = now()
-       where id = $1`,
-      [row.id, next.season, roundLabel, next.home_team_id, next.away_team_id, next.home_placeholder,
-        next.away_placeholder, next.start_at, next.date_only, next.status, venue, next.is_neutral,
-        scheduleChanged ? 1 : 0, title],
-    );
+    updates.push({ id: row.id, ...next, venue, round_label: roundLabel, title, bump: scheduleChanged ? 1 : 0 });
     result.updated++;
   }
+
+  // 5. 묶어서 저장
+  await inChunks(inserts, (json) =>
+    db.query(
+      `insert into match (id, competition_id, season, round_label, title, home_team_id, away_team_id,
+         home_placeholder, away_placeholder, start_at, date_only, status, venue, is_neutral)
+       select x.id, $1, x.season, x.round_label, x.title, x.home_team_id, x.away_team_id, x.home_placeholder,
+         x.away_placeholder, x.start_at, x.date_only, x.status, x.venue, x.is_neutral
+       from jsonb_to_recordset($2::text::jsonb) as x(id uuid, ${MATCH_COLUMNS})`,
+      [competitionId, json],
+    ),
+  );
+  await inChunks(links, (json) =>
+    db.query(
+      `insert into match_source_ref (match_id, source, external_id)
+       select x.match_id, $1, x.external_id from jsonb_to_recordset($2::text::jsonb) as x(match_id uuid, external_id text)
+       on conflict do nothing`,
+      [source, json],
+    ),
+  );
+  await inChunks(updates, (json) =>
+    db.query(
+      `update match m set season = x.season, round_label = x.round_label, title = x.title,
+         home_team_id = x.home_team_id, away_team_id = x.away_team_id, home_placeholder = x.home_placeholder,
+         away_placeholder = x.away_placeholder, start_at = x.start_at, date_only = x.date_only, status = x.status,
+         venue = x.venue, is_neutral = x.is_neutral, sequence = m.sequence + x.bump, updated_at = now()
+       from jsonb_to_recordset($1::text::jsonb) as x(id uuid, bump int, ${MATCH_COLUMNS})
+       where m.id = x.id`,
+      [json],
+    ),
+  );
   return result;
-}
-
-async function linkSource(db: Db, matchId: string, source: string, externalId: string) {
-  await db.query(
-    "insert into match_source_ref (match_id, source, external_id) values ($1, $2, $3) on conflict do nothing",
-    [matchId, source, externalId],
-  );
-}
-
-async function findExisting(
-  db: Db,
-  competitionId: number,
-  source: string,
-  externalId: string,
-  homeId: number | null,
-  awayId: number | null,
-  startAt: string | null,
-  windowDays: number,
-  isEvent: boolean,
-): Promise<{ row: MatchRow; linked: boolean } | null> {
-  const [byRef] = await db.query<MatchRow>(
-    `select m.* from match m join match_source_ref r on r.match_id = m.id
-     where r.source = $1 and r.external_id = $2`,
-    [source, externalId],
-  );
-  if (byRef) return { row: byRef, linked: true };
-  if (homeId == null || (awayId == null && !isEvent)) return null;
-  // 이벤트는 시각이 있어야 같은 세션을 가릴 수 있다
-  if (isEvent && !startAt) return null;
-
-  // 다른 소스로 이미 저장된 같은 대진: 같은 대회·홈·원정이고 이 소스와는 아직 연결되지 않은 경기 중 시각이 가장 가까운 것
-  const [byTeams] = await db.query<MatchRow>(
-    `select m.* from match m
-     where m.competition_id = $1 and m.home_team_id = $2 and m.away_team_id is not distinct from $3
-       and not exists (select 1 from match_source_ref r where r.match_id = m.id and r.source = $4)
-       and ($5::timestamptz is null or m.start_at is null
-            or abs(extract(epoch from (m.start_at - $5::timestamptz))) < $6::float8 * 86400)
-     order by case when $5::timestamptz is null or m.start_at is null then 0
-                   else abs(extract(epoch from (m.start_at - $5::timestamptz))) end
-     limit 1`,
-    [competitionId, homeId, awayId, source, startAt, windowDays],
-  );
-  return byTeams ? { row: byTeams, linked: false } : null;
 }
