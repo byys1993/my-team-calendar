@@ -27,7 +27,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      # 평소 10초. npm 저장소가 느린 날 멈춰 있지 않게 5분에 끊는다 (다음 시간 실행이 다시 시도)
+      - run: npm ci --no-audit --no-fund
+        timeout-minutes: 5
       # 평소 5초. DB 접속 문제로 멈추면 3분 만에 끊어서 다음 실행이 밀리지 않게 한다
       - run: npm run db:setup
         timeout-minutes: 3
