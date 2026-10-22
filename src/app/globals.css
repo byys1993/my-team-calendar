@@ -550,6 +550,15 @@ a {
   flex-direction: column;
 }
 
+/* 팀 목록만 줄어들며 스크롤되고, 제목·검색·종목 탭·하단 버튼은 높이를 지킨다 */
+.picker[open] > :not(.picker-body) {
+  flex: none;
+}
+
+.picker-body {
+  min-height: 0;
+}
+
 .picker::backdrop {
   background: rgb(0 0 0 / 0.45);
 }
@@ -588,9 +597,9 @@ a {
 
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   padding: 0 16px 8px;
-  overflow-x: auto;
 }
 
 .tab {
