@@ -26,6 +26,8 @@ export const ja: Messages = {
     dataSources: "データ提供元",
     disclaimer: "非営利の個人プロジェクトです。日程は変更されることがあるので、公式発表もあわせてご確認ください。",
     privacy: "プライバシー",
+    contact: "お問い合わせ・ご提案",
+    contactHint: "追加してほしいリーグ、日程の誤り、改善のアイデアがあればメールでお知らせください：",
   },
   calendar: {
     prevMonth: "前の月",
@@ -40,6 +42,8 @@ export const ja: Messages = {
     full: "最大 {max} チームまで選べます。別のチームを外すと追加できます。",
     noResults: "見つかりませんでした。",
     done: "完了",
+    reset: "リセット",
+    confirmReset: "選んだチームをすべて外しますか？",
   },
   match: {
     vs: "vs",

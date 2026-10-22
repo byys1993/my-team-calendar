@@ -10,10 +10,11 @@ interface Props {
   selections: Selection[];
   onAdd(slug: string): void;
   onRemove(slug: string): void;
+  onClear(): void;
   onClose(): void;
 }
 
-export function TeamPicker({ catalog, selections, onAdd, onRemove, onClose }: Props) {
+export function TeamPicker({ catalog, selections, onAdd, onRemove, onClear, onClose }: Props) {
   const { m: t, t: fmt } = useI18n();
   const dialog = useRef<HTMLDialogElement>(null);
   const [sport, setSport] = useState(catalog.sports[0]?.slug ?? "");
@@ -96,6 +97,17 @@ export function TeamPicker({ catalog, selections, onAdd, onRemove, onClose }: Pr
         ))}
       </div>
       <div className="picker-foot">
+        {/* 고른 팀을 한 번에 모두 빼기 */}
+        <button
+          type="button"
+          className="ghost"
+          disabled={selections.length === 0}
+          onClick={() => {
+            if (confirm(t.picker.confirmReset)) onClear();
+          }}
+        >
+          {t.picker.reset}
+        </button>
         <button type="button" className="primary" onClick={() => dialog.current?.close()}>
           {t.picker.done}
         </button>

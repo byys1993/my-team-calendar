@@ -27,6 +27,8 @@ export const pt: Messages = {
     disclaimer:
       "Projeto pessoal sem fins comerciais. Os horários podem mudar; confira também os anúncios oficiais.",
     privacy: "Privacidade",
+    contact: "Dúvidas e sugestões",
+    contactHint: "Quer outra liga, achou um horário errado ou tem uma ideia? Mande um e-mail:",
   },
   calendar: {
     prevMonth: "Mês anterior",
@@ -41,6 +43,8 @@ export const pt: Messages = {
     full: "Você pode escolher até {max} times. Remova um para adicionar outro.",
     noResults: "Nenhum resultado.",
     done: "Concluir",
+    reset: "Limpar",
+    confirmReset: "Remover todos os times escolhidos?",
   },
   match: {
     vs: "x",

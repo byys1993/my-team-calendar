@@ -30,7 +30,15 @@ import {
 const UPCOMING_LIMIT = 15;
 
 // loginEnabled: 메일 발송이 설정되지 않은 운영 환경에서는 로그인 버튼을 숨긴다 (로그인 없이도 모든 기능 사용 가능)
-export function CalendarApp({ catalog, loginEnabled }: { catalog: Catalog; loginEnabled: boolean }) {
+export function CalendarApp({
+  catalog,
+  loginEnabled,
+  contactEmail,
+}: {
+  catalog: Catalog;
+  loginEnabled: boolean;
+  contactEmail: string | null;
+}) {
   const { m: t, t: fmt, intl, locale } = useI18n();
   const display: Display = useMemo(
     () => ({ label: (raw) => formatLabel(raw, t) ?? raw, title: (raw) => formatTitle(raw, t, locale) ?? raw }),
@@ -38,7 +46,7 @@ export function CalendarApp({ catalog, loginEnabled }: { catalog: Catalog; login
   );
   const teamsBySlug = useMemo(() => new Map(catalog.teams.map((t) => [t.slug, t])), [catalog.teams]);
   const compsBySlug = useMemo(() => new Map(catalog.competitions.map((c) => [c.slug, c])), [catalog.competitions]);
-  const { list: selections, loaded, add, remove, toggle, replace } = useSelection(catalog.teams.map((t) => t.slug));
+  const { list: selections, loaded, add, remove, toggle, replace, clear } = useSelection(catalog.teams.map((t) => t.slug));
   const auth = useAccount();
   const { account, checked, save } = auth;
   const router = useRouter();
@@ -331,6 +339,15 @@ export function CalendarApp({ catalog, loginEnabled }: { catalog: Catalog; login
               </li>
             ))}
           </ul>
+          {contactEmail && (
+            <div className="contact">
+              <h2>{t.app.contact}</h2>
+              <p>
+                {t.app.contactHint}{" "}
+                <a href={`mailto:${contactEmail}?subject=${encodeURIComponent(t.app.title)}`}>{contactEmail}</a>
+              </p>
+            </div>
+          )}
           <p className="muted">{t.app.disclaimer}</p>
           <p>
             <a href="/privacy">{t.app.privacy}</a>
@@ -344,6 +361,7 @@ export function CalendarApp({ catalog, loginEnabled }: { catalog: Catalog; login
           selections={selections}
           onAdd={add}
           onRemove={remove}
+          onClear={clear}
           onClose={() => setPickerOpen(false)}
         />
       )}

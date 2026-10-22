@@ -27,6 +27,8 @@ export const en = {
     disclaimer:
       "A non-commercial personal project. Schedules can change, so please check official announcements as well.",
     privacy: "Privacy",
+    contact: "Questions & suggestions",
+    contactHint: "Want another league added, found a wrong schedule, or have an idea? Email us:",
   },
   calendar: {
     prevMonth: "Previous month",
@@ -41,6 +43,8 @@ export const en = {
     full: "You can pick up to {max} teams. Remove one to add another.",
     noResults: "No results.",
     done: "Done",
+    reset: "Reset",
+    confirmReset: "Remove all selected teams?",
   },
   match: {
     vs: "vs",

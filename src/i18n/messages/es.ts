@@ -27,6 +27,8 @@ export const es: Messages = {
     disclaimer:
       "Proyecto personal sin fines comerciales. Los horarios pueden cambiar; consulta también los anuncios oficiales.",
     privacy: "Privacidad",
+    contact: "Consultas y sugerencias",
+    contactHint: "¿Quieres que añadamos otra liga, encontraste un horario incorrecto o tienes una idea? Escríbenos:",
   },
   calendar: {
     prevMonth: "Mes anterior",
@@ -41,6 +43,8 @@ export const es: Messages = {
     full: "Puedes elegir hasta {max} equipos. Quita uno para añadir otro.",
     noResults: "Sin resultados.",
     done: "Listo",
+    reset: "Restablecer",
+    confirmReset: "¿Quitar todos los equipos elegidos?",
   },
   match: {
     vs: "vs",

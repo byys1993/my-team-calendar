@@ -27,6 +27,8 @@ export const de: Messages = {
     disclaimer:
       "Ein nicht-kommerzielles privates Projekt. Spielpläne können sich ändern – bitte prüfe auch die offiziellen Angaben.",
     privacy: "Datenschutz",
+    contact: "Fragen & Vorschläge",
+    contactHint: "Wunsch nach einer weiteren Liga, falscher Spielplan oder eine Idee? Schreib uns:",
   },
   calendar: {
     prevMonth: "Vorheriger Monat",
@@ -41,6 +43,8 @@ export const de: Messages = {
     full: "Du kannst bis zu {max} Teams wählen. Entferne eines, um ein anderes hinzuzufügen.",
     noResults: "Keine Treffer.",
     done: "Fertig",
+    reset: "Zurücksetzen",
+    confirmReset: "Alle gewählten Teams entfernen?",
   },
   match: {
     vs: "vs",

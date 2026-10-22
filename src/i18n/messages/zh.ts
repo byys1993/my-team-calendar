@@ -26,6 +26,8 @@ export const zh: Messages = {
     dataSources: "数据来源",
     disclaimer: "这是一个非商业的个人项目。赛程可能会变动，请同时查看官方公告。",
     privacy: "隐私说明",
+    contact: "咨询与建议",
+    contactHint: "想添加其他联赛、发现赛程有误或有改进建议？请发邮件给我们：",
   },
   calendar: {
     prevMonth: "上个月",
@@ -40,6 +42,8 @@ export const zh: Messages = {
     full: "最多可选 {max} 支球队。移除一支后才能添加。",
     noResults: "没有找到结果。",
     done: "完成",
+    reset: "重置",
+    confirmReset: "要清除所有已选球队吗？",
   },
   match: {
     vs: "vs",

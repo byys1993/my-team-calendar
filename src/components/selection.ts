@@ -89,5 +89,7 @@ export function useSelection(validSlugs: string[]) {
     [update, key],
   );
 
-  return { list, loaded, add, remove, toggle, replace };
+  const clear = useCallback(() => update(() => []), [update]);
+
+  return { list, loaded, add, remove, toggle, replace, clear };
 }

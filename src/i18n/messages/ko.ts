@@ -26,6 +26,8 @@ export const ko: Messages = {
     dataSources: "데이터 출처",
     disclaimer: "비상업 개인 프로젝트입니다. 일정은 각 리그 사정으로 바뀔 수 있으니 공식 발표를 함께 확인해 주세요.",
     privacy: "개인정보 처리 안내",
+    contact: "문의·제안",
+    contactHint: "추가하고 싶은 리그, 잘못된 일정, 개선 아이디어가 있으면 메일로 알려 주세요:",
   },
   calendar: {
     prevMonth: "이전 달",
@@ -40,6 +42,8 @@ export const ko: Messages = {
     full: "최대 {max}팀까지 선택할 수 있어요. 다른 팀을 빼면 추가할 수 있습니다.",
     noResults: "검색 결과가 없습니다.",
     done: "완료",
+    reset: "초기화",
+    confirmReset: "선택한 팀을 모두 지울까요?",
   },
   match: {
     vs: "vs",
