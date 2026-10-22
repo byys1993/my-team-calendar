@@ -175,6 +175,18 @@ export function CalendarApp({
     return result;
   }, [matches, selections, nowMs, display]);
 
+  // 다음 경기 카드: 켜 둔 팀의 임박한 경기부터, 꺼 둔 팀은 그 뒤, 예정 경기가 없는 팀은 맨 뒤 (같으면 고른 순서)
+  const cardOrder = useMemo(() => {
+    const rank = (s: (typeof selections)[number]) => {
+      const v = nextByTeam.get(s.slug);
+      return [v ? 0 : 1, s.enabled ? 0 : 1, v ? matchSortTime(v.match) : 0];
+    };
+    return [...selections].sort((x, y) => {
+      const [a, b] = [rank(x), rank(y)];
+      return a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+    });
+  }, [selections, nextByTeam]);
+
   const relevantComps = useMemo(() => {
     const slugs = new Set<string>();
     for (const s of selections) {
@@ -256,7 +268,7 @@ export function CalendarApp({
 
       {selections.length > 0 && (
         <section className="next-cards" aria-label={t.app.upcoming}>
-          {selections.map((s) => {
+          {cardOrder.map((s) => {
             const v = nextByTeam.get(s.slug);
             const days = v && todayKey ? daysBetween(todayKey, matchDateKey(v.match, tz)) : null;
             return (
