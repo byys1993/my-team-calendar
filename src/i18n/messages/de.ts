@@ -89,6 +89,8 @@ export const de: Messages = {
       sf: "Halbfinale",
       third: "Spiel um Platz 3",
       final: "Finale",
+      kl_final_a: "Finalrunde A",
+      kl_final_b: "Finalrunde B",
     },
     series: {
       ws: "World Series",
@@ -105,6 +107,17 @@ export const de: Messages = {
       kbl_6po: "Play-offs, erste Runde",
       kbl_4po: "Play-off-Halbfinale",
       kbl_final: "Meisterschaftsfinale",
+      kl_promo: "Relegation",
+      kl2_semi_po: "Halbfinal-Playoff",
+      kl2_po: "Playoff",
+    },
+    intl: {
+      friendly: "Freundschaftsspiel",
+      world_cup: "FIFA-Weltmeisterschaft",
+      wcq: "WM-Qualifikation (AFC)",
+      asian_cup: "Asienmeisterschaft",
+      asian_cup_q: "Asienmeisterschaft-Quali.",
+      eaff: "EAFF E-1 Meisterschaft",
     },
     lol: {
       swiss: "Schweizer Phase",

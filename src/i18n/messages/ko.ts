@@ -88,6 +88,8 @@ export const ko: Messages = {
       sf: "4강",
       third: "3·4위전",
       final: "결승",
+      kl_final_a: "파이널A",
+      kl_final_b: "파이널B",
     },
     series: {
       ws: "월드시리즈",
@@ -104,6 +106,17 @@ export const ko: Messages = {
       kbl_6po: "6강 플레이오프",
       kbl_4po: "4강 플레이오프",
       kbl_final: "챔피언결정전",
+      kl_promo: "승강 플레이오프",
+      kl2_semi_po: "준플레이오프",
+      kl2_po: "플레이오프",
+    },
+    intl: {
+      friendly: "친선 경기",
+      world_cup: "FIFA 월드컵",
+      wcq: "월드컵 아시아 예선",
+      asian_cup: "AFC 아시안컵",
+      asian_cup_q: "아시안컵 예선",
+      eaff: "동아시안컵",
     },
     lol: {
       swiss: "스위스 스테이지",

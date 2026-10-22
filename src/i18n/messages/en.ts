@@ -89,6 +89,8 @@ export const en = {
       sf: "Semi-finals",
       third: "Third place",
       final: "Final",
+      kl_final_a: "Final Round A",
+      kl_final_b: "Final Round B",
     },
     series: {
       ws: "World Series",
@@ -105,6 +107,17 @@ export const en = {
       kbl_6po: "First-round playoffs",
       kbl_4po: "Semifinal playoffs",
       kbl_final: "Championship Finals",
+      kl_promo: "Promotion-relegation playoff",
+      kl2_semi_po: "Semi-playoff",
+      kl2_po: "Playoff",
+    },
+    intl: {
+      friendly: "Friendly",
+      world_cup: "FIFA World Cup",
+      wcq: "World Cup qualifier (AFC)",
+      asian_cup: "AFC Asian Cup",
+      asian_cup_q: "Asian Cup qualifier",
+      eaff: "EAFF E-1 Championship",
     },
     lol: {
       swiss: "Swiss stage",

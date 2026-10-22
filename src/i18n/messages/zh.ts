@@ -88,6 +88,8 @@ export const zh: Messages = {
       sf: "半决赛",
       third: "季军赛",
       final: "决赛",
+      kl_final_a: "决赛轮A组",
+      kl_final_b: "决赛轮B组",
     },
     series: {
       ws: "世界大赛",
@@ -104,6 +106,17 @@ export const zh: Messages = {
       kbl_6po: "季后赛首轮",
       kbl_4po: "季后赛半决赛",
       kbl_final: "总决赛",
+      kl_promo: "升降级附加赛",
+      kl2_semi_po: "准附加赛",
+      kl2_po: "附加赛",
+    },
+    intl: {
+      friendly: "友谊赛",
+      world_cup: "FIFA世界杯",
+      wcq: "世界杯亚洲区预选赛",
+      asian_cup: "亚洲杯",
+      asian_cup_q: "亚洲杯预选赛",
+      eaff: "东亚杯",
     },
     lol: {
       swiss: "瑞士轮",

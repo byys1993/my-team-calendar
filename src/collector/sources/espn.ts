@@ -1,5 +1,6 @@
 import type { Fetcher, MatchStatus, SourceAdapter, SourceMatch } from "../types";
 import { europeanSeason, getJson, sleep } from "./http";
+import { nationKo } from "./nations";
 
 // ESPN 비공식 API. externalId 는 'soccer/eng.1', 'basketball/nba' 같은 경로다.
 // - 축구: scoreboard 날짜 범위 조회가 막혀 있어 리그 팀 목록 + 팀별 남은 일정을 받아 합친다.
@@ -12,6 +13,7 @@ interface EspnCompetitor {
 }
 export interface EspnEvent {
   id: string;
+  league?: { slug?: string; name?: string };
   date: string;
   timeValid?: boolean;
   season?: { year: number; type?: number };
@@ -34,6 +36,21 @@ const STATUS: Record<string, MatchStatus> = {
 };
 
 const isSoccer = (path: string) => path.startsWith("soccer/");
+const isNational = (id: string) => id.startsWith("team:");
+
+// 국가대표 경기의 대회 구분 (ESPN 리그 slug → 라운드 토큰)
+const INTL: Record<string, string> = {
+  "fifa.friendly": "friendly",
+  "fifa.world": "world_cup",
+  "fifa.worldq.afc": "wcq",
+  "afc.asian.cup": "asian_cup",
+  "afc.cupq": "asian_cup_q",
+  "eaff.championship": "eaff",
+};
+export function intlLabel(league?: { slug?: string; name?: string }): string | null {
+  const key = league?.slug ? INTL[league.slug] : undefined;
+  return key ? `@intl:${key}` : league?.name ? `@t:${league.name}` : null;
+}
 
 // 축구 팀 ID는 리그가 달라도 같은 팀이면 같지만, 미국 리그는 종목끼리 ID가 겹쳐서 'nba:1' 처럼 리그를 붙인다.
 export function espnTeamId(path: string, id: string): string {
@@ -132,10 +149,29 @@ export function espn(fetcher: Fetcher = fetch, opts: { delayMs?: number; now?: (
     return [...byId.values()];
   }
 
+  // 국가대표팀 ('team:451' = 대한민국): 남은 일정 + 올해 치른 경기. 상대국은 한국어 이름을 붙여 준다.
+  async function national(externalId: string): Promise<SourceMatch[]> {
+    const id = externalId.slice("team:".length);
+    const byId = new Map<string, SourceMatch>();
+    for (const q of ["fixture=true", `season=${now().getUTCFullYear()}`]) {
+      const sched = await getJson<{ events?: EspnEvent[] }>(fetcher, `${BASE}/soccer/all/teams/${id}/schedule?${q}`);
+      for (const e of sched.events ?? []) {
+        const m = parseEspnEvent(e, "soccer/all");
+        if (!m) continue;
+        for (const t of [m.home, m.away]) if (t) t.nameKo = nationKo(t.name);
+        byId.set(m.externalId, { ...m, season: e.date.slice(0, 4), roundLabel: intlLabel(e.league) });
+      }
+      if (delayMs) await sleep(delayMs);
+    }
+    return [...byId.values()];
+  }
+
   return {
     source: "espn",
-    fetchMatches: (path) => (isSoccer(path) ? soccer(path) : byDates(path, monthRange(now()))),
+    fetchMatches: (path) =>
+      isNational(path) ? national(path) : isSoccer(path) ? soccer(path) : byDates(path, monthRange(now())),
     fetchRecent: (path) => {
+      if (isNational(path)) return national(path);
       if (isSoccer(path)) return soccer(path);
       const t = now().getTime();
       return byDates(path, [-1, 0, 1].map((d) => ymd(new Date(t + d * 86_400_000))));

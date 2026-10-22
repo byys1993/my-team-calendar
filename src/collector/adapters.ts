@@ -3,6 +3,7 @@ import { jolpica, openF1 } from "./sources/f1";
 import { footballData } from "./sources/footballData";
 import { kbl } from "./sources/kbl";
 import { kbo } from "./sources/kbo";
+import { kleague } from "./sources/kleague";
 import { lolesports } from "./sources/lolesports";
 import { mlb } from "./sources/mlb";
 import { nhl } from "./sources/nhl";
@@ -20,6 +21,7 @@ export function defaultAdapters(env: NodeJS.ProcessEnv = process.env): Record<st
     lolesports(fetch, { apiKey: env.LOLESPORTS_API_KEY }),
     kbo(),
     kbl(),
+    kleague(),
   ];
   return Object.fromEntries(list.map((a) => [a.source, a]));
 }

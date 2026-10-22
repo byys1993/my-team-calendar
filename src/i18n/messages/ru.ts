@@ -89,6 +89,8 @@ export const ru: Messages = {
       sf: "1/2 финала",
       third: "Матч за 3-е место",
       final: "Финал",
+      kl_final_a: "Финальный раунд A",
+      kl_final_b: "Финальный раунд B",
     },
     series: {
       ws: "Мировая серия",
@@ -105,6 +107,17 @@ export const ru: Messages = {
       kbl_6po: "Первый раунд плей-офф",
       kbl_4po: "Полуфинал плей-офф",
       kbl_final: "Финал чемпионата",
+      kl_promo: "Стыковые матчи",
+      kl2_semi_po: "Полуфинал плей-офф",
+      kl2_po: "Плей-офф",
+    },
+    intl: {
+      friendly: "Товарищеский матч",
+      world_cup: "Чемпионат мира FIFA",
+      wcq: "Отбор ЧМ (АФК)",
+      asian_cup: "Кубок Азии",
+      asian_cup_q: "Отбор Кубка Азии",
+      eaff: "Чемпионат EAFF E-1",
     },
     lol: {
       swiss: "Швейцарский этап",

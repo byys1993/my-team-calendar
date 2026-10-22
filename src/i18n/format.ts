@@ -5,7 +5,7 @@ import { fmt, type Messages } from "./index";
 //
 // 라운드 토큰: '@' 로 시작하는 조각을 '|' 로 잇는다. 예) '@stage:league|@md:3', '@series:ws|@game:5', '@lol:swiss|@bo:1'
 //   @md:N  @round:N  @week:N  @game:N  @stage:<key>  @series:<key>  @playoffs[:N]  @postseason
-//   @bo:N  @lol:<key>  @tbd  @t:<원문>
+//   @bo:N  @lol:<key>  @intl:<key>  @tbd  @t:<원문>
 // '@' 로 시작하지 않으면 원문 그대로 보여준다 (ESPN 영문 비고, 관리자가 입력한 KBL 문구 등).
 // F1 제목: '@f1:<영문 그랑프리 이름>:<race|qualifying|sprint>'
 
@@ -63,6 +63,8 @@ function segment(seg: string, m: Messages): string {
       return (m.round.stage as Record<string, string>)[arg] ?? arg;
     case "series":
       return (m.round.series as Record<string, string>)[arg] ?? arg;
+    case "intl":
+      return (m.round.intl as Record<string, string>)[arg] ?? arg;
     case "lol":
       return (m.round.lol as Record<string, string>)[arg] ?? arg;
     case "playoffs":

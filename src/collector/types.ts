@@ -4,6 +4,8 @@ export interface SourceTeam {
   externalId: string;
   name: string;
   shortName?: string;
+  // 시드에 없는 팀을 새로 만들 때 쓸 한국어 이름 (국가대표 상대국 등)
+  nameKo?: string;
 }
 
 // 모든 소스의 응답을 이 형태로 바꾼 뒤 저장한다.

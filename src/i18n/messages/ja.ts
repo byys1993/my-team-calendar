@@ -88,6 +88,8 @@ export const ja: Messages = {
       sf: "準決勝",
       third: "3 位決定戦",
       final: "決勝",
+      kl_final_a: "ファイナルA",
+      kl_final_b: "ファイナルB",
     },
     series: {
       ws: "ワールドシリーズ",
@@ -104,6 +106,17 @@ export const ja: Messages = {
       kbl_6po: "プレーオフ 1 回戦",
       kbl_4po: "プレーオフ準決勝",
       kbl_final: "チャンピオンシップファイナル",
+      kl_promo: "昇降格プレーオフ",
+      kl2_semi_po: "準プレーオフ",
+      kl2_po: "プレーオフ",
+    },
+    intl: {
+      friendly: "親善試合",
+      world_cup: "FIFAワールドカップ",
+      wcq: "W杯アジア予選",
+      asian_cup: "AFCアジアカップ",
+      asian_cup_q: "アジアカップ予選",
+      eaff: "E-1選手権",
     },
     lol: {
       swiss: "スイスステージ",

@@ -1,0 +1,442 @@
+{
+  "competitions": [
+    {
+      "slug": "korea-national",
+      "sport": "soccer",
+      "name_ko": "대한민국 국가대표 A매치",
+      "type": "intl",
+      "display_order": 1,
+      "sources": [
+        {
+          "source": "espn",
+          "external_id": "team:451"
+        }
+      ]
+    },
+    {
+      "slug": "k-league-1",
+      "sport": "soccer",
+      "name_ko": "K리그1",
+      "type": "league",
+      "display_order": 2,
+      "sources": [
+        {
+          "source": "kleague",
+          "external_id": "1"
+        }
+      ]
+    },
+    {
+      "slug": "k-league-2",
+      "sport": "soccer",
+      "name_ko": "K리그2",
+      "type": "league",
+      "display_order": 3,
+      "sources": [
+        {
+          "source": "kleague",
+          "external_id": "2"
+        }
+      ]
+    }
+  ],
+  "competitionNames": {
+    "korea-national": {
+      "en": "South Korea national team",
+      "zh": "韩国国家队",
+      "ja": "サッカー韓国代表",
+      "es": "Selección de Corea del Sur",
+      "fr": "Équipe de Corée du Sud",
+      "de": "Südkoreanische Nationalmannschaft",
+      "pt": "Seleção da Coreia do Sul",
+      "ru": "Сборная Южной Кореи",
+      "ar": "منتخب كوريا الجنوبية"
+    },
+    "k-league-1": {
+      "en": "K League 1",
+      "zh": "K联赛1",
+      "ja": "Kリーグ1",
+      "es": "K League 1",
+      "fr": "K League 1",
+      "de": "K League 1",
+      "pt": "K League 1",
+      "ru": "K League 1",
+      "ar": "الدوري الكوري 1"
+    },
+    "k-league-2": {
+      "en": "K League 2",
+      "zh": "K联赛2",
+      "ja": "Kリーグ2",
+      "es": "K League 2",
+      "fr": "K League 2",
+      "de": "K League 2",
+      "pt": "K League 2",
+      "ru": "K League 2",
+      "ar": "الدوري الكوري 2"
+    }
+  },
+  "teams": [
+    {
+      "slug": "korea-national",
+      "sport": "soccer",
+      "competition": "korea-national",
+      "name_ko": "대한민국",
+      "short_ko": "대한민국",
+      "name_en": "South Korea",
+      "aliases": [
+        "Korea Republic"
+      ],
+      "refs": {
+        "espn": "451"
+      }
+    },
+    {
+      "slug": "kl-gangwon",
+      "sport": "soccer",
+      "competition": "k-league-1",
+      "name_ko": "강원FC",
+      "short_ko": "강원",
+      "name_en": "Gangwon FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K21"
+      }
+    },
+    {
+      "slug": "kl-gwangju",
+      "sport": "soccer",
+      "competition": "k-league-1",
+      "name_ko": "광주FC",
+      "short_ko": "광주",
+      "name_en": "Gwangju FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K22"
+      }
+    },
+    {
+      "slug": "kl-gimcheon-sangmu",
+      "sport": "soccer",
+      "competition": "k-league-1",
+      "name_ko": "김천 상무",
+      "short_ko": "김천",
+      "name_en": "Gimcheon Sangmu",
+      "aliases": [],
+      "refs": {
+        "kleague": "K35"
+      }
+    },
+    {
+      "slug": "kl-daejeon-hana-citizen",
+      "sport": "soccer",
+      "competition": "k-league-1",
+      "name_ko": "대전 하나 시티즌",
+      "short_ko": "대전",
+      "name_en": "Daejeon Hana Citizen",
+      "aliases": [],
+      "refs": {
+        "kleague": "K10"
+      }
+    },
+    {
+      "slug": "kl-bucheon",
+      "sport": "soccer",
+      "competition": "k-league-1",
+      "name_ko": "부천FC1995",
+      "short_ko": "부천",
+      "name_en": "Bucheon FC 1995",
+      "aliases": [],
+      "refs": {
+        "kleague": "K26"
+      }
+    },
+    {
+      "slug": "kl-seoul",
+      "sport": "soccer",
+      "competition": "k-league-1",
+      "name_ko": "FC서울",
+      "short_ko": "서울",
+      "name_en": "FC Seoul",
+      "aliases": [],
+      "refs": {
+        "kleague": "K09"
+      }
+    },
+    {
+      "slug": "kl-anyang",
+      "sport": "soccer",
+      "competition": "k-league-1",
+      "name_ko": "FC안양",
+      "short_ko": "안양",
+      "name_en": "FC Anyang",
+      "aliases": [],
+      "refs": {
+        "kleague": "K27"
+      }
+    },
+    {
+      "slug": "kl-ulsan-hd",
+      "sport": "soccer",
+      "competition": "k-league-1",
+      "name_ko": "울산 HD",
+      "short_ko": "울산",
+      "name_en": "Ulsan HD",
+      "aliases": [],
+      "refs": {
+        "kleague": "K01"
+      }
+    },
+    {
+      "slug": "kl-incheon-united",
+      "sport": "soccer",
+      "competition": "k-league-1",
+      "name_ko": "인천 유나이티드",
+      "short_ko": "인천",
+      "name_en": "Incheon United",
+      "aliases": [],
+      "refs": {
+        "kleague": "K18"
+      }
+    },
+    {
+      "slug": "kl-jeonbuk-hyundai-motors",
+      "sport": "soccer",
+      "competition": "k-league-1",
+      "name_ko": "전북 현대",
+      "short_ko": "전북",
+      "name_en": "Jeonbuk Hyundai Motors",
+      "aliases": [],
+      "refs": {
+        "kleague": "K05"
+      }
+    },
+    {
+      "slug": "kl-jeju-sk",
+      "sport": "soccer",
+      "competition": "k-league-1",
+      "name_ko": "제주SK FC",
+      "short_ko": "제주",
+      "name_en": "Jeju SK FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K04"
+      }
+    },
+    {
+      "slug": "kl-pohang-steelers",
+      "sport": "soccer",
+      "competition": "k-league-1",
+      "name_ko": "포항 스틸러스",
+      "short_ko": "포항",
+      "name_en": "Pohang Steelers",
+      "aliases": [],
+      "refs": {
+        "kleague": "K03"
+      }
+    },
+    {
+      "slug": "kl-gyeongnam",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "경남FC",
+      "short_ko": "경남",
+      "name_en": "Gyeongnam FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K20"
+      }
+    },
+    {
+      "slug": "kl-gimpo",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "김포FC",
+      "short_ko": "김포",
+      "name_en": "Gimpo FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K36"
+      }
+    },
+    {
+      "slug": "kl-gimhae",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "김해FC2008",
+      "short_ko": "김해",
+      "name_en": "Gimhae FC 2008",
+      "aliases": [],
+      "refs": {
+        "kleague": "K41"
+      }
+    },
+    {
+      "slug": "kl-daegu",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "대구FC",
+      "short_ko": "대구",
+      "name_en": "Daegu FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K17"
+      }
+    },
+    {
+      "slug": "kl-busan-ipark",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "부산 아이파크",
+      "short_ko": "부산",
+      "name_en": "Busan IPark",
+      "aliases": [],
+      "refs": {
+        "kleague": "K06"
+      }
+    },
+    {
+      "slug": "kl-seoul-e-land",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "서울 이랜드",
+      "short_ko": "서울E",
+      "name_en": "Seoul E-Land",
+      "aliases": [],
+      "refs": {
+        "kleague": "K31"
+      }
+    },
+    {
+      "slug": "kl-seongnam",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "성남FC",
+      "short_ko": "성남",
+      "name_en": "Seongnam FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K08"
+      }
+    },
+    {
+      "slug": "kl-suwon-samsung-bluewings",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "수원 삼성",
+      "short_ko": "수원",
+      "name_en": "Suwon Samsung Bluewings",
+      "aliases": [],
+      "refs": {
+        "kleague": "K02"
+      }
+    },
+    {
+      "slug": "kl-suwon-fc",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "수원FC",
+      "short_ko": "수원FC",
+      "name_en": "Suwon FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K29"
+      }
+    },
+    {
+      "slug": "kl-ansan-greeners",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "안산 그리너스",
+      "short_ko": "안산",
+      "name_en": "Ansan Greeners",
+      "aliases": [],
+      "refs": {
+        "kleague": "K32"
+      }
+    },
+    {
+      "slug": "kl-yongin",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "용인FC",
+      "short_ko": "용인",
+      "name_en": "Yongin FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K42"
+      }
+    },
+    {
+      "slug": "kl-jeonnam-dragons",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "전남 드래곤즈",
+      "short_ko": "전남",
+      "name_en": "Jeonnam Dragons",
+      "aliases": [],
+      "refs": {
+        "kleague": "K07"
+      }
+    },
+    {
+      "slug": "kl-cheonan-city",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "천안시티FC",
+      "short_ko": "천안",
+      "name_en": "Cheonan City FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K38"
+      }
+    },
+    {
+      "slug": "kl-chungnam-asan",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "충남 아산 FC",
+      "short_ko": "충남아산",
+      "name_en": "Chungnam Asan FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K34"
+      }
+    },
+    {
+      "slug": "kl-chungbuk-cheongju",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "충북 청주FC",
+      "short_ko": "충북청주",
+      "name_en": "Chungbuk Cheongju FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K37"
+      }
+    },
+    {
+      "slug": "kl-paju-frontier",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "파주프런티어FC",
+      "short_ko": "파주",
+      "name_en": "Paju Frontier FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K40"
+      }
+    },
+    {
+      "slug": "kl-hwaseong",
+      "sport": "soccer",
+      "competition": "k-league-2",
+      "name_ko": "화성FC",
+      "short_ko": "화성",
+      "name_en": "Hwaseong FC",
+      "aliases": [],
+      "refs": {
+        "kleague": "K39"
+      }
+    }
+  ]
+}

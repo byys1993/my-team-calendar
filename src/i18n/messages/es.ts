@@ -89,6 +89,8 @@ export const es: Messages = {
       sf: "Semifinales",
       third: "Tercer puesto",
       final: "Final",
+      kl_final_a: "Ronda final A",
+      kl_final_b: "Ronda final B",
     },
     series: {
       ws: "Serie Mundial",
@@ -105,6 +107,17 @@ export const es: Messages = {
       kbl_6po: "Primera ronda de playoffs",
       kbl_4po: "Semifinales de playoffs",
       kbl_final: "Final del campeonato",
+      kl_promo: "Promoción de ascenso",
+      kl2_semi_po: "Semifinal de promoción",
+      kl2_po: "Promoción",
+    },
+    intl: {
+      friendly: "Amistoso",
+      world_cup: "Copa Mundial de la FIFA",
+      wcq: "Eliminatoria mundialista (AFC)",
+      asian_cup: "Copa Asiática",
+      asian_cup_q: "Clasificación Copa Asiática",
+      eaff: "Campeonato EAFF E-1",
     },
     lol: {
       swiss: "Fase suiza",

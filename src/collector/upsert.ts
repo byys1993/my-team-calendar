@@ -115,10 +115,10 @@ class TeamResolver {
     const slug = `${this.source}-${team.externalId}`.toLowerCase().replace(/[^a-z0-9-]+/g, "-");
     const [{ id }] = await this.db.query<{ id: number }>(
       `insert into team (sport_id, slug, name_ko, short_ko, name_en, needs_review)
-       values ((select sport_id from competition where id = $1), $2, $3, $4, $3, true)
+       values ((select sport_id from competition where id = $1), $2, coalesce($5, $3), $4, $3, $5::text is null)
        on conflict (slug) do update set name_en = excluded.name_en
        returning id`,
-      [this.competitionId, slug, team.name, team.shortName ?? null],
+      [this.competitionId, slug, team.name, team.nameKo ?? team.shortName ?? null, team.nameKo ?? null],
     );
     await this.db.query(
       `insert into team_source_ref (team_id, source, external_id, raw_name) values ($1, $2, $3, $4)

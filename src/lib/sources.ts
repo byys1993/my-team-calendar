@@ -44,10 +44,18 @@ export const SOURCE_CREDITS: Record<string, { label: string; url: string; text: 
     url: "https://www.kbl.or.kr/",
     text: { ko: "KBL 일정: KBL 공식 홈페이지", en: "KBL schedule: KBL official website" },
   },
+  kleague: {
+    label: "K League",
+    url: "https://www.kleague.com/",
+    text: { ko: "K리그 일정: K리그 공식 홈페이지", en: "K League schedule: K League official website" },
+  },
   espn: {
     label: "ESPN",
     url: "https://www.espn.com/",
-    text: { ko: "NBA·NFL 일정 및 일부 대체 정보: ESPN", en: "NBA/NFL schedules and some fallback data: ESPN" },
+    text: {
+      ko: "NBA·NFL·국가대표 일정 및 일부 대체 정보: ESPN",
+      en: "NBA/NFL/national team schedules and some fallback data: ESPN",
+    },
   },
 };
 
