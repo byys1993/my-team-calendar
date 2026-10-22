@@ -69,6 +69,12 @@ export const fr: Messages = {
     postponed: "Reporté",
     cancelled: "Annulé",
   },
+  stats: {
+    label: "Visiteurs",
+    online: "En ligne",
+    today: "Aujourd'hui",
+    total: "Total",
+  },
   notify: {
     title: "Alertes de matchs par e-mail",
     enable: "Recevoir les alertes de matchs par e-mail",
@@ -193,6 +199,7 @@ export const fr: Messages = {
       "Les e-mails de connexion sont envoyés par notre prestataire d'e-mails (Resend). Les données sont hébergées chez nos hébergeurs (Vercel, Supabase).",
       "Vous pouvez supprimer votre compte et toutes les données enregistrées à tout moment depuis le menu du compte.",
       "Sans connexion, vos équipes sont enregistrées uniquement dans ce navigateur.",
+      "Pour compter les visiteurs, nous enregistrons un identifiant anonyme aléatoire dans votre navigateur, sans lien avec votre compte ni votre IP.",
     ],
     back: "Retour au calendrier",
   },

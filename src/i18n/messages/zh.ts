@@ -68,6 +68,12 @@ export const zh: Messages = {
     postponed: "延期",
     cancelled: "取消",
   },
+  stats: {
+    label: "访问人数",
+    online: "在线",
+    today: "今日",
+    total: "累计",
+  },
   notify: {
     title: "比赛提醒邮件",
     enable: "接收比赛提醒邮件",
@@ -192,6 +198,7 @@ export const zh: Messages = {
       "登录邮件通过邮件发送服务（Resend）发送，数据存储在托管服务（Vercel、Supabase）中。",
       "你可以随时在账户菜单中删除账户及所有已保存的数据。",
       "不登录时，你选择的球队只保存在此浏览器中。",
+      "为统计访问人数，我们会在浏览器中保存一个随机匿名 ID，不与账户或 IP 关联。",
     ],
     back: "返回日历",
   },

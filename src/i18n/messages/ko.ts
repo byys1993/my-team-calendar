@@ -68,6 +68,12 @@ export const ko: Messages = {
     postponed: "연기",
     cancelled: "취소",
   },
+  stats: {
+    label: "방문자 수",
+    online: "접속 중",
+    today: "오늘",
+    total: "전체",
+  },
   notify: {
     title: "경기 알림 메일",
     enable: "경기 알림 메일 받기",
@@ -192,6 +198,7 @@ export const ko: Messages = {
       "로그인 메일은 메일 발송 서비스(Resend)를 통해 보내고, 데이터는 호스팅 서비스(Vercel, Supabase)에 저장됩니다.",
       "계정 메뉴에서 언제든 계정과 저장된 정보를 모두 삭제할 수 있습니다.",
       "로그인하지 않으면 선택한 팀은 이 브라우저에만 저장됩니다.",
+      "방문자 수를 세기 위해 브라우저에 무작위 익명 ID를 저장합니다. 이 ID는 계정·IP와 연결하지 않습니다.",
     ],
     back: "캘린더로 돌아가기",
   },

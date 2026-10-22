@@ -69,6 +69,12 @@ export const es: Messages = {
     postponed: "Aplazado",
     cancelled: "Cancelado",
   },
+  stats: {
+    label: "Visitantes",
+    online: "En línea",
+    today: "Hoy",
+    total: "Total",
+  },
   notify: {
     title: "Avisos de partidos por correo",
     enable: "Recibir avisos de partidos por correo",
@@ -193,6 +199,7 @@ export const es: Messages = {
       "Los correos de acceso se envían mediante nuestro proveedor de correo (Resend). Los datos se almacenan con nuestros proveedores de alojamiento (Vercel, Supabase).",
       "Puedes eliminar tu cuenta y todos los datos guardados en cualquier momento desde el menú de la cuenta.",
       "Si no inicias sesión, tus equipos solo se guardan en este navegador.",
+      "Para contar visitantes guardamos en tu navegador un ID anónimo aleatorio, sin vincularlo a tu cuenta ni a tu IP.",
     ],
     back: "Volver al calendario",
   },

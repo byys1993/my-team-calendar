@@ -132,6 +132,35 @@ a {
   font-weight: 800;
 }
 
+/* 헤더의 방문자 수 */
+.visitor-stats {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.visitor-stats b {
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.visitor-stats .sep {
+  margin: 0 2px;
+}
+
+.visitor-stats .live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16a34a;
+  margin-inline-end: 2px;
+}
+
 .tz-select {
   font: inherit;
   font-size: 13px;

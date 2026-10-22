@@ -17,6 +17,7 @@ import { TeamPicker } from "./TeamPicker";
 import { viewOf, type Display, type MatchView } from "./matchView";
 import { PALETTE, useSelection } from "./selection";
 import { TimeZoneSelect } from "./TimeZoneSelect";
+import { VisitorStats } from "./VisitorStats";
 import { AUTO, browserTimeZone, isValidTimeZone, TimeZoneProvider, useTimeZonePref } from "./timezone";
 import {
   dateLabel,
@@ -226,6 +227,7 @@ export function CalendarApp({
               }}
             />
           )}
+          <VisitorStats />
         </div>
         <div className="top-actions">
           <LanguageSelect onChange={(l) => account && void save({ locale: l })} />

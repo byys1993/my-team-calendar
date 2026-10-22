@@ -69,6 +69,12 @@ export const en = {
     postponed: "Postponed",
     cancelled: "Cancelled",
   },
+  stats: {
+    label: "Visitors",
+    online: "Online",
+    today: "Today",
+    total: "Total",
+  },
   notify: {
     title: "Match alert emails",
     enable: "Email me match alerts",
@@ -193,6 +199,7 @@ export const en = {
       "Sign-in emails are sent through our email delivery provider (Resend). Data is stored with our hosting providers (Vercel, Supabase).",
       "You can delete your account and all stored data at any time from the account menu.",
       "Without signing in, your teams are stored only in your browser.",
+      "To count visitors, we store a random anonymous ID in your browser. It is not linked to your account or IP address.",
     ],
     back: "Back to calendar",
   },

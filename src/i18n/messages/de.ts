@@ -69,6 +69,12 @@ export const de: Messages = {
     postponed: "Verschoben",
     cancelled: "Abgesagt",
   },
+  stats: {
+    label: "Besucher",
+    online: "Online",
+    today: "Heute",
+    total: "Gesamt",
+  },
   notify: {
     title: "Spiel-Erinnerungen per E-Mail",
     enable: "Spiel-Erinnerungen per E-Mail erhalten",
@@ -193,6 +199,7 @@ export const de: Messages = {
       "Anmelde-E-Mails werden über unseren E-Mail-Dienst (Resend) versendet. Die Daten liegen bei unseren Hosting-Anbietern (Vercel, Supabase).",
       "Du kannst dein Konto und alle gespeicherten Daten jederzeit im Kontomenü löschen.",
       "Ohne Anmeldung werden deine Teams nur in diesem Browser gespeichert.",
+      "Zum Zählen der Besucher speichern wir eine zufällige anonyme ID im Browser. Sie wird nicht mit Konto oder IP verknüpft.",
     ],
     back: "Zurück zum Kalender",
   },

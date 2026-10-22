@@ -69,6 +69,12 @@ export const pt: Messages = {
     postponed: "Adiado",
     cancelled: "Cancelado",
   },
+  stats: {
+    label: "Visitantes",
+    online: "Online",
+    today: "Hoje",
+    total: "Total",
+  },
   notify: {
     title: "Alertas de jogos por e-mail",
     enable: "Receber alertas de jogos por e-mail",
@@ -193,6 +199,7 @@ export const pt: Messages = {
       "Os e-mails de acesso são enviados pelo nosso provedor de e-mail (Resend). Os dados ficam nos nossos provedores de hospedagem (Vercel, Supabase).",
       "Você pode excluir sua conta e todos os dados salvos a qualquer momento no menu da conta.",
       "Sem entrar, seus times ficam salvos apenas neste navegador.",
+      "Para contar visitantes, guardamos no navegador um ID anônimo aleatório, sem ligação com sua conta ou IP.",
     ],
     back: "Voltar ao calendário",
   },
