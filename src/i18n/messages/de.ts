@@ -71,6 +71,7 @@ export const de: Messages = {
   },
   notify: {
     title: "Spiel-Erinnerungen per E-Mail",
+    enable: "Spiel-Erinnerungen per E-Mail erhalten",
     mode: "Senden",
     off: "Nichts",
     daily: "An Spieltagen morgens",

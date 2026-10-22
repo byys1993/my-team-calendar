@@ -70,6 +70,7 @@ export const ar: Messages = {
   },
   notify: {
     title: "رسائل تنبيه المباريات",
+    enable: "تلقي رسائل تنبيه المباريات",
     mode: "الإرسال",
     off: "لا شيء",
     daily: "صباح أيام المباريات",

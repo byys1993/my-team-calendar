@@ -71,6 +71,7 @@ export const es: Messages = {
   },
   notify: {
     title: "Avisos de partidos por correo",
+    enable: "Recibir avisos de partidos por correo",
     mode: "Recibir",
     off: "Nada",
     daily: "Los días de partido, por la mañana",

@@ -71,6 +71,7 @@ export const fr: Messages = {
   },
   notify: {
     title: "Alertes de matchs par e-mail",
+    enable: "Recevoir les alertes de matchs par e-mail",
     mode: "Recevoir",
     off: "Rien",
     daily: "Les jours de match, le matin",

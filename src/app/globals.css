@@ -1038,6 +1038,20 @@ a {
   gap: 10px;
 }
 
+.notify-box .notify-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.notify-box .notify-check input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
 .notify-box legend {
   font-weight: 700;
   font-size: 14px;

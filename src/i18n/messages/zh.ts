@@ -70,6 +70,7 @@ export const zh: Messages = {
   },
   notify: {
     title: "比赛提醒邮件",
+    enable: "接收比赛提醒邮件",
     mode: "接收方式",
     off: "不接收",
     daily: "比赛日早上",

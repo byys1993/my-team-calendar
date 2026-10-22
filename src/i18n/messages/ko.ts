@@ -70,6 +70,7 @@ export const ko: Messages = {
   },
   notify: {
     title: "경기 알림 메일",
+    enable: "경기 알림 메일 받기",
     mode: "받는 방식",
     off: "받지 않기",
     daily: "경기 있는 날 아침",

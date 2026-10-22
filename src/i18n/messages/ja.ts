@@ -70,6 +70,7 @@ export const ja: Messages = {
   },
   notify: {
     title: "試合お知らせメール",
+    enable: "試合お知らせメールを受け取る",
     mode: "受け取り方",
     off: "受け取らない",
     daily: "試合がある日の朝",

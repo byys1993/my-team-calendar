@@ -176,14 +176,24 @@ function NotifySettings({ account, saveNotify, timeZone }: Props & { account: Ac
   return (
     <fieldset className="notify-box">
       <legend>{m.notify.title}</legend>
-      <label>
-        {m.notify.mode}
-        <select value={account.notifyMode} onChange={(e) => void change({ notifyMode: e.target.value as NotifyMode })}>
-          <option value="off">{m.notify.off}</option>
-          <option value="daily">{m.notify.daily}</option>
-          <option value="weekly">{m.notify.weekly}</option>
-        </select>
+      {/* 기본은 꺼짐. 직접 체크해야 받는다 (켜면 '경기 있는 날 아침'부터) */}
+      <label className="notify-check">
+        <input
+          type="checkbox"
+          checked={account.notifyMode !== "off"}
+          onChange={(e) => void change({ notifyMode: e.target.checked ? "daily" : "off" })}
+        />
+        {m.notify.enable}
       </label>
+      {account.notifyMode !== "off" && (
+        <label>
+          {m.notify.mode}
+          <select value={account.notifyMode} onChange={(e) => void change({ notifyMode: e.target.value as NotifyMode })}>
+            <option value="daily">{m.notify.daily}</option>
+            <option value="weekly">{m.notify.weekly}</option>
+          </select>
+        </label>
+      )}
       {account.notifyMode !== "off" && (
         <label>
           {m.notify.hour}
@@ -196,7 +206,7 @@ function NotifySettings({ account, saveNotify, timeZone }: Props & { account: Ac
           </select>
         </label>
       )}
-      <p className="muted">{t(m.notify.hint, { tz: timeZone.replace(/_/g, " ") })}</p>
+      {account.notifyMode !== "off" && <p className="muted">{t(m.notify.hint, { tz: timeZone.replace(/_/g, " ") })}</p>}
       {status === "saved" && <p className="muted">{m.notify.saved}</p>}
       {status === "failed" && <p className="error">{m.auth.failed}</p>}
     </fieldset>

@@ -71,6 +71,7 @@ export const pt: Messages = {
   },
   notify: {
     title: "Alertas de jogos por e-mail",
+    enable: "Receber alertas de jogos por e-mail",
     mode: "Receber",
     off: "Nada",
     daily: "Nos dias de jogo, pela manhã",

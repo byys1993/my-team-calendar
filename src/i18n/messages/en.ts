@@ -71,6 +71,7 @@ export const en = {
   },
   notify: {
     title: "Match alert emails",
+    enable: "Email me match alerts",
     mode: "Send me",
     off: "Nothing",
     daily: "On match days, in the morning",
