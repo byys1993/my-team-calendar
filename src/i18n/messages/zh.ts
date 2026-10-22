@@ -87,6 +87,14 @@ export const zh: Messages = {
     widgetIphone: "iPhone：长按主屏幕，点左上角“+”→ 添加“日历”小组件。",
     note: "更换球队后地址会改变，请重新添加。日历应用刷新可能需要几个小时。",
   },
+  results: {
+    win: "胜",
+    draw: "平",
+    loss: "负",
+    reveal: "查看结果",
+    spoiler: "防剧透",
+    spoilerHint: "开启后隐藏已结束比赛的比分和胜负（适合看回放）",
+  },
   stats: {
     label: "访问人数",
     online: "在线",

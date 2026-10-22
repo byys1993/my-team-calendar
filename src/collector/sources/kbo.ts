@@ -136,6 +136,9 @@ export function parseKboMonth(json: KboResponse, year: number, postseason: boole
     // 끝난 경기는 점수 칸에 win/lose 표시가 붙는다
     const playText = row.find((c) => c.Class === "play")!.Text;
     const won = playText.match(/<span class="win">/) ? (playText.indexOf('class="win"') < playText.indexOf("vs") ? awayCode : homeCode) : null;
+    // 점수 칸: 원정 점수, 홈 점수 순 (무승부는 class="same")
+    const scores = [...playText.matchAll(/<span class="(?:win|lose|same)">(\d+)<\/span>/g)].map((x) => Number(x[1]));
+    const final = scores.length === 2 && status !== "postponed" ? { awayScore: scores[0], homeScore: scores[1] } : {};
     out.push({
       winner: won,
       externalId: gameId,
@@ -148,6 +151,7 @@ export function parseKboMonth(json: KboResponse, year: number, postseason: boole
       status,
       venue,
       broadcast,
+      ...final,
     });
   }
   return out;

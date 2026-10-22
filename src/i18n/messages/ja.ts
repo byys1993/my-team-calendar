@@ -87,6 +87,14 @@ export const ja: Messages = {
     widgetIphone: "iPhone：ホーム画面を長押しし、左上の「+」→「カレンダー」ウィジェットを追加してください。",
     note: "チームを変えるとURLも変わるので、もう一度追加してください。カレンダーアプリの更新には数時間かかることがあります。",
   },
+  results: {
+    win: "勝",
+    draw: "分",
+    loss: "敗",
+    reveal: "結果を見る",
+    spoiler: "ネタバレ防止",
+    spoilerHint: "オンにすると終了した試合のスコアと勝敗を隠します（見逃し配信で見るとき）",
+  },
   stats: {
     label: "訪問者数",
     online: "接続中",

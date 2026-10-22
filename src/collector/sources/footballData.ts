@@ -18,6 +18,7 @@ interface FdMatch {
   season: { startDate: string };
   homeTeam: FdTeam;
   awayTeam: FdTeam;
+  score?: { fullTime?: { home: number | null; away: number | null } };
 }
 
 // SCHEDULED = 날짜만 확정, TIMED = 시각까지 확정
@@ -73,6 +74,10 @@ export function parseFootballData(json: { matches: FdMatch[] }): SourceMatch[] {
       startAt: m.utcDate,
       status,
       venue: m.venue ?? null,
+      // 끝난 경기만 결과를 넣는다 (진행 중 점수는 넣지 않음)
+      ...(m.status === "FINISHED" || m.status === "AWARDED"
+        ? { homeScore: m.score?.fullTime?.home ?? null, awayScore: m.score?.fullTime?.away ?? null }
+        : {}),
     };
   });
 }

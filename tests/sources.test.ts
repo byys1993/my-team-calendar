@@ -442,6 +442,8 @@ describe("ESPN 미국 리그", () => {
     expect(urls).toEqual([
       "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/teams",
       "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.league_cup/teams/359/schedule?fixture=true",
+      // 치른 경기 결과
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.league_cup/teams/359/schedule",
     ]);
     expect(m).toMatchObject({ roundLabel: "Fourth Round", away: { externalId: "359" } });
   });

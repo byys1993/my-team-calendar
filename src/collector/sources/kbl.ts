@@ -81,6 +81,7 @@ export function parseKbl(games: KblGame[]): KblMatch[] {
       status: time ? "scheduled" : "time_tbd",
       venue: g.stadiumnameF || g.stadiumname || null,
       broadcast: normalizeBroadcast(g.tv),
+      ...(ended ? { homeScore: g.scoreH, awayScore: g.scoreA } : {}),
       winner: ended ? (g.scoreH! > g.scoreA! ? g.tcodeH : g.tcodeA) : null,
     };
   });

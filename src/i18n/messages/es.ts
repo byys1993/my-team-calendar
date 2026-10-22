@@ -88,6 +88,14 @@ export const es: Messages = {
     widgetIphone: "iPhone: mantén pulsada la pantalla de inicio, toca '+' arriba a la izquierda → añade el widget 'Calendario'.",
     note: "La URL cambia si cambias de equipos; vuelve a añadirla. Las apps de calendario pueden tardar unas horas en actualizarse.",
   },
+  results: {
+    win: "V",
+    draw: "E",
+    loss: "D",
+    reveal: "Ver resultado",
+    spoiler: "Ocultar resultados",
+    spoilerHint: "Oculta marcadores y resultados (para ver repeticiones después)",
+  },
   stats: {
     label: "Visitantes",
     online: "En línea",

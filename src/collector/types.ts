@@ -27,6 +27,9 @@ export interface SourceMatch {
   isNeutral?: boolean;
   // 국내 중계 채널 (예: 'SPOTV, 쿠팡플레이'). 공식 일정 데이터에 있을 때만.
   broadcast?: string | null;
+  // 끝난 경기의 점수 (e스포츠는 세트 승수). 끝나지 않았으면 비워 둔다.
+  homeScore?: number | null;
+  awayScore?: number | null;
 }
 
 export interface SourceAdapter {

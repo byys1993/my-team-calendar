@@ -31,6 +31,9 @@ export interface KleagueGame {
   fieldName?: string | null;
   codeName?: string | null; // '일반', '스플릿일반', '파이널A', '파이널B', 'Play Off'
   broadcastName?: string | null; // 'JTBC SPORTS//COUPANGPLAY'
+  endYn?: string; // 'Y' 끝남
+  homeGoal?: number | null;
+  awayGoal?: number | null;
 }
 
 // 라운드 표시 토큰: 정규 'N라운드', 파이널 라운드, K리그2 준PO·PO, 승강 PO N차전
@@ -61,6 +64,7 @@ export function parseKleague(games: KleagueGame[]): SourceMatch[] {
         status: time ? "scheduled" : "time_tbd",
         venue: g.fieldNameFull || g.fieldName || null,
         broadcast: normalizeBroadcast(g.broadcastName),
+        ...(g.endYn === "Y" ? { homeScore: g.homeGoal ?? null, awayScore: g.awayGoal ?? null } : {}),
       };
     });
 }

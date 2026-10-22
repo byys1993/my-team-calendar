@@ -8,6 +8,7 @@ const BASE = "https://api-web.nhle.com/v1";
 interface NhlTeam {
   id: number;
   abbrev: string;
+  score?: number;
   placeName?: { default: string };
   commonName?: { default: string };
 }
@@ -17,6 +18,7 @@ interface NhlGame {
   gameType: number; // 1 프리시즌, 2 정규시즌, 3 플레이오프
   startTimeUTC: string;
   gameScheduleState: string;
+  gameState?: string; // FUT 예정, LIVE 진행 중, FINAL·OFF 끝남
   venue?: { default: string };
   neutralSite?: boolean;
   ifNecessary?: boolean;
@@ -48,6 +50,9 @@ export function parseNhlGame(g: NhlGame): SourceMatch | null {
     status,
     venue: g.venue?.default ?? null,
     isNeutral: g.neutralSite ?? false,
+    ...(g.gameState === "FINAL" || g.gameState === "OFF"
+      ? { homeScore: g.homeTeam.score ?? null, awayScore: g.awayTeam.score ?? null }
+      : {}),
   };
 }
 

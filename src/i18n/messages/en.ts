@@ -88,6 +88,14 @@ export const en = {
     widgetIphone: "iPhone: long-press the Home Screen, tap '+' at the top left → add the 'Calendar' widget.",
     note: "The URL changes when you change teams, so add it again. Calendar apps may take a few hours to refresh.",
   },
+  results: {
+    win: "W",
+    draw: "D",
+    loss: "L",
+    reveal: "Show result",
+    spoiler: "Hide scores",
+    spoilerHint: "Hide final scores and results (for watching replays later)",
+  },
   stats: {
     label: "Visitors",
     online: "Online",

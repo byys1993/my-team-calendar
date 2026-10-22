@@ -4,6 +4,8 @@ import { isRtl } from "@/i18n/config";
 import { useI18n } from "@/i18n/client";
 import type { MatchView } from "./matchView";
 import { isTentative } from "./matchView";
+import { resultFor } from "./result";
+import { useSpoiler } from "./spoiler";
 import { dateLabel, isDawn, keyOf, matchTimeLabel, monthLabel, weekdayNames } from "./time";
 import { useTz } from "./timezone";
 
@@ -24,6 +26,7 @@ const MAX_CHIPS = 3;
 export function MonthCalendar({ year, month, todayKey, selectedKey, byDay, teamShort, onSelectDay, onMove, onToday }: Props) {
   const { m: t, intl, locale, t: fmt } = useI18n();
   const tz = useTz();
+  const spoiler = useSpoiler();
   const rtl = isRtl(locale);
   const title = monthLabel(year, month, intl);
   // 달력 칸은 시간대와 무관하게 날짜 숫자로 만든다 (UTC 기준 계산)
@@ -81,22 +84,32 @@ export function MonthCalendar({ year, month, todayKey, selectedKey, byDay, teamS
             >
               <span className="num">{d.day}</span>
               <span className="chips">
-                {items.slice(0, MAX_CHIPS).map((v) => (
-                  <span
-                    key={v.match.id}
-                    className={`chip${isTentative(v.match) ? " tentative" : ""}${v.match.status === "cancelled" ? " cancelled" : ""}`}
-                    style={{ "--team": v.color } as React.CSSProperties}
-                  >
-                    <span className="chip-time">
-                      {isDawn(v.match, tz) && "🌙"}
-                      {matchTimeLabel(v.match, intl, t.match.timeTbdShort, tz)}
+                {items.slice(0, MAX_CHIPS).map((v) => {
+                  // 끝난 경기는 시각 대신 결과 (스포일러 방지 중이면 시각 그대로)
+                  const r = spoiler.hide ? null : resultFor(v.match, v.team);
+                  return (
+                    <span
+                      key={v.match.id}
+                      className={`chip${isTentative(v.match) ? " tentative" : ""}${v.match.status === "cancelled" ? " cancelled" : ""}`}
+                      style={{ "--team": v.color } as React.CSSProperties}
+                    >
+                      {r ? (
+                        <span className={`chip-time chip-result result-${r.outcome}`}>
+                          {t.results[r.outcome]} {r.mine}:{r.theirs}
+                        </span>
+                      ) : (
+                        <span className="chip-time">
+                          {isDawn(v.match, tz) && "🌙"}
+                          {matchTimeLabel(v.match, intl, t.match.timeTbdShort, tz)}
+                        </span>
+                      )}
+                      <span className="chip-text">
+                        {teamShort(v.team)} {v.side ? `${t.match.vs} ` : ""}
+                        {v.opponent}
+                      </span>
                     </span>
-                    <span className="chip-text">
-                      {teamShort(v.team)} {v.side ? `${t.match.vs} ` : ""}
-                      {v.opponent}
-                    </span>
-                  </span>
-                ))}
+                  );
+                })}
                 {items.length > MAX_CHIPS && <span className="more">+{items.length - MAX_CHIPS}</span>}
               </span>
               <span className="dots" aria-hidden>

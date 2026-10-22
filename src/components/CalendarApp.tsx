@@ -19,6 +19,7 @@ import { PALETTE, useSelection } from "./selection";
 import { TimeZoneSelect } from "./TimeZoneSelect";
 import { VisitorStats } from "./VisitorStats";
 import { CalendarSubscribe } from "./CalendarSubscribe";
+import { SpoilerProvider, SpoilerToggle } from "./spoiler";
 import { AUTO, browserTimeZone, isValidTimeZone, TimeZoneProvider, useTimeZonePref } from "./timezone";
 import {
   dateLabel,
@@ -218,6 +219,7 @@ export function CalendarApp({
 
   return (
     <TimeZoneProvider tz={tz}>
+    <SpoilerProvider>
     <div className="app">
       <header className="top">
         <div className="brand">
@@ -283,6 +285,7 @@ export function CalendarApp({
           </span>
         ))}
         <CalendarSubscribe slugs={selections.filter((s) => s.enabled).map((s) => s.slug)} />
+        {selections.length > 0 && <SpoilerToggle />}
       </section>
 
       {error && <p className="error">{error}</p>}
@@ -453,6 +456,7 @@ export function CalendarApp({
         />
       )}
     </div>
+    </SpoilerProvider>
     </TimeZoneProvider>
   );
 }

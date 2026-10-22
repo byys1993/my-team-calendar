@@ -87,6 +87,14 @@ export const ko: Messages = {
     widgetIphone: "iPhone: 홈 화면을 길게 눌러 왼쪽 위 '+' → '캘린더' 위젯을 추가하세요.",
     note: "팀을 바꾸면 주소도 바뀌니 다시 추가해 주세요. 캘린더 앱이 새로 받아오는 데 몇 시간 걸릴 수 있습니다.",
   },
+  results: {
+    win: "승",
+    draw: "무",
+    loss: "패",
+    reveal: "결과 보기",
+    spoiler: "스포일러 방지",
+    spoilerHint: "켜면 끝난 경기의 점수와 승패를 가립니다 (다시보기로 볼 때)",
+  },
   stats: {
     label: "방문자 수",
     online: "접속 중",

@@ -88,6 +88,14 @@ export const fr: Messages = {
     widgetIphone: "iPhone : appui long sur l'écran d'accueil, touchez « + » en haut à gauche → ajoutez le widget « Calendrier ».",
     note: "L'URL change si vous changez d'équipes : ajoutez-la de nouveau. La mise à jour peut prendre quelques heures.",
   },
+  results: {
+    win: "V",
+    draw: "N",
+    loss: "D",
+    reveal: "Voir le résultat",
+    spoiler: "Masquer les scores",
+    spoilerHint: "Masque les scores et résultats (pour regarder en différé)",
+  },
   stats: {
     label: "Visiteurs",
     online: "En ligne",

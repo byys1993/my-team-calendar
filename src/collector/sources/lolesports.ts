@@ -10,6 +10,7 @@ const MAX_NEWER_PAGES = 10;
 interface LolTeam {
   name: string;
   code: string;
+  result?: { outcome: string | null; gameWins: number } | null;
 }
 export interface LolEvent {
   startTime: string;
@@ -67,6 +68,10 @@ export function parseLolEvent(e: LolEvent): SourceMatch | null {
     status: home && away ? "scheduled" : "draw_pending",
     // e스포츠는 홈·원정 개념이 없다
     isNeutral: true,
+    // 끝난 경기는 세트 승수 (예: 2:1)
+    ...(e.state === "completed" && t1?.result && t2?.result
+      ? { homeScore: t1.result.gameWins, awayScore: t2.result.gameWins }
+      : {}),
   };
 }
 

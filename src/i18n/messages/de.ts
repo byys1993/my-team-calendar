@@ -88,6 +88,14 @@ export const de: Messages = {
     widgetIphone: "iPhone: Home-Bildschirm lange drücken, oben links „+“ → das Widget „Kalender“ hinzufügen.",
     note: "Die URL ändert sich, wenn du Teams änderst – bitte erneut hinzufügen. Kalender-Apps aktualisieren evtl. erst nach einigen Stunden.",
   },
+  results: {
+    win: "S",
+    draw: "U",
+    loss: "N",
+    reveal: "Ergebnis zeigen",
+    spoiler: "Ergebnisse ausblenden",
+    spoilerHint: "Blendet Endstände und Ergebnisse aus (für späteres Ansehen)",
+  },
   stats: {
     label: "Besucher",
     online: "Online",

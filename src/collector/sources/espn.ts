@@ -10,6 +10,8 @@ const BASE = "https://site.api.espn.com/apis/site/v2/sports";
 interface EspnCompetitor {
   homeAway: "home" | "away";
   team: { id: string; displayName: string; shortDisplayName?: string };
+  // scoreboard 응답은 '2', 팀 일정 응답은 { value: 2, displayValue: '2' }
+  score?: string | { value?: number; displayValue?: string };
 }
 export interface EspnEvent {
   id: string;
@@ -23,7 +25,7 @@ export interface EspnEvent {
     neutralSite?: boolean;
     venue?: { fullName?: string };
     competitors: EspnCompetitor[];
-    status?: { type?: { name?: string } };
+    status?: { type?: { name?: string; completed?: boolean } };
     notes?: { headline?: string }[];
   }[];
 }
@@ -94,7 +96,18 @@ export function parseEspnEvent(e: EspnEvent, path = "soccer/eng.1"): SourceMatch
     status,
     venue: c.venue?.fullName ?? null,
     isNeutral: c.neutralSite ?? false,
+    ...(c.status?.type?.completed && status !== "cancelled" && status !== "postponed"
+      ? {
+          homeScore: scoreOf(c.competitors.find((x) => x.homeAway === "home")),
+          awayScore: scoreOf(c.competitors.find((x) => x.homeAway === "away")),
+        }
+      : {}),
   };
+}
+
+function scoreOf(c?: EspnCompetitor): number | null {
+  const v = typeof c?.score === "string" ? Number(c.score) : (c?.score?.value ?? Number(c?.score?.displayValue));
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
 const ymd = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, "");
@@ -138,13 +151,16 @@ export function espn(fetcher: Fetcher = fetch, opts: { delayMs?: number; now?: (
     );
     const ids = teams.sports[0]?.leagues[0]?.teams.map((t) => t.team.id) ?? [];
     const byId = new Map<string, SourceMatch>();
+    // 남은 일정(fixture=true)과 이번 시즌 치른 경기(결과 포함)를 함께 받는다
     for (const id of ids) {
-      const sched = await getJson<{ events?: EspnEvent[] }>(fetcher, `${BASE}/${path}/teams/${id}/schedule?fixture=true`);
-      for (const e of sched.events ?? []) {
-        const m = parseEspnEvent(e, path);
-        if (m) byId.set(m.externalId, m);
+      for (const query of ["?fixture=true", ""]) {
+        const sched = await getJson<{ events?: EspnEvent[] }>(fetcher, `${BASE}/${path}/teams/${id}/schedule${query}`);
+        for (const e of sched.events ?? []) {
+          const m = parseEspnEvent(e, path);
+          if (m) byId.set(m.externalId, m);
+        }
+        if (delayMs) await sleep(delayMs);
       }
-      if (delayMs) await sleep(delayMs);
     }
     return [...byId.values()];
   }

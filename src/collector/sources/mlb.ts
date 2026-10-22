@@ -12,8 +12,11 @@ interface MlbGame {
   seriesDescription?: string;
   seriesGameNumber?: number;
   ifNecessary?: string;
-  status: { detailedState: string; startTimeTBD?: boolean };
-  teams: { home: { team: { id: number; name: string } }; away: { team: { id: number; name: string } } };
+  status: { detailedState: string; abstractGameState?: string; startTimeTBD?: boolean };
+  teams: {
+    home: { team: { id: number; name: string }; score?: number };
+    away: { team: { id: number; name: string }; score?: number };
+  };
   venue?: { name?: string };
 }
 
@@ -59,6 +62,9 @@ export function parseMlb(json: { dates: { games: MlbGame[] }[] }): SourceMatch[]
         dateOnly: tbd ? g.officialDate : null,
         status: st === "scheduled" && tbd ? "time_tbd" : st,
         venue: g.venue?.name ?? null,
+        ...(g.status.abstractGameState === "Final" && !/postponed|suspended|cancel/i.test(g.status.detailedState)
+          ? { homeScore: g.teams.home.score ?? null, awayScore: g.teams.away.score ?? null }
+          : {}),
       };
     }),
   );

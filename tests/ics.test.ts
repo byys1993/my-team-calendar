@@ -27,6 +27,8 @@ const match = (o: Partial<ScheduleMatch> = {}): ScheduleMatch => ({
   venue: "Tottenham Hotspur Stadium",
   isNeutral: false,
   broadcast: "쿠팡플레이",
+  homeScore: null,
+  awayScore: null,
   sequence: 2,
   updatedAt: "2026-10-20T01:02:03.000Z",
   ...o,

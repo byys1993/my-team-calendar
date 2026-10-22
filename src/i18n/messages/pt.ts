@@ -88,6 +88,14 @@ export const pt: Messages = {
     widgetIphone: "iPhone: mantenha pressionada a tela inicial, toque em '+' no canto superior esquerdo → adicione o widget 'Calendário'.",
     note: "A URL muda quando você troca de times; adicione de novo. Os apps de calendário podem levar algumas horas para atualizar.",
   },
+  results: {
+    win: "V",
+    draw: "E",
+    loss: "D",
+    reveal: "Ver resultado",
+    spoiler: "Ocultar placares",
+    spoilerHint: "Oculta placares e resultados (para assistir depois)",
+  },
   stats: {
     label: "Visitantes",
     online: "Online",
