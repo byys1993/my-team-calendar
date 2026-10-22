@@ -165,6 +165,7 @@ export const ar: Messages = {
     sprint: "السباق السريع",
   },
   auth: {
+    captcha: "يرجى إكمال التحقق البشري ثم المحاولة مرة أخرى.",
     login: "تسجيل الدخول",
     logout: "تسجيل الخروج",
     account: "الحساب",

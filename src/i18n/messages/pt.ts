@@ -166,6 +166,7 @@ export const pt: Messages = {
     sprint: "Sprint",
   },
   auth: {
+    captcha: "Conclua a verificação humana e tente novamente.",
     login: "Entrar",
     logout: "Sair",
     account: "Conta",

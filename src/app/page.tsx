@@ -5,6 +5,7 @@ import { I18nProvider } from "@/i18n/client";
 import { MESSAGES } from "@/i18n";
 import { getLocale } from "@/i18n/server";
 import { loginEnabled } from "@/lib/auth/mailer";
+import { turnstileSiteKey } from "@/lib/auth/turnstile";
 import { getDb } from "@/lib/db";
 import { getCatalog } from "@/lib/schedule";
 
@@ -31,6 +32,7 @@ export default async function Home() {
         catalog={await cachedCatalog(locale)}
         loginEnabled={loginEnabled()}
         contactEmail={contactEmail()}
+        turnstileSiteKey={turnstileSiteKey()}
       />
     </I18nProvider>
   );

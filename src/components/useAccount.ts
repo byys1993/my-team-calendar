@@ -23,7 +23,7 @@ type Patch = {
   lastTz?: string;
 };
 
-export type AuthError = "invalid_email" | "wait" | "too_many" | "invalid_code" | "send_failed" | "failed";
+export type AuthError = "invalid_email" | "wait" | "too_many" | "invalid_code" | "send_failed" | "captcha" | "failed";
 
 async function call<T>(method: string, url: string, body?: unknown): Promise<T> {
   const res = await fetch(url, {
@@ -38,7 +38,7 @@ async function call<T>(method: string, url: string, body?: unknown): Promise<T> 
 
 const asAuthError = (e: unknown): AuthError => {
   const msg = e instanceof Error ? e.message : "failed";
-  return (["invalid_email", "wait", "too_many", "invalid_code", "send_failed"].includes(msg) ? msg : "failed") as AuthError;
+  return (["invalid_email", "wait", "too_many", "invalid_code", "send_failed", "captcha"].includes(msg) ? msg : "failed") as AuthError;
 };
 
 // 로그인 상태와 계정 API. 로그인하지 않아도 사이트는 그대로 쓸 수 있다.
@@ -53,9 +53,9 @@ export function useAccount() {
       .finally(() => setChecked(true));
   }, []);
 
-  const requestCode = useCallback(async (email: string, locale: string): Promise<AuthError | null> => {
+  const requestCode = useCallback(async (email: string, locale: string, turnstile?: string | null): Promise<AuthError | null> => {
     try {
-      await call("POST", "/api/auth/request", { email, locale });
+      await call("POST", "/api/auth/request", { email, locale, turnstile });
       return null;
     } catch (e) {
       return asAuthError(e);

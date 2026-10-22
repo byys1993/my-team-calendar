@@ -166,6 +166,7 @@ export const ru: Messages = {
     sprint: "Спринт",
   },
   auth: {
+    captcha: "Пройдите проверку, что вы человек, и повторите попытку.",
     login: "Войти",
     logout: "Выйти",
     account: "Аккаунт",

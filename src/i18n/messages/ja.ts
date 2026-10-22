@@ -165,6 +165,7 @@ export const ja: Messages = {
     sprint: "スプリント",
   },
   auth: {
+    captcha: "ロボットでないことの確認を完了してから、もう一度お試しください。",
     login: "ログイン",
     logout: "ログアウト",
     account: "アカウント",

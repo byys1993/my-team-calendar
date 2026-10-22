@@ -38,10 +38,12 @@ export function CalendarApp({
   catalog,
   loginEnabled,
   contactEmail,
+  turnstileSiteKey,
 }: {
   catalog: Catalog;
   loginEnabled: boolean;
   contactEmail: string | null;
+  turnstileSiteKey: string | null;
 }) {
   const { m: t, t: fmt, intl, locale } = useI18n();
   const display: Display = useMemo(
@@ -240,6 +242,7 @@ export function CalendarApp({
               deleteAccount={auth.deleteAccount}
               saveNotify={auth.saveNotify}
               timeZone={tz}
+              turnstileSiteKey={turnstileSiteKey}
             />
           )}
           <button type="button" className="primary" onClick={() => setPickerOpen(true)}>

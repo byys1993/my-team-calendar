@@ -165,6 +165,7 @@ export const ko: Messages = {
     sprint: "스프린트",
   },
   auth: {
+    captcha: "사람 확인을 마친 뒤 다시 시도해 주세요.",
     login: "로그인",
     logout: "로그아웃",
     account: "계정",

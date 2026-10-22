@@ -96,3 +96,18 @@ GitHub Actions 의 매시간 수집이 끝나면 사이트의 `/api/cron/notify`
 
 `CRON_SECRET` 이 없으면 발송 단계는 건너뜁니다. 한 번 실행에 최대 80통만 보내고 나머지는 다음 시간에 보냅니다
 (Resend 무료 한도 하루 100통에 로그인 코드 메일 몫을 남겨 둠). 받는 사람이 늘면 Resend 유료 플랜이 필요합니다.
+
+## 7. 로그인 사람 확인 켜기 (Cloudflare Turnstile, 선택)
+
+로그인 코드 요청을 자동화로 남용해 메일 한도를 소진시키는 공격을 막습니다. 대부분은 자동 통과하고 의심스러울 때만 체크를 요구합니다.
+
+1. https://dash.cloudflare.com 가입 → 왼쪽 **Turnstile** → **Add widget**
+2. Widget name: `my-team-calendar`, Hostname: `my-team-calendar.com` (www 포함 자동), Widget Mode: **Managed** → Create
+3. 나오는 **Site Key**·**Secret Key** 를 Vercel 환경 변수 `TURNSTILE_SITE_KEY`·`TURNSTILE_SECRET_KEY` 에 넣고 Redeploy 합니다.
+   (둘 다 있을 때만 켜집니다. `*.vercel.app` 주소에서도 로그인하려면 위젯 Hostname 에 그 주소도 추가합니다.)
+
+## 참고: Supabase 공개 API 차단 (RLS)
+
+Supabase 는 public 테이블을 공개 API(anon 키)로 노출합니다. 이 사이트는 그 API 를 쓰지 않으므로 모든 테이블에 RLS 를 켜 두었습니다
+(`db/migrations/010_enable_rls.sql`, 정책 없음 = 공개 API 로는 읽기·쓰기 불가, 서버 접속 계정은 테이블 주인이라 영향 없음).
+새 테이블을 추가하면 같은 마이그레이션 줄을 넣어야 하며, `tests/rls.test.ts` 가 빠진 것을 잡아냅니다.

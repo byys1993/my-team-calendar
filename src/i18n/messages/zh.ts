@@ -165,6 +165,7 @@ export const zh: Messages = {
     sprint: "冲刺赛",
   },
   auth: {
+    captcha: "请完成人机验证后重试。",
     login: "登录",
     logout: "退出登录",
     account: "账户",

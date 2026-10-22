@@ -166,6 +166,7 @@ export const en = {
     sprint: "Sprint",
   },
   auth: {
+    captcha: "Please complete the human check and try again.",
     login: "Sign in",
     logout: "Sign out",
     account: "Account",

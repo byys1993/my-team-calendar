@@ -2,16 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/i18n/client";
+import { Turnstile } from "./Turnstile";
 import type { Account, AuthError, NotifyMode } from "./useAccount";
 
 interface Props {
   account: Account | null;
-  requestCode(email: string, locale: string): Promise<AuthError | null>;
+  requestCode(email: string, locale: string, turnstile?: string | null): Promise<AuthError | null>;
   verify(email: string, code: string): Promise<AuthError | Account>;
   logout(): Promise<void>;
   deleteAccount(): Promise<void>;
   saveNotify(patch: { notifyMode?: NotifyMode; notifyHour?: number }): Promise<boolean>;
   timeZone: string;
+  turnstileSiteKey: string | null; // 있으면 코드 요청 전에 사람 확인
 }
 
 // 헤더의 로그인 버튼 → 이메일 입력 → 6자리 코드 입력. 로그인 후에는 계정 메뉴(로그아웃·계정 삭제)
@@ -44,7 +46,7 @@ function useModal(onClose: () => void) {
   return { ref, onClose, close: () => ref.current?.close() };
 }
 
-function LoginDialog({ requestCode, verify, onClose }: Props & { onClose(): void }) {
+function LoginDialog({ requestCode, verify, turnstileSiteKey, onClose }: Props & { onClose(): void }) {
   const { m, t, locale } = useI18n();
   const modal = useModal(onClose);
   const [step, setStep] = useState<"email" | "code">("email");
@@ -52,6 +54,9 @@ function LoginDialog({ requestCode, verify, onClose }: Props & { onClose(): void
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
+  const needCaptcha = !!turnstileSiteKey && !captcha;
 
   const message = (e: AuthError) =>
     ({
@@ -60,14 +65,17 @@ function LoginDialog({ requestCode, verify, onClose }: Props & { onClose(): void
       wait: m.auth.tooMany,
       too_many: m.auth.tooMany,
       send_failed: m.auth.failed,
+      captcha: m.auth.captcha,
       failed: m.auth.failed,
     })[e];
 
   async function send() {
     setBusy(true);
     setError(null);
-    const err = await requestCode(email, locale);
+    const err = await requestCode(email, locale, captcha);
     setBusy(false);
+    // 사람 확인 토큰은 한 번만 쓸 수 있다
+    if (turnstileSiteKey) setCaptchaReset((n) => n + 1);
     if (err) setError(message(err));
     else setStep("code");
   }
@@ -110,7 +118,7 @@ function LoginDialog({ requestCode, verify, onClose }: Props & { onClose(): void
               />
             </label>
             {error && <p className="error">{error}</p>}
-            <button type="submit" className="primary" disabled={busy}>
+            <button type="submit" className="primary" disabled={busy || needCaptcha}>
               {m.auth.sendCode}
             </button>
           </form>
@@ -141,7 +149,7 @@ function LoginDialog({ requestCode, verify, onClose }: Props & { onClose(): void
               {m.auth.verify}
             </button>
             <div className="auth-links">
-              <button type="button" className="link-btn" disabled={busy} onClick={() => void send()}>
+              <button type="button" className="link-btn" disabled={busy || needCaptcha} onClick={() => void send()}>
                 {m.auth.resend}
               </button>
               <button
@@ -157,6 +165,9 @@ function LoginDialog({ requestCode, verify, onClose }: Props & { onClose(): void
               </button>
             </div>
           </form>
+        )}
+        {turnstileSiteKey && (
+          <Turnstile siteKey={turnstileSiteKey} onToken={setCaptcha} resetSignal={captchaReset} />
         )}
       </div>
     </dialog>

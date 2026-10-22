@@ -166,6 +166,7 @@ export const de: Messages = {
     sprint: "Sprint",
   },
   auth: {
+    captcha: "Bitte schließe die Sicherheitsprüfung ab und versuche es erneut.",
     login: "Anmelden",
     logout: "Abmelden",
     account: "Konto",
