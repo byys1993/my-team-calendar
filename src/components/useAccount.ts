@@ -8,7 +8,20 @@ export interface Account {
   locale: string | null;
   timeZone: string | null;
   selections: Selection[];
+  notifyMode: NotifyMode;
+  notifyHour: number;
+  lastTz: string | null;
 }
+
+export type NotifyMode = "off" | "daily" | "weekly";
+type Patch = {
+  selections?: Selection[];
+  locale?: string;
+  timeZone?: string | null;
+  notifyMode?: NotifyMode;
+  notifyHour?: number;
+  lastTz?: string;
+};
 
 export type AuthError = "invalid_email" | "wait" | "too_many" | "invalid_code" | "send_failed" | "failed";
 
@@ -69,9 +82,20 @@ export function useAccount() {
     setAccount(null);
   }, []);
 
-  const save = useCallback(async (patch: { selections?: Selection[]; locale?: string; timeZone?: string | null }) => {
+  const save = useCallback(async (patch: Patch) => {
     await call("PUT", "/api/me", patch).catch(() => {});
   }, []);
 
-  return { account, checked, requestCode, verify, logout, deleteAccount, save };
+  // 알림 메일 설정: 저장에 성공하면 화면의 계정 정보도 바꾼다
+  const saveNotify = useCallback(async (patch: { notifyMode?: NotifyMode; notifyHour?: number }) => {
+    try {
+      await call("PUT", "/api/me", patch);
+      setAccount((a) => (a ? { ...a, ...patch } : a));
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  return { account, checked, requestCode, verify, logout, deleteAccount, save, saveNotify };
 }

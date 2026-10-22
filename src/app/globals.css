@@ -1017,6 +1017,38 @@ a {
   font-weight: 600;
 }
 
+.auth-body select {
+  font: inherit;
+  font-weight: 400;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+/* 계정 창의 경기 알림 메일 설정 */
+.notify-box {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px 12px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notify-box legend {
+  font-weight: 700;
+  font-size: 14px;
+  padding: 0 4px;
+}
+
+.notify-box p {
+  margin: 0;
+  font-size: 13px;
+}
+
 .auth-body input {
   font: inherit;
   font-weight: 400;

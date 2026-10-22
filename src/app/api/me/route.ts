@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isLocale } from "@/i18n/config";
-import { cleanSelections, deleteUser, isTimeZone, updateUser } from "@/lib/auth/core";
+import { cleanSelections, deleteUser, isHour, isNotifyMode, isTimeZone, updateUser } from "@/lib/auth/core";
 import { bad, clearSessionCookie, currentUser, publicUser, readJson } from "@/lib/auth/http";
 import { getDb } from "@/lib/db";
 
@@ -12,7 +12,8 @@ export async function GET() {
   return NextResponse.json({ user: user ? publicUser(user) : null }, { headers: noStore });
 }
 
-// PUT /api/me {selections?, locale?, timeZone?} → 내 팀·언어·시간대 저장 (timeZone: null 이면 자동)
+// PUT /api/me {selections?, locale?, timeZone?, notifyMode?, notifyHour?, lastTz?}
+// → 내 팀·언어·시간대·알림 메일 설정 저장 (timeZone: null 이면 자동, lastTz 는 지금 브라우저 시간대)
 export async function PUT(req: Request) {
   const user = await currentUser();
   if (!user) return bad("unauthorized", 401);
@@ -22,7 +23,10 @@ export async function PUT(req: Request) {
   if (selections === null) return bad("bad_selections");
   const locale = isLocale(body.locale) ? body.locale : undefined;
   const timeZone = body.timeZone === null ? null : isTimeZone(body.timeZone) ? body.timeZone : undefined;
-  await updateUser(getDb(), user.id, { selections, locale, timeZone });
+  const notifyMode = isNotifyMode(body.notifyMode) ? body.notifyMode : undefined;
+  const notifyHour = isHour(body.notifyHour) ? body.notifyHour : undefined;
+  const lastTz = isTimeZone(body.lastTz) ? body.lastTz : undefined;
+  await updateUser(getDb(), user.id, { selections, locale, timeZone, notifyMode, notifyHour, lastTz });
   return NextResponse.json({ ok: true }, { headers: noStore });
 }
 

@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomBytes, randomInt } from "node:crypto";
+import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import type { Db } from "@/lib/db";
 import { isPaletteIndex } from "@/lib/palette";
 import { MAX_TEAMS } from "@/lib/schedule";
@@ -12,6 +12,12 @@ export const MAX_ATTEMPTS = 5; // 코드 하나당 입력 시도
 export const SESSION_DAYS = 180;
 
 export type SelectionItem = { slug: string; color: number; enabled: boolean };
+export type NotifyMode = "off" | "daily" | "weekly";
+export const NOTIFY_MODES: NotifyMode[] = ["off", "daily", "weekly"];
+
+// 계정 조회에 쓰는 열 (u = app_user)
+const USER_COLS = `u.id, u.email, u.locale, u.time_zone as "timeZone", u.selections,
+  u.notify_mode as "notifyMode", u.notify_hour as "notifyHour", u.last_tz as "lastTz"`;
 
 export interface User {
   id: string;
@@ -19,6 +25,9 @@ export interface User {
   locale: string | null;
   timeZone: string | null; // null = 브라우저 자동
   selections: SelectionItem[];
+  notifyMode: NotifyMode;
+  notifyHour: number;
+  lastTz: string | null; // 마지막으로 본 브라우저 시간대
 }
 
 // 'Asia/Seoul' 같은 IANA 시간대 이름인지
@@ -99,9 +108,9 @@ export async function verifyCode(db: Db, email: string, code: string, now = new 
   // 성공: 코드는 즉시 무효화 (발송 횟수 기록은 남긴다)
   await db.query("update login_code set expires_at = $2 where email = $1", [email, now.toISOString()]);
   const [user] = await db.query<User>(
-    `insert into app_user (email, last_login_at) values ($1, $2)
+    `insert into app_user as u (email, last_login_at) values ($1, $2)
      on conflict (email) do update set last_login_at = excluded.last_login_at
-     returning id, email, locale, time_zone as "timeZone", selections`,
+     returning ${USER_COLS}`,
     [email, now.toISOString()],
   );
   const token = randomBytes(32).toString("base64url");
@@ -117,7 +126,7 @@ export async function verifyCode(db: Db, email: string, code: string, now = new 
 export async function userFromToken(db: Db, token: string | undefined, now = new Date()): Promise<User | null> {
   if (!token) return null;
   const [user] = await db.query<User>(
-    `select u.id, u.email, u.locale, u.time_zone as "timeZone", u.selections from user_session s join app_user u on u.id = s.user_id
+    `select ${USER_COLS} from user_session s join app_user u on u.id = s.user_id
      where s.token_hash = $1 and s.expires_at > $2`,
     [hashToken(token), now.toISOString()],
   );
@@ -145,7 +154,14 @@ export function cleanSelections(raw: unknown): SelectionItem[] | null {
 export async function updateUser(
   db: Db,
   userId: string,
-  patch: { selections?: SelectionItem[]; locale?: string; timeZone?: string | null },
+  patch: {
+    selections?: SelectionItem[];
+    locale?: string;
+    timeZone?: string | null;
+    notifyMode?: NotifyMode;
+    notifyHour?: number;
+    lastTz?: string;
+  },
 ): Promise<void> {
   if (patch.selections) {
     await db.query("update app_user set selections = $2::text::jsonb where id = $1", [userId, JSON.stringify(patch.selections)]);
@@ -154,6 +170,27 @@ export async function updateUser(
   if (patch.timeZone !== undefined) {
     await db.query("update app_user set time_zone = $2 where id = $1", [userId, patch.timeZone]);
   }
+  if (patch.notifyMode) await db.query("update app_user set notify_mode = $2 where id = $1", [userId, patch.notifyMode]);
+  if (patch.notifyHour !== undefined) {
+    await db.query("update app_user set notify_hour = $2 where id = $1", [userId, patch.notifyHour]);
+  }
+  if (patch.lastTz) await db.query("update app_user set last_tz = $2 where id = $1", [userId, patch.lastTz]);
+}
+
+export const isNotifyMode = (v: unknown): v is NotifyMode => NOTIFY_MODES.includes(v as NotifyMode);
+export const isHour = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 23;
+
+// 메일의 수신 거부 링크용 서명 (로그인 없이 그 계정의 알림만 끌 수 있다)
+export const unsubscribeSig = (userId: string) =>
+  createHmac("sha256", secret()).update(`unsubscribe:${userId}`).digest("base64url").slice(0, 32);
+
+export async function unsubscribe(db: Db, userId: string, sig: string): Promise<boolean> {
+  if (!/^[0-9a-f-]{36}$/.test(userId)) return false;
+  const want = Buffer.from(unsubscribeSig(userId));
+  const got = Buffer.from(sig);
+  if (got.length !== want.length || !timingSafeEqual(got, want)) return false;
+  await db.query("update app_user set notify_mode = 'off' where id = $1", [userId]);
+  return true;
 }
 
 // 계정과 세션·코드를 모두 지운다

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/i18n/client";
-import type { Account, AuthError } from "./useAccount";
+import type { Account, AuthError, NotifyMode } from "./useAccount";
 
 interface Props {
   account: Account | null;
@@ -10,6 +10,8 @@ interface Props {
   verify(email: string, code: string): Promise<AuthError | Account>;
   logout(): Promise<void>;
   deleteAccount(): Promise<void>;
+  saveNotify(patch: { notifyMode?: NotifyMode; notifyHour?: number }): Promise<boolean>;
+  timeZone: string;
 }
 
 // 헤더의 로그인 버튼 → 이메일 입력 → 6자리 코드 입력. 로그인 후에는 계정 메뉴(로그아웃·계정 삭제)
@@ -161,7 +163,48 @@ function LoginDialog({ requestCode, verify, onClose }: Props & { onClose(): void
   );
 }
 
-function AccountDialog({ account, logout, deleteAccount, onClose }: Props & { account: Account; onClose(): void }) {
+// 경기 알림 메일: 받는 방식(끄기·경기 있는 날·매주 월요일)과 보낼 시각
+function NotifySettings({ account, saveNotify, timeZone }: Props & { account: Account }) {
+  const { m, t, intl } = useI18n();
+  const [status, setStatus] = useState<"saved" | "failed" | null>(null);
+  const hourLabel = (h: number) =>
+    new Intl.DateTimeFormat(intl, { hour: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(2026, 0, 1, h)));
+  async function change(patch: { notifyMode?: NotifyMode; notifyHour?: number }) {
+    setStatus(null);
+    setStatus((await saveNotify(patch)) ? "saved" : "failed");
+  }
+  return (
+    <fieldset className="notify-box">
+      <legend>{m.notify.title}</legend>
+      <label>
+        {m.notify.mode}
+        <select value={account.notifyMode} onChange={(e) => void change({ notifyMode: e.target.value as NotifyMode })}>
+          <option value="off">{m.notify.off}</option>
+          <option value="daily">{m.notify.daily}</option>
+          <option value="weekly">{m.notify.weekly}</option>
+        </select>
+      </label>
+      {account.notifyMode !== "off" && (
+        <label>
+          {m.notify.hour}
+          <select value={account.notifyHour} onChange={(e) => void change({ notifyHour: Number(e.target.value) })}>
+            {Array.from({ length: 24 }, (_, h) => (
+              <option key={h} value={h}>
+                {hourLabel(h)}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      <p className="muted">{t(m.notify.hint, { tz: timeZone.replace(/_/g, " ") })}</p>
+      {status === "saved" && <p className="muted">{m.notify.saved}</p>}
+      {status === "failed" && <p className="error">{m.auth.failed}</p>}
+    </fieldset>
+  );
+}
+
+function AccountDialog(props: Props & { account: Account; onClose(): void }) {
+  const { account, logout, deleteAccount, onClose } = props;
   const { m, t } = useI18n();
   const modal = useModal(onClose);
   return (
@@ -175,6 +218,7 @@ function AccountDialog({ account, logout, deleteAccount, onClose }: Props & { ac
       <div className="auth-body">
         <p>{t(m.auth.signedInAs, { email: account.email })}</p>
         <p className="muted">{m.auth.synced}</p>
+        <NotifySettings {...props} />
         <p>
           <a href="/privacy">{m.app.privacy}</a>
         </p>

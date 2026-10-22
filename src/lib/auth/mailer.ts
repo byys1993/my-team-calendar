@@ -36,3 +36,35 @@ export async function sendLoginCode(email: string, code: string, locale: Locale)
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
+
+// 경기 알림 메일 묶음 발송 (Resend 배치 API, 한 번에 100통까지). 수신 거부 헤더를 붙여 메일 앱의 '구독 취소' 버튼이 동작하게 한다.
+export async function sendNotifyEmails(
+  emails: { to: string; subject: string; text: string; html: string; unsubscribeUrl: string }[],
+): Promise<void> {
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.MAIL_FROM;
+  if (!key || !from) {
+    if (process.env.NODE_ENV === "production") throw new Error("메일 발송 설정(RESEND_API_KEY, MAIL_FROM)이 없습니다.");
+    for (const e of emails) console.log(`[dev] 알림 메일 ${e.to}: ${e.subject}\n${e.text}`);
+    return;
+  }
+  const res = await fetch("https://api.resend.com/emails/batch", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify(
+      emails.map((e) => ({
+        from,
+        to: [e.to],
+        subject: e.subject,
+        text: e.text,
+        html: e.html,
+        headers: {
+          "List-Unsubscribe": `<${e.unsubscribeUrl}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+      })),
+    ),
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!res.ok) throw new Error(`알림 메일 발송 실패: ${res.status} ${await res.text()}`);
+}

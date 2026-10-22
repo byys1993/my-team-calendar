@@ -83,3 +83,16 @@
 5. 사이트에서 로그인 → 메일로 온 6자리 코드 입력으로 확인합니다.
 
 무료 한도: Resend 무료 플랜은 하루 100통·월 3,000통입니다. 같은 이메일은 1분에 한 번, 시간당 5번, 같은 IP 는 시간당 10번까지만 코드를 보냅니다.
+
+## 6. 경기 알림 메일 켜기 (선택, 5번 이후)
+
+로그인한 사람이 계정 메뉴에서 **경기 있는 날 아침** 또는 **매주 월요일**에 내 팀 일정을 메일로 받을 수 있습니다.
+GitHub Actions 의 매시간 수집이 끝나면 사이트의 `/api/cron/notify` 를 불러, 각자의 시간대로 정한 시각이 지난 사람에게 보냅니다.
+
+1. 무작위 문자열을 하나 만듭니다 (`AUTH_SECRET` 만들 때와 같은 방법).
+2. **Vercel** → Settings → Environment Variables → `CRON_SECRET` 에 그 값을 넣고 Redeploy 합니다.
+3. **GitHub** 저장소 → Settings → Secrets and variables → Actions → New repository secret → `CRON_SECRET` 에 같은 값을 넣습니다.
+4. 다음 정시 수집(Actions 의 sync-schedules) 로그 마지막 단계 `send match alert emails` 에 `{"checked":..,"sent":..}` 가 찍히면 됩니다.
+
+`CRON_SECRET` 이 없으면 발송 단계는 건너뜁니다. 한 번 실행에 최대 80통만 보내고 나머지는 다음 시간에 보냅니다
+(Resend 무료 한도 하루 100통에 로그인 코드 메일 몫을 남겨 둠). 받는 사람이 늘면 Resend 유료 플랜이 필요합니다.

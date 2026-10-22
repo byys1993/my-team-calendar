@@ -77,6 +77,9 @@ export function CalendarApp({
     if (account.locale && account.locale !== locale && isLocale(account.locale)) {
       document.cookie = `${LOCALE_COOKIE}=${account.locale}; path=/; max-age=31536000; samesite=lax`;
       router.refresh();
+    } else if (!account.locale) {
+      // 알림 메일을 이 언어로 보내도록 지금 언어를 남긴다
+      void save({ locale });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 로그인 시점에 한 번만 맞춘다
   }, [account, loaded]);
@@ -104,6 +107,14 @@ export function CalendarApp({
   // 화면 시간대: '자동'이면 브라우저 시간대 (브라우저 값은 화면이 뜬 뒤에만 알 수 있다)
   const { pref: tzPref, setPref: setTzPref } = useTimeZonePref();
   const tz = now ? (tzPref === AUTO ? browserTimeZone() : tzPref) : "UTC";
+
+  // 알림 메일 시각 계산용으로 지금 쓰는 시간대를 계정에 남긴다 ('자동'이면 브라우저 시간대)
+  const lastTzSent = useRef<string | null>(null);
+  useEffect(() => {
+    if (!account || !now || account.lastTz === tz || lastTzSent.current === tz) return;
+    lastTzSent.current = tz;
+    void save({ lastTz: tz });
+  }, [account, now, tz, save]);
 
   useEffect(() => {
     const d = new Date();
@@ -225,6 +236,8 @@ export function CalendarApp({
               verify={auth.verify}
               logout={auth.logout}
               deleteAccount={auth.deleteAccount}
+              saveNotify={auth.saveNotify}
+              timeZone={tz}
             />
           )}
           <button type="button" className="primary" onClick={() => setPickerOpen(true)}>
