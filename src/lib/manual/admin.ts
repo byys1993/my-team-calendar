@@ -59,6 +59,9 @@ const SELECT = `
   left join team h on h.id = m.home_team_id
   left join team a on a.id = m.away_team_id`;
 
+// 관리자 화면은 한국어 전용: 저장된 '@tbd' 토큰은 '미정'으로 보여준다
+const placeholderKo = (p: string | null) => (p === "@tbd" ? "미정" : p);
+
 function toAdmin(r: Row): AdminMatch {
   const kst = r.start_at ? toKst(r.start_at) : null;
   return {
@@ -69,10 +72,10 @@ function toAdmin(r: Row): AdminMatch {
     time: r.status === "time_tbd" || !kst ? null : kst.time,
     home: r.home,
     away: r.away,
-    homeLabel: r.home_label ?? r.home_placeholder ?? "미정",
-    awayLabel: r.away_label ?? r.away_placeholder ?? "미정",
-    homePlaceholder: r.home_placeholder,
-    awayPlaceholder: r.away_placeholder,
+    homeLabel: r.home_label ?? placeholderKo(r.home_placeholder) ?? "미정",
+    awayLabel: r.away_label ?? placeholderKo(r.away_placeholder) ?? "미정",
+    homePlaceholder: r.home_placeholder === "@tbd" ? null : r.home_placeholder,
+    awayPlaceholder: r.away_placeholder === "@tbd" ? null : r.away_placeholder,
     status: r.status,
     round: r.round_label,
     venue: r.venue,

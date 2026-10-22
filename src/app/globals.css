@@ -307,7 +307,7 @@ a {
   border: 1.5px solid transparent;
   border-radius: 8px;
   padding: 4px;
-  text-align: left;
+  text-align: start;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -350,7 +350,7 @@ a {
   padding: 1px 4px;
   border-radius: 4px;
   background: color-mix(in srgb, var(--team) 18%, var(--surface));
-  border-left: 3px solid var(--team);
+  border-inline-start: 3px solid var(--team);
   white-space: nowrap;
   overflow: hidden;
   min-width: 0;
@@ -371,7 +371,7 @@ a {
 .chip.tentative {
   background: transparent;
   border: 1px dashed var(--team);
-  border-left: 3px dashed var(--team);
+  border-inline-start: 3px dashed var(--team);
   color: var(--muted);
 }
 
@@ -383,7 +383,7 @@ a {
 .more {
   font-size: 11px;
   color: var(--muted);
-  padding-left: 4px;
+  padding-inline-start: 4px;
 }
 
 .dots {
@@ -418,13 +418,13 @@ a {
   display: flex;
   gap: 12px;
   padding: 8px 10px;
-  border-left: 4px solid var(--team);
+  border-inline-start: 4px solid var(--team);
   background: var(--surface-2);
   border-radius: 6px;
 }
 
 .match-row.tentative {
-  border-left-style: dashed;
+  border-inline-start-style: dashed;
   background: transparent;
   outline: 1px dashed var(--border);
 }
@@ -471,7 +471,7 @@ a {
   color: var(--muted);
 }
 
-.side-홈 {
+.side-home {
   color: var(--text);
   background: var(--surface);
 }
@@ -531,7 +531,7 @@ a {
 
 .foot ul {
   margin: 0 0 6px;
-  padding-left: 18px;
+  padding-inline-start: 18px;
 }
 
 /* 팀 선택 대화상자 */
@@ -644,7 +644,7 @@ a {
   display: flex;
   align-items: center;
   gap: 6px;
-  text-align: left;
+  text-align: start;
   border: 1.5px solid var(--border);
   background: var(--surface-2);
   border-radius: 8px;
@@ -749,7 +749,7 @@ a {
 .admin-table td {
   padding: 6px 10px;
   border-bottom: 1px solid var(--border);
-  text-align: left;
+  text-align: start;
   white-space: nowrap;
 }
 
@@ -759,7 +759,7 @@ a {
 }
 
 .admin-table td.num {
-  text-align: right;
+  text-align: end;
   font-variant-numeric: tabular-nums;
 }
 
@@ -842,7 +842,7 @@ a {
 .error-box ul,
 .ok-box ul {
   margin: 6px 0 0;
-  padding-left: 18px;
+  padding-inline-start: 18px;
 }
 
 .danger-zone {
@@ -899,4 +899,32 @@ a {
   .foot {
     grid-template-columns: 1fr;
   }
+}
+
+/* 헤더 오른쪽 묶음 (언어 선택·로그인·팀 선택) */
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.lang-select {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 8px;
+}
+
+.privacy {
+  max-width: 720px;
+}
+
+.privacy ul {
+  padding-inline-start: 20px;
+  line-height: 1.7;
 }

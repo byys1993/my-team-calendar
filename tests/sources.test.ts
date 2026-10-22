@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { espn, espnTeamId, monthRange, parseEspnEvent } from "@/collector/sources/espn";
-import { gpKo, parseJolpica, parseOpenF1 } from "@/collector/sources/f1";
+import { parseJolpica, parseOpenF1 } from "@/collector/sources/f1";
 import { markConditional, parseKboMonth, type KboGame } from "@/collector/sources/kbo";
 import { parseLolEvent } from "@/collector/sources/lolesports";
 import { parseMlb } from "@/collector/sources/mlb";
@@ -31,21 +31,20 @@ describe("F1", () => {
     },
   ];
 
-  it("Jolpica: 결승·예선을 한국어 제목의 이벤트로 만든다", () => {
+  it("Jolpica: 결승·예선을 제목 토큰이 있는 이벤트로 만든다", () => {
     const [race, quali, mexico] = parseJolpica(races);
     expect(race).toMatchObject({
       externalId: "2026-18-race",
-      title: "미국 GP 결승",
-      roundLabel: "18라운드",
+      title: "@f1:United States Grand Prix:race",
+      roundLabel: "@round:18",
       home: { externalId: "f1" },
       away: null,
       startAt: "2026-10-25T20:00:00.000Z",
       status: "scheduled",
     });
-    expect(quali).toMatchObject({ externalId: "2026-18-quali", title: "미국 GP 예선" });
+    expect(quali).toMatchObject({ externalId: "2026-18-quali", title: "@f1:United States Grand Prix:qualifying" });
     // 시각이 없으면 날짜만, 시간 미정
     expect(mexico).toMatchObject({ startAt: null, dateOnly: "2026-11-01", status: "time_tbd" });
-    expect(gpKo("Some New Grand Prix")).toBe("Some New GP");
   });
 
   describe("소스 간 같은 세션 연결", () => {
@@ -90,8 +89,8 @@ describe("F1", () => {
          group by m.id, m.title order by m.title`,
       );
       expect(rows).toEqual([
-        { title: "미국 GP 결승", n: 2 },
-        { title: "미국 GP 예선", n: 2 },
+        { title: "@f1:United States Grand Prix:qualifying", n: 2 },
+        { title: "@f1:United States Grand Prix:race", n: 2 },
       ]);
     });
   });
@@ -103,7 +102,7 @@ describe("LoL (lolesports)", () => {
       startTime: "2026-10-23T17:00:00Z",
       state: "unstarted",
       type: "match",
-      blockName: "스위스",
+      blockName: "Swiss",
       match: {
         id: "115660540726095005",
         teams: [
@@ -116,17 +115,17 @@ describe("LoL (lolesports)", () => {
     expect(parseLolEvent(base)).toMatchObject({
       externalId: "115660540726095005",
       season: "2026",
-      roundLabel: "스위스 · 단판",
+      roundLabel: "@lol:swiss|@bo:1",
       home: { externalId: "GEN" },
       away: { externalId: "IG" },
       status: "scheduled",
     });
     const tbd = parseLolEvent({
       ...base,
-      blockName: "결승",
+      blockName: "Finals",
       match: { ...base.match, teams: [{ name: "TBD", code: "TBD" }, { name: "TBD", code: "TBD" }], strategy: { type: "bestOf", count: 5 } },
     });
-    expect(tbd).toMatchObject({ home: null, away: null, status: "draw_pending", roundLabel: "결승 · 5판 3선승" });
+    expect(tbd).toMatchObject({ home: null, away: null, status: "draw_pending", roundLabel: "@lol:finals|@bo:5" });
     expect(parseLolEvent({ ...base, type: "show" })).toBeNull();
   });
 });
@@ -168,15 +167,15 @@ describe("KBO 공식 사이트", () => {
       { row: [cell("<b>14:00</b>", "time"), play("두산", "LG"), cell("", "relay"), cell(""), cell(""), cell(""), cell("잠실"), cell("WC 2차전")] },
     ];
     const [g1, g2] = parseKboMonth({ rows }, 2026, true);
-    expect(g1).toMatchObject({ externalId: "20261014OBLG1", roundLabel: "WC 1차전" });
-    expect(g2).toMatchObject({ externalId: "20261014OBLG2", roundLabel: "WC 2차전" });
+    expect(g1).toMatchObject({ externalId: "20261014OBLG1", roundLabel: "@series:kbo_wc|@game:1" });
+    expect(g2).toMatchObject({ externalId: "20261014OBLG2", roundLabel: "@series:kbo_wc|@game:2" });
   });
 
   it("5전 3선승에서 아직 필요 없는 4·5차전은 '진출 시', 2승 1패가 되면 4차전은 확정", () => {
     const game = (no: number, winner: string | null): KboGame => ({
       externalId: `po${no}`,
       season: "2026",
-      roundLabel: `PO ${no}차전`,
+      roundLabel: `@series:kbo_po|@game:${no}`,
       home: { externalId: "SS", name: "삼성" },
       away: { externalId: "HT", name: "KIA" },
       startAt: `2026-10-${24 + no}T09:30:00.000Z`,
@@ -188,7 +187,7 @@ describe("KBO 공식 사이트", () => {
     const after = markConditional([game(1, "SS"), game(2, "HT"), game(3, "SS"), game(4, null), game(5, null)]);
     expect(after.map((g) => g.status).slice(3)).toEqual(["scheduled", "conditional"]);
     // 와일드카드(2경기): 2차전은 1차전 결과에 달려 있다
-    const wc = markConditional([1, 2].map((n) => ({ ...game(n, null), roundLabel: `WC ${n}차전` })));
+    const wc = markConditional([1, 2].map((n) => ({ ...game(n, null), roundLabel: `@series:kbo_wc|@game:${n}` })));
     expect(wc.map((g) => g.status)).toEqual(["scheduled", "conditional"]);
   });
 
@@ -237,7 +236,7 @@ describe("MLB", () => {
         },
       ],
     });
-    expect(ws5).toMatchObject({ status: "conditional", roundLabel: "월드시리즈 5차전", home: { externalId: "158" } });
+    expect(ws5).toMatchObject({ status: "conditional", roundLabel: "@series:ws|@game:5", home: { externalId: "158" } });
     expect(tbd).toMatchObject({ status: "time_tbd", startAt: null, dateOnly: "2026-10-28", roundLabel: null });
     expect(ppd.status).toBe("postponed");
   });
@@ -264,7 +263,7 @@ describe("NHL", () => {
     expect(parseNhlGame({ ...base, gameScheduleState: "PPD" })?.status).toBe("postponed");
     expect(
       parseNhlGame({ ...base, gameType: 3, ifNecessary: true, seriesStatus: { round: 2, gameNumberOfSeries: 6 } }),
-    ).toMatchObject({ status: "conditional", roundLabel: "플레이오프 2라운드 6차전" });
+    ).toMatchObject({ status: "conditional", roundLabel: "@playoffs:2|@game:6" });
   });
 });
 
@@ -291,7 +290,7 @@ describe("ESPN 미국 리그", () => {
       },
       "football/nfl",
     );
-    expect(m).toMatchObject({ roundLabel: "7주차", isNeutral: true, home: { externalId: "nfl:18" } });
+    expect(m).toMatchObject({ roundLabel: "@week:7", isNeutral: true, home: { externalId: "nfl:18" } });
   });
 
   it("TBD 팀은 대진 미정, 시간 미정 경기는 미국 날짜만 남긴다", () => {

@@ -4,42 +4,12 @@ import { getJson } from "./http";
 // F1은 팀 대신 '시리즈' 하나(시드의 f1 팀)를 선택하고, 그랑프리의 결승·예선·스프린트를 이벤트로 저장한다.
 const SERIES: SourceTeam = { externalId: "f1", name: "Formula 1" };
 
-const GP_KO: Record<string, string> = {
-  "Australian Grand Prix": "호주 GP",
-  "Chinese Grand Prix": "중국 GP",
-  "Japanese Grand Prix": "일본 GP",
-  "Bahrain Grand Prix": "바레인 GP",
-  "Bahrain Grand Prix in Malaysia": "바레인 GP (말레이시아 개최)",
-  "Saudi Arabian Grand Prix": "사우디아라비아 GP",
-  "Miami Grand Prix": "마이애미 GP",
-  "Emilia Romagna Grand Prix": "에밀리아로마냐 GP",
-  "Canadian Grand Prix": "캐나다 GP",
-  "Monaco Grand Prix": "모나코 GP",
-  "Barcelona Grand Prix": "바르셀로나 GP",
-  "Spanish Grand Prix": "스페인 GP",
-  "Austrian Grand Prix": "오스트리아 GP",
-  "British Grand Prix": "영국 GP",
-  "Belgian Grand Prix": "벨기에 GP",
-  "Hungarian Grand Prix": "헝가리 GP",
-  "Dutch Grand Prix": "네덜란드 GP",
-  "Italian Grand Prix": "이탈리아 GP",
-  "Azerbaijan Grand Prix": "아제르바이잔 GP",
-  "Malaysian Grand Prix": "말레이시아 GP",
-  "Singapore Grand Prix": "싱가포르 GP",
-  "United States Grand Prix": "미국 GP",
-  "Mexico City Grand Prix": "멕시코시티 GP",
-  "Brazilian Grand Prix": "브라질 GP",
-  "São Paulo Grand Prix": "상파울루 GP",
-  "Las Vegas Grand Prix": "라스베이거스 GP",
-  "Qatar Grand Prix": "카타르 GP",
-  "Abu Dhabi Grand Prix": "아부다비 GP",
-  "Portuguese Grand Prix": "포르투갈 GP",
-};
+// 세션 → 제목 토큰의 세션 이름. 경기 ID에는 기존 짧은 이름(quali)을 그대로 쓴다.
+const SESSION = { race: "race", quali: "qualifying", sprint: "sprint" } as const;
+type SessionKind = keyof typeof SESSION;
 
-export const gpKo = (name: string) => GP_KO[name] ?? name.replace(/ Grand Prix/, " GP");
-
-const SESSION_KO = { race: "결승", quali: "예선", sprint: "스프린트" } as const;
-type SessionKind = keyof typeof SESSION_KO;
+// 제목은 '@f1:<영문 그랑프리 이름>:<세션>' 토큰으로 저장하고 화면에서 그 언어로 바꾼다 (src/i18n/format.ts)
+const f1Title = (gp: string, kind: SessionKind) => `@f1:${gp}:${SESSION[kind]}`;
 
 // --- Jolpica (Ergast 호환) https://github.com/jolpica/jolpica-f1
 interface JolpicaSession {
@@ -60,8 +30,8 @@ function session(race: JolpicaRace, kind: SessionKind, s: JolpicaSession): Sourc
   return {
     externalId: `${race.season}-${race.round}-${kind}`,
     season: race.season,
-    roundLabel: `${race.round}라운드`,
-    title: `${gpKo(race.raceName)} ${SESSION_KO[kind]}`,
+    roundLabel: `@round:${race.round}`,
+    title: f1Title(race.raceName, kind),
     home: SERIES,
     away: null,
     startAt: hasTime ? new Date(`${s.date}T${s.time}`).toISOString() : null,
@@ -119,7 +89,7 @@ export function parseOpenF1(sessions: OpenF1Session[], meetings: OpenF1Meeting[]
       return {
         externalId: String(s.session_key),
         season: String(s.year),
-        title: `${gpKo(meeting)} ${SESSION_KO[kind]}`,
+        title: f1Title(meeting, kind),
         home: SERIES,
         away: null,
         startAt: new Date(s.date_start).toISOString(),

@@ -60,8 +60,8 @@ export function parseEspnEvent(e: EspnEvent, path = "soccer/eng.1"): SourceMatch
   const roundLabel = isSoccer(path)
     ? (note ?? null)
     : e.season?.type === 3
-      ? (note ?? "포스트시즌")
-      : (note ?? (e.week?.number ? `${e.week.number}주차` : null));
+      ? (note ?? "@postseason")
+      : (note ?? (e.week?.number ? `@week:${e.week.number}` : null));
   // 미국 리그의 시간 미정 경기는 미 동부 자정(05:00Z)으로 오므로 날짜만 쓴다
   const usDateOnly = !isSoccer(path) && timeValid === false;
   return {
@@ -70,8 +70,8 @@ export function parseEspnEvent(e: EspnEvent, path = "soccer/eng.1"): SourceMatch
     roundLabel,
     home,
     away,
-    homePlaceholder: home ? null : "미정",
-    awayPlaceholder: away ? null : "미정",
+    homePlaceholder: home ? null : "@tbd",
+    awayPlaceholder: away ? null : "@tbd",
     startAt: usDateOnly ? null : new Date(e.date).toISOString(),
     dateOnly: usDateOnly ? new Date(new Date(e.date).getTime() - 5 * 3600_000).toISOString().slice(0, 10) : null,
     status,

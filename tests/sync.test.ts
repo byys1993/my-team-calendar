@@ -130,10 +130,10 @@ describe("소스 파서", () => {
         { ...base, id: 4, status: "TIMED", stage: "LEAGUE_STAGE", matchday: 3 },
       ],
     });
-    expect(a).toMatchObject({ status: "scheduled", season: "2026", roundLabel: "9라운드" });
+    expect(a).toMatchObject({ status: "scheduled", season: "2026", roundLabel: "@md:9" });
     expect(b.status).toBe("time_tbd");
-    expect(c).toMatchObject({ status: "draw_pending", away: null, roundLabel: "결승" });
-    expect(d.roundLabel).toBe("리그 페이즈 3차전");
+    expect(c).toMatchObject({ status: "draw_pending", away: null, roundLabel: "@stage:final" });
+    expect(d.roundLabel).toBe("@stage:league|@md:3");
   });
 
   it("ESPN: 실제 응답 구조를 변환한다", () => {

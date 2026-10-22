@@ -44,13 +44,23 @@ interface KboRow {
 
 export type KboGame = SourceMatch & { winner: string | null };
 
+// 비고의 시리즈 표기('WC 1차전', '준PO 2차전', 'PO 3차전', 'KS 1차전') → 언어 중립 토큰
+const KBO_SERIES: Record<string, string> = { WC: "kbo_wc", 준PO: "kbo_semi", PO: "kbo_po", KS: "kbo_ks", 한국시리즈: "kbo_ks" };
+
+export function kboRound(note: string): string {
+  const m = note.match(/^(.+?)\s*(\d+)차전$/);
+  const key = m && KBO_SERIES[m[1].trim()];
+  if (m && key) return `@series:${key}|@game:${m[2]}`;
+  return note && note !== "-" ? `@t:${note}` : "@postseason";
+}
+
 // 포스트시즌 'N차전' 중 시리즈가 먼저 끝나면 열리지 않는 경기를 '진출 시'로 바꾼다.
 // KBO 는 최대 경기 수만큼 미리 일정을 올려 두고, 시리즈가 끝나면 남은 경기를 지운다.
 // N차전은 '지금까지 치른 경기 수 + 앞선 팀이 이기려면 더 필요한 승수' 안이면 반드시 열린다.
 export function markConditional(games: KboGame[]): KboGame[] {
   const series = new Map<string, { no: number; g: KboGame }[]>();
   for (const g of games) {
-    const m = g.roundLabel?.match(/^(.+?)\s*(\d+)차전$/);
+    const m = g.roundLabel?.match(/^@series:([^|]+)\|@game:(\d+)$/);
     if (!m || g.status === "postponed") continue;
     const key = `${g.season}:${m[1]}`;
     series.set(key, [...(series.get(key) ?? []), { no: Number(m[2]), g }]);
@@ -127,7 +137,7 @@ export function parseKboMonth(json: KboResponse, year: number, postseason: boole
       winner: won,
       externalId: gameId,
       season: String(year),
-      roundLabel: postseason ? (note && note !== "-" && status !== "postponed" ? note : "포스트시즌") : null,
+      roundLabel: postseason ? (status !== "postponed" ? kboRound(note) : "@postseason") : null,
       home: { externalId: homeCode, name: homeName },
       away: { externalId: awayCode, name: awayName },
       startAt: time ? new Date(`${date}T${time}:00+09:00`).toISOString() : null,

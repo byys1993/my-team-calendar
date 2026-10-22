@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/i18n/client";
 import { MAX_TEAMS, type Catalog } from "@/lib/schedule";
 import { PALETTE, type Selection } from "./selection";
 
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function TeamPicker({ catalog, selections, onAdd, onRemove, onClose }: Props) {
+  const { m: t, t: fmt } = useI18n();
   const dialog = useRef<HTMLDialogElement>(null);
   const [sport, setSport] = useState(catalog.sports[0]?.slug ?? "");
   const [query, setQuery] = useState("");
@@ -24,28 +26,28 @@ export function TeamPicker({ catalog, selections, onAdd, onRemove, onClose }: Pr
   }, []);
 
   const q = query.trim().toLowerCase();
-  const teams = catalog.teams.filter((t) =>
-    q ? t.nameKo.toLowerCase().includes(q) || t.shortKo.toLowerCase().includes(q) : t.sport === sport,
+  const teams = catalog.teams.filter((team) =>
+    q ? team.name.toLowerCase().includes(q) || team.short.toLowerCase().includes(q) : team.sport === sport,
   );
   const groups = catalog.competitions
-    .map((c) => ({ comp: c, teams: teams.filter((t) => t.competition === c.slug) }))
+    .map((c) => ({ comp: c, teams: teams.filter((team) => team.competition === c.slug) }))
     .filter((g) => g.teams.length > 0);
 
   return (
     <dialog ref={dialog} className="picker" onClose={onClose} aria-labelledby="picker-title">
       <div className="picker-head">
-        <h2 id="picker-title">팀 선택</h2>
+        <h2 id="picker-title">{t.picker.title}</h2>
         <span className={full ? "count full" : "count"}>
           {selections.length}/{MAX_TEAMS}
         </span>
-        <button type="button" className="icon-btn" onClick={() => dialog.current?.close()} aria-label="닫기">
+        <button type="button" className="icon-btn" onClick={() => dialog.current?.close()} aria-label={t.picker.close}>
           ✕
         </button>
       </div>
       <input
         className="search"
         type="search"
-        placeholder="팀 이름 검색"
+        placeholder={t.picker.search}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
@@ -60,32 +62,32 @@ export function TeamPicker({ catalog, selections, onAdd, onRemove, onClose }: Pr
               className={s.slug === sport ? "tab active" : "tab"}
               onClick={() => setSport(s.slug)}
             >
-              {s.nameKo}
+              {s.name}
             </button>
           ))}
         </div>
       )}
-      {full && <p className="notice">최대 {MAX_TEAMS}팀까지 선택할 수 있어요. 다른 팀을 빼면 추가할 수 있습니다.</p>}
+      {full && <p className="notice">{fmt(t.picker.full, { max: MAX_TEAMS })}</p>}
       <div className="picker-body">
-        {groups.length === 0 && <p className="muted">검색 결과가 없습니다.</p>}
+        {groups.length === 0 && <p className="muted">{t.picker.noResults}</p>}
         {groups.map(({ comp, teams }) => (
           <section key={comp.slug}>
-            <h3>{comp.nameKo}</h3>
+            <h3>{comp.name}</h3>
             <div className="team-grid">
-              {teams.map((t) => {
-                const sel = selected.get(t.slug);
+              {teams.map((team) => {
+                const sel = selected.get(team.slug);
                 return (
                   <button
-                    key={t.slug}
+                    key={team.slug}
                     type="button"
                     className={sel ? "team-btn on" : "team-btn"}
                     style={sel ? { borderColor: PALETTE[sel.color] } : undefined}
                     aria-pressed={!!sel}
                     disabled={!sel && full}
-                    onClick={() => (sel ? onRemove(t.slug) : onAdd(t.slug))}
+                    onClick={() => (sel ? onRemove(team.slug) : onAdd(team.slug))}
                   >
                     {sel && <span className="dot" style={{ background: PALETTE[sel.color] }} />}
-                    {t.nameKo}
+                    {team.name}
                   </button>
                 );
               })}
@@ -95,7 +97,7 @@ export function TeamPicker({ catalog, selections, onAdd, onRemove, onClose }: Pr
       </div>
       <div className="picker-foot">
         <button type="button" className="primary" onClick={() => dialog.current?.close()}>
-          완료
+          {t.picker.done}
         </button>
       </div>
     </dialog>

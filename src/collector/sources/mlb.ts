@@ -20,14 +20,15 @@ interface MlbGame {
 // R 정규시즌, F 와일드카드, D 디비전시리즈, L 챔피언십시리즈, W 월드시리즈
 const GAME_TYPES = "R,F,D,L,W";
 
-const SERIES_KO: Record<string, string> = {
-  "World Series": "월드시리즈",
-  "AL Championship Series": "ALCS",
-  "NL Championship Series": "NLCS",
-  "AL Division Series": "ALDS",
-  "NL Division Series": "NLDS",
-  "AL Wild Card Series": "AL 와일드카드",
-  "NL Wild Card Series": "NL 와일드카드",
+// 시리즈 이름 → 언어 중립 토큰 키 (src/i18n/format.ts)
+const SERIES_KEY: Record<string, string> = {
+  "World Series": "ws",
+  "AL Championship Series": "alcs",
+  "NL Championship Series": "nlcs",
+  "AL Division Series": "alds",
+  "NL Division Series": "nlds",
+  "AL Wild Card Series": "alwc",
+  "NL Wild Card Series": "nlwc",
 };
 
 function status(g: MlbGame): MatchStatus {
@@ -46,11 +47,12 @@ export function parseMlb(json: { dates: { games: MlbGame[] }[] }): SourceMatch[]
       const st = status(g);
       // 시간 미정 경기의 gameDate 는 임의 시각이라 날짜만 쓴다
       const tbd = !!g.status.startTimeTBD;
-      const series = g.seriesDescription ? (SERIES_KO[g.seriesDescription] ?? g.seriesDescription) : null;
+      const key = g.seriesDescription ? SERIES_KEY[g.seriesDescription] : undefined;
+      const series = key ? `@series:${key}` : g.seriesDescription ? `@t:${g.seriesDescription}` : "@postseason";
       return {
         externalId: String(g.gamePk),
         season: g.season,
-        roundLabel: g.gameType === "R" ? null : `${series ?? "포스트시즌"}${g.seriesGameNumber ? ` ${g.seriesGameNumber}차전` : ""}`,
+        roundLabel: g.gameType === "R" ? null : `${series}${g.seriesGameNumber ? `|@game:${g.seriesGameNumber}` : ""}`,
         home: { externalId: String(g.teams.home.team.id), name: g.teams.home.team.name },
         away: { externalId: String(g.teams.away.team.id), name: g.teams.away.team.name },
         startAt: tbd ? null : new Date(g.gameDate).toISOString(),

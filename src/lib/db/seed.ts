@@ -23,17 +23,22 @@ interface Catalog {
     aliases?: string[];
     refs?: Record<string, string>;
   }[];
+  // 다국어 이름 (names-i18n.json): slug → { en, ja, ... }
+  sportNames?: Record<string, Record<string, string>>;
+  competitionNames?: Record<string, Record<string, string>>;
 }
 
 // data/seed/*.json 을 파일명 순서대로 합친다 (catalog.json = 종목·대회·축구, 그 외는 종목별 팀)
 export async function loadCatalog(dir = path.join(process.cwd(), "data", "seed")): Promise<Catalog> {
-  const merged: Catalog = { sports: [], competitions: [], teams: [] };
+  const merged: Catalog = { sports: [], competitions: [], teams: [], sportNames: {}, competitionNames: {} };
   const files = (await readdir(dir)).filter((f) => f.endsWith(".json")).sort();
   for (const f of files) {
     const part = JSON.parse(await readFile(path.join(dir, f), "utf8")) as Partial<Catalog>;
     merged.sports.push(...(part.sports ?? []));
     merged.competitions.push(...(part.competitions ?? []));
     merged.teams.push(...(part.teams ?? []));
+    Object.assign(merged.sportNames!, part.sportNames ?? {});
+    Object.assign(merged.competitionNames!, part.competitionNames ?? {});
   }
   return merged;
 }
@@ -120,6 +125,17 @@ export async function seed(db: Db, catalog: Catalog): Promise<void> {
       `delete from unmapped_team u using jsonb_to_recordset($1::text::jsonb) as x(slug text, source text, external_id text)
        where u.source = x.source and u.external_id = x.external_id`,
       [json(refs)],
+    );
+    // 다국어 이름은 통째로 바꾼다
+    await t.query(
+      `update sport s set name_i18n = x.names
+       from jsonb_each($1::text::jsonb) as x(slug, names) where s.slug = x.slug`,
+      [json(catalog.sportNames ?? {})],
+    );
+    await t.query(
+      `update competition c set name_i18n = x.names
+       from jsonb_each($1::text::jsonb) as x(slug, names) where c.slug = x.slug`,
+      [json(catalog.competitionNames ?? {})],
     );
   });
 }

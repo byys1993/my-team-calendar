@@ -41,7 +41,7 @@ export function parseNhlGame(g: NhlGame): SourceMatch | null {
     externalId: String(g.id),
     season: `${s.slice(0, 4)}-${s.slice(6, 8)}`,
     roundLabel:
-      g.gameType === 3 ? `플레이오프${round ? ` ${round}라운드` : ""}${gameNo ? ` ${gameNo}차전` : ""}` : null,
+      g.gameType === 3 ? `${round ? `@playoffs:${round}` : "@playoffs"}${gameNo ? `|@game:${gameNo}` : ""}` : null,
     home: { externalId: String(g.homeTeam.id), name: teamName(g.homeTeam) },
     away: { externalId: String(g.awayTeam.id), name: teamName(g.awayTeam) },
     startAt: new Date(g.startTimeUTC).toISOString(),

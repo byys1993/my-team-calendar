@@ -43,7 +43,7 @@ export function fdMatch(overrides: Partial<SourceMatch> = {}): SourceMatch {
   return {
     externalId: "537001",
     season: "2026",
-    roundLabel: "9라운드",
+    roundLabel: "@md:9",
     home: { externalId: "57", name: "Arsenal FC", shortName: "Arsenal" },
     away: { externalId: "62", name: "Everton FC", shortName: "Everton" },
     startAt: "2026-10-24T14:00:00Z",

@@ -29,16 +29,17 @@ const STATUS: Record<string, MatchStatus> = {
   CANCELLED: "cancelled",
 };
 
-const STAGE_KO: Record<string, string> = {
-  LEAGUE_STAGE: "리그 페이즈",
-  GROUP_STAGE: "조별리그",
-  PLAYOFFS: "플레이오프",
-  LAST_32: "32강",
-  LAST_16: "16강",
-  QUARTER_FINALS: "8강",
-  SEMI_FINALS: "4강",
-  THIRD_PLACE: "3·4위전",
-  FINAL: "결승",
+// 라운드는 언어 중립 토큰으로 저장한다 (src/i18n/format.ts 참고)
+const STAGE_KEY: Record<string, string> = {
+  LEAGUE_STAGE: "league",
+  GROUP_STAGE: "group",
+  PLAYOFFS: "playoffs",
+  LAST_32: "last32",
+  LAST_16: "last16",
+  QUARTER_FINALS: "qf",
+  SEMI_FINALS: "sf",
+  THIRD_PLACE: "third",
+  FINAL: "final",
 };
 
 function team(t: FdTeam): SourceTeam | null {
@@ -50,14 +51,14 @@ export function parseFootballData(json: { matches: FdMatch[] }): SourceMatch[] {
   return json.matches.map((m) => {
     const home = team(m.homeTeam);
     const away = team(m.awayTeam);
-    const stage = STAGE_KO[m.stage] ?? m.stage;
+    const stage = STAGE_KEY[m.stage] ? `@stage:${STAGE_KEY[m.stage]}` : `@t:${m.stage}`;
     const roundLabel =
       m.stage === "REGULAR_SEASON"
         ? m.matchday
-          ? `${m.matchday}라운드`
+          ? `@md:${m.matchday}`
           : null
         : (m.stage === "LEAGUE_STAGE" || m.stage === "GROUP_STAGE") && m.matchday
-          ? `${stage} ${m.matchday}차전`
+          ? `${stage}|@md:${m.matchday}`
           : stage;
     let status = STATUS[m.status] ?? "scheduled";
     if ((!home || !away) && status !== "cancelled") status = "draw_pending";
@@ -67,8 +68,8 @@ export function parseFootballData(json: { matches: FdMatch[] }): SourceMatch[] {
       roundLabel,
       home,
       away,
-      homePlaceholder: home ? null : "미정",
-      awayPlaceholder: away ? null : "미정",
+      homePlaceholder: home ? null : "@tbd",
+      awayPlaceholder: away ? null : "@tbd",
       startAt: m.utcDate,
       status,
       venue: m.venue ?? null,

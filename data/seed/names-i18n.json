@@ -1,0 +1,38 @@
+{
+  "sportNames": {
+    "soccer": { "en": "Football", "zh": "足球", "ja": "サッカー", "es": "Fútbol", "fr": "Football", "de": "Fußball", "pt": "Futebol", "ru": "Футбол", "ar": "كرة القدم" },
+    "motorsport": { "en": "Motorsport", "zh": "赛车", "ja": "モータースポーツ", "es": "Automovilismo", "fr": "Sport automobile", "de": "Motorsport", "pt": "Automobilismo", "ru": "Автоспорт", "ar": "رياضة السيارات" },
+    "baseball": { "en": "Baseball", "zh": "棒球", "ja": "野球", "es": "Béisbol", "fr": "Baseball", "de": "Baseball", "pt": "Beisebol", "ru": "Бейсбол", "ar": "البيسبول" },
+    "basketball": { "en": "Basketball", "zh": "篮球", "ja": "バスケットボール", "es": "Baloncesto", "fr": "Basket-ball", "de": "Basketball", "pt": "Basquete", "ru": "Баскетбол", "ar": "كرة السلة" },
+    "american-football": { "en": "American football", "zh": "美式橄榄球", "ja": "アメフト", "es": "Fútbol americano", "fr": "Football américain", "de": "American Football", "pt": "Futebol americano", "ru": "Американский футбол", "ar": "كرة القدم الأمريكية" },
+    "hockey": { "en": "Ice hockey", "zh": "冰球", "ja": "アイスホッケー", "es": "Hockey sobre hielo", "fr": "Hockey sur glace", "de": "Eishockey", "pt": "Hóquei no gelo", "ru": "Хоккей", "ar": "هوكي الجليد" },
+    "esports": { "en": "Esports", "zh": "电子竞技", "ja": "eスポーツ", "es": "Esports", "fr": "Esport", "de": "E-Sport", "pt": "eSports", "ru": "Киберспорт", "ar": "الرياضات الإلكترونية" }
+  },
+  "competitionNames": {
+    "epl": { "en": "Premier League", "zh": "英超", "ja": "プレミアリーグ", "es": "Premier League", "fr": "Premier League", "de": "Premier League", "pt": "Premier League", "ru": "Английская Премьер-лига", "ar": "الدوري الإنجليزي الممتاز" },
+    "laliga": { "en": "LaLiga", "zh": "西甲", "ja": "ラ・リーガ", "es": "LaLiga", "fr": "Liga espagnole", "de": "La Liga", "pt": "La Liga", "ru": "Ла Лига", "ar": "الدوري الإسباني" },
+    "bundesliga": { "en": "Bundesliga", "zh": "德甲", "ja": "ブンデスリーガ", "es": "Bundesliga", "fr": "Bundesliga", "de": "Bundesliga", "pt": "Bundesliga", "ru": "Бундеслига", "ar": "الدوري الألماني" },
+    "serie-a": { "en": "Serie A", "zh": "意甲", "ja": "セリエA", "es": "Serie A", "fr": "Serie A", "de": "Serie A", "pt": "Serie A", "ru": "Серия A", "ar": "الدوري الإيطالي" },
+    "ligue-1": { "en": "Ligue 1", "zh": "法甲", "ja": "リーグ・アン", "es": "Ligue 1", "fr": "Ligue 1", "de": "Ligue 1", "pt": "Ligue 1", "ru": "Лига 1", "ar": "الدوري الفرنسي" },
+    "ucl": { "en": "UEFA Champions League", "zh": "欧冠", "ja": "UEFAチャンピオンズリーグ", "es": "Liga de Campeones", "fr": "Ligue des champions", "de": "Champions League", "pt": "Liga dos Campeões", "ru": "Лига чемпионов УЕФА", "ar": "دوري أبطال أوروبا" },
+    "uel": { "en": "UEFA Europa League", "zh": "欧联杯", "ja": "UEFAヨーロッパリーグ", "es": "Liga Europa", "fr": "Ligue Europa", "de": "Europa League", "pt": "Liga Europa", "ru": "Лига Европы УЕФА", "ar": "الدوري الأوروبي" },
+    "uecl": { "en": "UEFA Conference League", "zh": "欧协联", "ja": "UEFAカンファレンスリーグ", "es": "Liga Conferencia", "fr": "Ligue Conférence", "de": "Conference League", "pt": "Liga Conferência", "ru": "Лига конференций УЕФА", "ar": "دوري المؤتمر الأوروبي" },
+    "fa-cup": { "en": "FA Cup", "zh": "足总杯", "ja": "FAカップ", "es": "FA Cup", "fr": "Coupe d'Angleterre", "de": "FA Cup", "pt": "Copa da Inglaterra", "ru": "Кубок Англии", "ar": "كأس الاتحاد الإنجليزي" },
+    "efl-cup": { "en": "Carabao Cup", "zh": "联赛杯", "ja": "カラバオカップ", "es": "Copa de la Liga inglesa", "fr": "Coupe de la Ligue anglaise", "de": "EFL Cup", "pt": "Copa da Liga Inglesa", "ru": "Кубок английской лиги", "ar": "كأس الرابطة الإنجليزية" },
+    "copa-del-rey": { "en": "Copa del Rey", "zh": "国王杯", "ja": "コパ・デル・レイ", "es": "Copa del Rey", "fr": "Coupe du Roi", "de": "Copa del Rey", "pt": "Copa do Rei", "ru": "Кубок Испании", "ar": "كأس ملك إسبانيا" },
+    "dfb-pokal": { "en": "DFB-Pokal", "zh": "德国杯", "ja": "DFBポカール", "es": "Copa de Alemania", "fr": "Coupe d'Allemagne", "de": "DFB-Pokal", "pt": "Copa da Alemanha", "ru": "Кубок Германии", "ar": "كأس ألمانيا" },
+    "coppa-italia": { "en": "Coppa Italia", "zh": "意大利杯", "ja": "コッパ・イタリア", "es": "Copa de Italia", "fr": "Coupe d'Italie", "de": "Coppa Italia", "pt": "Copa da Itália", "ru": "Кубок Италии", "ar": "كأس إيطاليا" },
+    "coupe-de-france": { "en": "Coupe de France", "zh": "法国杯", "ja": "クープ・ドゥ・フランス", "es": "Copa de Francia", "fr": "Coupe de France", "de": "Coupe de France", "pt": "Copa da França", "ru": "Кубок Франции", "ar": "كأس فرنسا" },
+    "f1": { "en": "Formula 1", "zh": "F1 一级方程式", "ja": "F1", "es": "Fórmula 1", "fr": "Formule 1", "de": "Formel 1", "pt": "Fórmula 1", "ru": "Формула-1", "ar": "الفورمولا 1" },
+    "nba": { "en": "NBA", "zh": "NBA", "ja": "NBA", "es": "NBA", "fr": "NBA", "de": "NBA", "pt": "NBA", "ru": "НБА", "ar": "الدوري الأمريكي للمحترفين NBA" },
+    "mlb": { "en": "MLB", "zh": "美国职棒大联盟", "ja": "MLB", "es": "MLB", "fr": "MLB", "de": "MLB", "pt": "MLB", "ru": "МЛБ", "ar": "دوري البيسبول الأمريكي MLB" },
+    "nfl": { "en": "NFL", "zh": "NFL", "ja": "NFL", "es": "NFL", "fr": "NFL", "de": "NFL", "pt": "NFL", "ru": "НФЛ", "ar": "دوري كرة القدم الأمريكية NFL" },
+    "nhl": { "en": "NHL", "zh": "NHL 国家冰球联盟", "ja": "NHL", "es": "NHL", "fr": "LNH", "de": "NHL", "pt": "NHL", "ru": "НХЛ", "ar": "دوري الهوكي الوطني NHL" },
+    "kbo": { "en": "KBO League", "zh": "韩国职棒联赛", "ja": "KBOリーグ", "es": "Liga KBO", "fr": "KBO League", "de": "KBO League", "pt": "Liga KBO", "ru": "Лига KBO", "ar": "دوري KBO الكوري" },
+    "kbl": { "en": "KBL", "zh": "韩国篮球联赛", "ja": "KBL", "es": "KBL", "fr": "KBL", "de": "KBL", "pt": "KBL", "ru": "KBL", "ar": "دوري كرة السلة الكوري KBL" },
+    "lck": { "en": "LCK", "zh": "LCK", "ja": "LCK", "es": "LCK", "fr": "LCK", "de": "LCK", "pt": "LCK", "ru": "LCK", "ar": "LCK" },
+    "lol-first-stand": { "en": "LoL First Stand", "zh": "英雄联盟先锋赛", "ja": "LoL ファーストスタンド", "es": "LoL First Stand", "fr": "LoL First Stand", "de": "LoL First Stand", "pt": "LoL First Stand", "ru": "LoL First Stand", "ar": "LoL First Stand" },
+    "msi": { "en": "MSI", "zh": "MSI 季中冠军赛", "ja": "MSI", "es": "MSI", "fr": "MSI", "de": "MSI", "pt": "MSI", "ru": "MSI", "ar": "MSI" },
+    "worlds": { "en": "LoL Worlds", "zh": "英雄联盟全球总决赛", "ja": "LoL 世界大会", "es": "Mundial de LoL", "fr": "Mondial de LoL", "de": "LoL-Weltmeisterschaft", "pt": "Mundial de LoL", "ru": "Чемпионат мира по LoL", "ar": "بطولة العالم لـ LoL" }
+  }
+}

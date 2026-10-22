@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Catalog, ScheduleMatch } from "@/lib/schedule";
+import { useI18n } from "@/i18n/client";
+import { formatLabel, formatTitle } from "@/i18n/format";
+import { MAX_TEAMS, type Catalog, type ScheduleMatch } from "@/lib/schedule";
 import { SOURCE_CREDITS, SOURCE_LABEL } from "@/lib/sources";
+import { LanguageSelect } from "./LanguageSelect";
 import { MatchRow } from "./MatchRow";
 import { MonthCalendar } from "./MonthCalendar";
 import { TeamPicker } from "./TeamPicker";
-import { viewOf, type MatchView } from "./matchView";
+import { viewOf, type Display, type MatchView } from "./matchView";
 import { PALETTE, useSelection } from "./selection";
 import {
   browserTimeZone,
@@ -23,6 +26,11 @@ import {
 const UPCOMING_LIMIT = 15;
 
 export function CalendarApp({ catalog }: { catalog: Catalog }) {
+  const { m: t, t: fmt, intl, locale } = useI18n();
+  const display: Display = useMemo(
+    () => ({ label: (raw) => formatLabel(raw, t) ?? raw, title: (raw) => formatTitle(raw, t, locale) ?? raw }),
+    [t, locale],
+  );
   const teamsBySlug = useMemo(() => new Map(catalog.teams.map((t) => [t.slug, t])), [catalog.teams]);
   const compsBySlug = useMemo(() => new Map(catalog.competitions.map((c) => [c.slug, c])), [catalog.competitions]);
   const { list: selections, loaded, add, remove, toggle } = useSelection(catalog.teams.map((t) => t.slug));
@@ -56,23 +64,23 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
     const ctrl = new AbortController();
     setLoading(true);
     setError(null);
-    fetch(`/api/matches?teams=${encodeURIComponent(slugKey)}`, { signal: ctrl.signal })
+    fetch(`/api/matches?teams=${encodeURIComponent(slugKey)}&lang=${locale}`, { signal: ctrl.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d: { matches: ScheduleMatch[] }) => setMatches(d.matches))
       .catch((e) => {
-        if (e.name !== "AbortError") setError("일정을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+        if (e.name !== "AbortError") setError(t.app.loadError);
       })
       .finally(() => setLoading(false));
     return () => ctrl.abort();
-  }, [slugKey]);
+  }, [slugKey, locale, t]);
 
-  const teamName = (slug: string) => teamsBySlug.get(slug)?.nameKo ?? slug;
-  const teamShort = (slug: string) => teamsBySlug.get(slug)?.shortKo ?? slug;
-  const competitionName = (slug: string) => compsBySlug.get(slug)?.nameKo ?? slug;
+  const teamName = (slug: string) => teamsBySlug.get(slug)?.name ?? slug;
+  const teamShort = (slug: string) => teamsBySlug.get(slug)?.short ?? slug;
+  const competitionName = (slug: string) => compsBySlug.get(slug)?.name ?? slug;
 
   const views = useMemo(
-    () => matches.map((m) => viewOf(m, selections)).filter((v): v is MatchView => v !== null),
-    [matches, selections],
+    () => matches.map((m) => viewOf(m, selections, display)).filter((v): v is MatchView => v !== null),
+    [matches, selections, display],
   );
 
   const byDay = useMemo(() => {
@@ -98,11 +106,11 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
       const next = matches
         .filter((m) => (m.home === s.slug || m.away === s.slug) && m.status !== "cancelled")
         .find((m) => matchSortTime(m) >= nowMs - 2 * 3600_000);
-      const v = next && viewOf(next, [s], false);
+      const v = next && viewOf(next, [s], display, false);
       if (v) result.set(s.slug, v);
     }
     return result;
-  }, [matches, selections, nowMs]);
+  }, [matches, selections, nowMs, display]);
 
   const relevantComps = useMemo(() => {
     const slugs = new Set<string>();
@@ -121,16 +129,19 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
     <div className="app">
       <header className="top">
         <div className="brand">
-          <h1>마이팀 캘린더</h1>
-          {now && <span className="tz">시간대: {browserTimeZone()}</span>}
+          <h1>{t.app.title}</h1>
+          {now && <span className="tz">{fmt(t.app.timeZone, { tz: browserTimeZone() })}</span>}
         </div>
-        <button type="button" className="primary" onClick={() => setPickerOpen(true)}>
-          팀 선택
-        </button>
+        <div className="top-actions">
+          <LanguageSelect />
+          <button type="button" className="primary" onClick={() => setPickerOpen(true)}>
+            {t.app.pickTeams}
+          </button>
+        </div>
       </header>
 
-      <section className="team-bar" aria-label="내 팀 (눌러서 켜기/끄기)">
-        {selections.length === 0 && loaded && <p className="muted">응원하는 팀을 골라 주세요. 최대 10팀까지 선택할 수 있어요.</p>}
+      <section className="team-bar" aria-label={t.app.pickTeams}>
+        {selections.length === 0 && loaded && <p className="muted">{fmt(t.app.emptyHint, { max: MAX_TEAMS })}</p>}
         {selections.map((s) => (
           <button
             key={s.slug}
@@ -138,7 +149,7 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
             className={s.enabled ? "team-chip" : "team-chip off"}
             style={{ "--team": PALETTE[s.color] } as React.CSSProperties}
             aria-pressed={s.enabled}
-            title={s.enabled ? "눌러서 숨기기" : "눌러서 보이기"}
+            title={s.enabled ? t.app.toggleHide : t.app.toggleShow}
             onClick={() => toggle(s.slug)}
           >
             <span className="dot" />
@@ -150,7 +161,7 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
       {error && <p className="error">{error}</p>}
 
       {selections.length > 0 && (
-        <section className="next-cards" aria-label="팀별 다음 경기">
+        <section className="next-cards" aria-label={t.app.upcoming}>
           {selections.map((s) => {
             const v = nextByTeam.get(s.slug);
             const days = v && todayKey ? daysBetween(todayKey, matchDateKey(v.match)) : null;
@@ -163,18 +174,18 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
                 <div className="next-team">{teamName(s.slug)}</div>
                 {v ? (
                   <>
-                    <div className="dday">{days !== null ? dDayLabel(days) : ""}</div>
+                    <div className="dday">{days !== null ? dDayLabel(days, t.match.dday) : ""}</div>
                     <div className="next-vs">
-                      {v.side ? `vs ${v.opponent} ` : v.opponent}
-                      {v.side && v.side !== "vs" && <span className={`side side-${v.side}`}>{v.side}</span>}
+                      {v.side ? `${t.match.vs} ${v.opponent} ` : v.opponent}
+                      {v.side && v.side !== "vs" && <span className={`side side-${v.side}`}>{t.match[v.side]}</span>}
                     </div>
                     <div className="next-when">
-                      {dateLabel(matchDateKey(v.match))} {matchTimeLabel(v.match)}
+                      {dateLabel(matchDateKey(v.match), intl)} {matchTimeLabel(v.match, intl, t.match.timeTbd)}
                     </div>
                     <div className="next-comp">{competitionName(v.match.competition)}</div>
                   </>
                 ) : (
-                  <div className="muted">{loading ? "불러오는 중…" : "예정된 경기 없음"}</div>
+                  <div className="muted">{loading ? t.app.loading : t.app.noNext}</div>
                 )}
               </article>
             );
@@ -207,9 +218,9 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
           )}
           {selectedKey && (
             <section className="card day-list" aria-live="polite">
-              <h2>{dateLabel(selectedKey)}</h2>
+              <h2>{dateLabel(selectedKey, intl)}</h2>
               {dayItems.length === 0 ? (
-                <p className="muted">이 날은 경기가 없습니다.</p>
+                <p className="muted">{t.app.noMatchesDay}</p>
               ) : (
                 <ul className="matches">
                   {dayItems.map((v) => (
@@ -221,10 +232,10 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
           )}
         </div>
 
-        <section className="card upcoming" aria-label="다가오는 경기">
-          <h2>다가오는 경기</h2>
-          {loading && matches.length === 0 && <p className="muted">불러오는 중…</p>}
-          {!loading && upcoming.length === 0 && <p className="muted">표시할 경기가 없습니다.</p>}
+        <section className="card upcoming" aria-label={t.app.upcoming}>
+          <h2>{t.app.upcoming}</h2>
+          {loading && matches.length === 0 && <p className="muted">{t.app.loading}</p>}
+          {!loading && upcoming.length === 0 && <p className="muted">{t.app.noUpcoming}</p>}
           <ul className="matches">
             {upcoming.slice(0, UPCOMING_LIMIT).map((v) => (
               <MatchRow key={v.match.id} view={v} teamName={teamName} competitionName={competitionName} />
@@ -232,10 +243,10 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
           </ul>
           <p className="legend">
             <span className="legend-item">
-              <span className="legend-box" /> 확정
+              <span className="legend-box" /> {t.app.legendConfirmed}
             </span>
             <span className="legend-item">
-              <span className="legend-box tentative" /> 미확정 (시간 미정·진출 시·대진 추첨 대기·연기)
+              <span className="legend-box tentative" /> {t.app.legendTentative}
             </span>
           </p>
         </section>
@@ -244,11 +255,11 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
       <footer className="foot">
         {relevantComps.length > 0 && (
           <div className="updates">
-            <h2>마지막 업데이트</h2>
+            <h2>{t.app.lastUpdated}</h2>
             <ul>
               {relevantComps.map((c) => (
                 <li key={c.slug}>
-                  {c.nameKo} · {c.lastSuccessAt && now ? updatedLabel(c.lastSuccessAt) : "아직 없음"}
+                  {c.name} · {c.lastSuccessAt && now ? updatedLabel(c.lastSuccessAt, intl) : t.app.never}
                   {c.lastSource && <span className="muted"> ({SOURCE_LABEL(c.lastSource)})</span>}
                 </li>
               ))}
@@ -256,19 +267,20 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
           </div>
         )}
         <div className="credits">
-          <h2>데이터 출처</h2>
+          <h2>{t.app.dataSources}</h2>
           <ul>
             {/* 대체 소스 데이터(장소 등)도 DB에 남아 있으므로 수집에 쓰는 모든 소스를 항상 표기한다 */}
             {Object.entries(SOURCE_CREDITS).map(([s, c]) => (
               <li key={s}>
                 <a href={c.url} target="_blank" rel="noreferrer">
-                  {c.text}
+                  {locale === "ko" ? c.text.ko : c.text.en}
                 </a>
               </li>
             ))}
           </ul>
-          <p className="muted">
-            비상업 개인 프로젝트입니다. 일정은 각 리그 사정으로 바뀔 수 있으니 공식 발표를 함께 확인해 주세요.
+          <p className="muted">{t.app.disclaimer}</p>
+          <p>
+            <a href="/privacy">{t.app.privacy}</a>
           </p>
         </div>
       </footer>
