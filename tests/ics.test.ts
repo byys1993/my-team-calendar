@@ -26,6 +26,7 @@ const match = (o: Partial<ScheduleMatch> = {}): ScheduleMatch => ({
   status: "scheduled",
   venue: "Tottenham Hotspur Stadium",
   isNeutral: false,
+  broadcast: "쿠팡플레이",
   sequence: 2,
   updatedAt: "2026-10-20T01:02:03.000Z",
   ...o,
@@ -48,8 +49,9 @@ describe("캘린더 구독 (ICS)", () => {
     expect(ics).toContain("UID:11111111-2222-3333-4444-555555555555@my-team-calendar.com\r\n");
     expect(ics).toContain("DTSTART:20261024T163000Z\r\nDTEND:20261024T183000Z\r\n");
     expect(ics).toContain("SUMMARY:⚽ 토트넘 vs 첼시\r\n");
-    expect(ics).toContain("DESCRIPTION:프리미어리그 · 9라운드\\nhttps://example.com\r\n");
+    expect(ics).toContain("DESCRIPTION:프리미어리그 · 9라운드\\n📺 쿠팡플레이\\nhttps://example.com\r\n");
     expect(ics).toContain("SEQUENCE:2\r\n");
+    expect(ics).toContain("📺 쿠팡플레이");
     expect(ics).toContain("STATUS:CONFIRMED\r\n");
     expect(ics).toContain("X-WR-CALNAME:마이팀 캘린더\r\n");
     // 모든 줄이 75바이트 이하

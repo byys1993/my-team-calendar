@@ -11,6 +11,8 @@ interface Catalog {
     type: string;
     feed?: "auto" | "manual";
     display_order?: number;
+    // 국내 중계 플랫폼 (시즌 중계권 기준, 예: '쿠팡플레이')
+    broadcast?: string;
     sources?: { source: string; external_id: string }[];
   }[];
   teams: {
@@ -54,6 +56,7 @@ export async function seed(db: Db, catalog: Catalog): Promise<void> {
     type: c.type,
     feed: c.feed ?? "auto",
     display_order: c.display_order ?? 100,
+    broadcast: c.broadcast ?? null,
   }));
   const sources = catalog.competitions.flatMap((c) =>
     (c.sources ?? []).map((s, priority) => ({ competition: c.slug, source: s.source, external_id: s.external_id, priority })),
@@ -79,12 +82,13 @@ export async function seed(db: Db, catalog: Catalog): Promise<void> {
       [json(catalog.sports)],
     );
     await t.query(
-      `insert into competition (sport_id, slug, name_ko, type, feed, display_order)
-       select s.id, x.slug, x.name_ko, x.type, x.feed, x.display_order
-       from jsonb_to_recordset($1::text::jsonb) as x(slug text, sport text, name_ko text, type text, feed text, display_order int)
+      `insert into competition (sport_id, slug, name_ko, type, feed, display_order, broadcast)
+       select s.id, x.slug, x.name_ko, x.type, x.feed, x.display_order, x.broadcast
+       from jsonb_to_recordset($1::text::jsonb)
+         as x(slug text, sport text, name_ko text, type text, feed text, display_order int, broadcast text)
        join sport s on s.slug = x.sport
        on conflict (slug) do update set name_ko = excluded.name_ko, type = excluded.type, feed = excluded.feed,
-         display_order = excluded.display_order`,
+         display_order = excluded.display_order, broadcast = excluded.broadcast`,
       [json(competitions)],
     );
     // 시드에 적힌 대회의 소스 목록은 시드 내용으로 통째로 바꾼다

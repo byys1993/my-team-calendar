@@ -53,6 +53,8 @@ export const es: Messages = {
     confirmReset: "¿Quitar todos los equipos elegidos?",
   },
   match: {
+    dawn: "Partido de madrugada",
+    broadcast: "TV en Corea",
     vs: "vs",
     home: "Local",
     away: "Visitante",

@@ -113,7 +113,7 @@ export function buildIcs(opts: {
     }
     lines.push(
       `SUMMARY:${escapeText(`${icon}${who}${note}`)}`,
-      `DESCRIPTION:${escapeText([details, x.status === "time_tbd" ? m.match.timeTbd : "", siteUrl].filter(Boolean).join("\n"))}`,
+      `DESCRIPTION:${escapeText([details, x.broadcast ? `📺 ${x.broadcast}` : "", x.status === "time_tbd" ? m.match.timeTbd : "", siteUrl].filter(Boolean).join("\n"))}`,
     );
     if (x.venue) lines.push(`LOCATION:${escapeText(x.venue)}`);
     lines.push(

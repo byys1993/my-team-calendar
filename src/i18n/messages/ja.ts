@@ -52,6 +52,8 @@ export const ja: Messages = {
     confirmReset: "選んだチームをすべて外しますか？",
   },
   match: {
+    dawn: "深夜・早朝の試合",
+    broadcast: "韓国での中継",
     vs: "vs",
     home: "ホーム",
     away: "アウェー",

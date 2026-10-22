@@ -1,4 +1,5 @@
 import type { Fetcher, MatchStatus, SourceAdapter, SourceMatch } from "../types";
+import { kboBroadcast } from "./broadcast";
 import { sleep, SourceError } from "./http";
 
 // KBO 공식 사이트(koreabaseball.com) 일정 화면이 쓰는 데이터. 공식 API가 아니라 화면용 표 데이터라
@@ -120,6 +121,8 @@ export function parseKboMonth(json: KboResponse, year: number, postseason: boole
     const cells = row.map((c) => strip(c.Text));
     const note = cells[cells.length - 1];
     const venue = cells[cells.length - 2] || null;
+    // 칸 순서: … TV, 라디오, 구장, 비고
+    const broadcast = kboBroadcast(cells[cells.length - 4]);
 
     // 공식 경기 ID (예: 20261025HTSS0). 링크가 없는 취소 경기는 같은 규칙으로 만든다.
     const linked = row.map((c) => c.Text.match(/gameId=(\d{8}[A-Z]{4}\d)/)?.[1]).find(Boolean);
@@ -144,6 +147,7 @@ export function parseKboMonth(json: KboResponse, year: number, postseason: boole
       dateOnly: time ? null : date,
       status,
       venue,
+      broadcast,
     });
   }
   return out;

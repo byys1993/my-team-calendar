@@ -52,6 +52,8 @@ export const ar: Messages = {
     confirmReset: "هل تريد إزالة جميع الفرق المختارة؟",
   },
   match: {
+    dawn: "مباراة في الفجر",
+    broadcast: "البث في كوريا",
     vs: "ضد",
     home: "على أرضه",
     away: "خارج أرضه",

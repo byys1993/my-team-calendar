@@ -1,7 +1,7 @@
 {
   "competitions": [
     {
-      "slug": "korea-national",
+      "slug": "korea-national", "broadcast": "쿠팡플레이",
       "sport": "soccer",
       "name_ko": "대한민국 국가대표 A매치",
       "type": "intl",

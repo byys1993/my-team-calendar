@@ -25,6 +25,8 @@ export interface SourceMatch {
   status: MatchStatus;
   venue?: string | null;
   isNeutral?: boolean;
+  // 국내 중계 채널 (예: 'SPOTV, 쿠팡플레이'). 공식 일정 데이터에 있을 때만.
+  broadcast?: string | null;
 }
 
 export interface SourceAdapter {

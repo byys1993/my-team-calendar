@@ -1190,3 +1190,14 @@ a {
 .ics-widget p {
   margin: 6px 0 0;
 }
+
+/* 중계 채널·새벽 경기 */
+.broadcast {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.dawn {
+  margin-inline-end: 3px;
+}

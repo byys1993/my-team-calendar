@@ -3,7 +3,7 @@
 import { formatLabel } from "@/i18n/format";
 import { useI18n } from "@/i18n/client";
 import { isTentative, type MatchView } from "./matchView";
-import { dateLabel, matchDateKey, matchTimeLabel } from "./time";
+import { dateLabel, isDawn, matchDateKey, matchTimeLabel } from "./time";
 import { useTz } from "./timezone";
 
 interface Props {
@@ -26,7 +26,14 @@ export function MatchRow({ view, teamName, competitionName, showDate = true }: P
     >
       <div className="when">
         {showDate && <span className="date">{dateLabel(matchDateKey(m, tz), intl)}</span>}
-        <span className="time">{matchTimeLabel(m, intl, t.match.timeTbd, tz)}</span>
+        <span className="time">
+          {isDawn(m, tz) && (
+            <span className="dawn" title={t.match.dawn} aria-label={t.match.dawn}>
+              🌙
+            </span>
+          )}
+          {matchTimeLabel(m, intl, t.match.timeTbd, tz)}
+        </span>
       </div>
       <div className="what">
         <div className="teams">
@@ -41,6 +48,11 @@ export function MatchRow({ view, teamName, competitionName, showDate = true }: P
           {round && ` · ${round}`}
           {m.venue && ` · ${m.venue}`}
         </div>
+        {m.broadcast && (
+          <div className="broadcast" title={t.match.broadcast}>
+            📺 {m.broadcast}
+          </div>
+        )}
       </div>
     </li>
   );

@@ -1,6 +1,6 @@
 {
   "competitions": [
-    { "slug": "lck", "sport": "esports", "name_ko": "LCK", "type": "esports", "display_order": 20,
+    { "slug": "lck", "broadcast": "치지직, SOOP", "sport": "esports", "name_ko": "LCK", "type": "esports", "display_order": 20,
       "sources": [{ "source": "lolesports", "external_id": "98767991310872058" }] },
     { "slug": "lol-first-stand", "sport": "esports", "name_ko": "LoL 퍼스트 스탠드", "type": "intl", "display_order": 21,
       "sources": [{ "source": "lolesports", "external_id": "113464388705111224" }] },

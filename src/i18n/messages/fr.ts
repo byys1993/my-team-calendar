@@ -53,6 +53,8 @@ export const fr: Messages = {
     confirmReset: "Retirer toutes les équipes choisies ?",
   },
   match: {
+    dawn: "Match en pleine nuit",
+    broadcast: "Diffusion en Corée",
     vs: "vs",
     home: "Domicile",
     away: "Extérieur",

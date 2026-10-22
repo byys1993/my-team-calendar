@@ -94,7 +94,8 @@ export function composeEmail(opts: {
     const who = x.title && !x.away ? formatTitle(x.title, m, locale)! : `${label(x.homeLabel)} ${m.match.vs} ${label(x.awayLabel)}`;
     const extra = [compName.get(x.competition), formatLabel(x.roundLabel, m)].filter(Boolean).join(" · ");
     const note = x.status !== "scheduled" && x.status !== "time_tbd" ? ` (${m.status[x.status]})` : "";
-    const line = `${matchTimeLabel(x, intl, m.match.timeTbd, tz)}  ${who}${note}${extra ? `  —  ${extra}` : ""}`;
+    const tv = x.broadcast ? `  📺 ${x.broadcast}` : "";
+    const line = `${matchTimeLabel(x, intl, m.match.timeTbd, tz)}  ${who}${note}${extra ? `  —  ${extra}` : ""}${tv}`;
     byDay.set(key, [...(byDay.get(key) ?? []), line]);
   }
 

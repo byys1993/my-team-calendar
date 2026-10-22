@@ -4,7 +4,7 @@ import { isRtl } from "@/i18n/config";
 import { useI18n } from "@/i18n/client";
 import type { MatchView } from "./matchView";
 import { isTentative } from "./matchView";
-import { dateLabel, keyOf, matchTimeLabel, monthLabel, weekdayNames } from "./time";
+import { dateLabel, isDawn, keyOf, matchTimeLabel, monthLabel, weekdayNames } from "./time";
 import { useTz } from "./timezone";
 
 interface Props {
@@ -87,7 +87,10 @@ export function MonthCalendar({ year, month, todayKey, selectedKey, byDay, teamS
                     className={`chip${isTentative(v.match) ? " tentative" : ""}${v.match.status === "cancelled" ? " cancelled" : ""}`}
                     style={{ "--team": v.color } as React.CSSProperties}
                   >
-                    <span className="chip-time">{matchTimeLabel(v.match, intl, t.match.timeTbdShort, tz)}</span>
+                    <span className="chip-time">
+                      {isDawn(v.match, tz) && "🌙"}
+                      {matchTimeLabel(v.match, intl, t.match.timeTbdShort, tz)}
+                    </span>
                     <span className="chip-text">
                       {teamShort(v.team)} {v.side ? `${t.match.vs} ` : ""}
                       {v.opponent}

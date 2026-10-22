@@ -53,6 +53,8 @@ export const pt: Messages = {
     confirmReset: "Remover todos os times escolhidos?",
   },
   match: {
+    dawn: "Jogo de madrugada",
+    broadcast: "TV na Coreia",
     vs: "x",
     home: "Casa",
     away: "Fora",

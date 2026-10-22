@@ -52,6 +52,8 @@ export const zh: Messages = {
     confirmReset: "要清除所有已选球队吗？",
   },
   match: {
+    dawn: "凌晨比赛",
+    broadcast: "韩国转播",
     vs: "vs",
     home: "主场",
     away: "客场",

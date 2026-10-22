@@ -26,6 +26,7 @@ import {
   dDayLabel,
   matchDateKey,
   matchSortTime,
+  isDawn,
   keyParts,
   matchTimeLabel,
   toDateKey,
@@ -306,9 +307,20 @@ export function CalendarApp({
                       {v.side && v.side !== "vs" && <span className={`side side-${v.side}`}>{t.match[v.side]}</span>}
                     </div>
                     <div className="next-when">
-                      {dateLabel(matchDateKey(v.match, tz), intl)} {matchTimeLabel(v.match, intl, t.match.timeTbd, tz)}
+                      {dateLabel(matchDateKey(v.match, tz), intl)}{" "}
+                      {isDawn(v.match, tz) && (
+                        <span className="dawn" title={t.match.dawn} aria-label={t.match.dawn}>
+                          🌙
+                        </span>
+                      )}
+                      {matchTimeLabel(v.match, intl, t.match.timeTbd, tz)}
                     </div>
                     <div className="next-comp">{competitionName(v.match.competition)}</div>
+                    {v.match.broadcast && (
+                      <div className="broadcast" title={t.match.broadcast}>
+                        📺 {v.match.broadcast}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="muted">{loading ? t.app.loading : t.app.noNext}</div>

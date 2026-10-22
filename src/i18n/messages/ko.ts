@@ -52,6 +52,8 @@ export const ko: Messages = {
     confirmReset: "선택한 팀을 모두 지울까요?",
   },
   match: {
+    dawn: "새벽 경기",
+    broadcast: "중계",
     vs: "vs",
     home: "홈",
     away: "원정",

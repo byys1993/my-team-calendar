@@ -53,6 +53,8 @@ export const en = {
     confirmReset: "Remove all selected teams?",
   },
   match: {
+    dawn: "Late-night / early-morning match",
+    broadcast: "TV in Korea",
     vs: "vs",
     home: "Home",
     away: "Away",

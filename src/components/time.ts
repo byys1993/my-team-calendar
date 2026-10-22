@@ -40,6 +40,13 @@ export function hasExactTime(m: ScheduleMatch): boolean {
   return !!m.startAt && m.status !== "time_tbd";
 }
 
+// 새벽 경기 (보는 시간대 기준 0시~5시 59분 시작)
+export function isDawn(m: ScheduleMatch, tz: string): boolean {
+  if (!hasExactTime(m)) return false;
+  const h = Number(dtf("en-US", { hour: "numeric", hourCycle: "h23", timeZone: tz }).format(new Date(m.startAt!)));
+  return h < 6;
+}
+
 // 시각, 시간 미정이면 tbdText
 export function matchTimeLabel(m: ScheduleMatch, intl: string, tbdText: string, tz: string): string {
   return hasExactTime(m) ? dtf(intl, { ...clock(intl), timeZone: tz }).format(new Date(m.startAt!)) : tbdText;

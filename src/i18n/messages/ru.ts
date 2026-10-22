@@ -53,6 +53,8 @@ export const ru: Messages = {
     confirmReset: "Убрать все выбранные команды?",
   },
   match: {
+    dawn: "Ночной матч",
+    broadcast: "Трансляция в Корее",
     vs: "—",
     home: "Дома",
     away: "В гостях",

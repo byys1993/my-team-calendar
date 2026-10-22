@@ -1,4 +1,5 @@
 import type { Fetcher, SourceAdapter, SourceMatch } from "../types";
+import { normalizeBroadcast } from "./broadcast";
 import { getJson } from "./http";
 
 // KBL 공식 홈페이지(kbl.or.kr)가 쓰는 일정 데이터 (api.kbl.or.kr, 공식 공개 API 아님).
@@ -29,6 +30,7 @@ export interface KblGame {
   tnameA: string;
   stadiumnameF?: string | null;
   stadiumname?: string | null;
+  tv?: string | null; // 'tvN SPORTS'
   isEnded: number;
   scoreH: number | null;
   scoreA: number | null;
@@ -78,6 +80,7 @@ export function parseKbl(games: KblGame[]): KblMatch[] {
       dateOnly: time ? null : date,
       status: time ? "scheduled" : "time_tbd",
       venue: g.stadiumnameF || g.stadiumname || null,
+      broadcast: normalizeBroadcast(g.tv),
       winner: ended ? (g.scoreH! > g.scoreA! ? g.tcodeH : g.tcodeA) : null,
     };
   });

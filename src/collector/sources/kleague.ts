@@ -1,4 +1,5 @@
 import type { Fetcher, SourceAdapter, SourceMatch } from "../types";
+import { normalizeBroadcast } from "./broadcast";
 
 // K리그 공식 홈페이지(kleague.com)가 쓰는 일정 데이터 (공식 공개 API 아님).
 // externalId 는 리그 번호('1' K리그1, '2' K리그2). 월 단위로만 응답해서 한 달씩 받는다.
@@ -29,6 +30,7 @@ export interface KleagueGame {
   fieldNameFull?: string | null;
   fieldName?: string | null;
   codeName?: string | null; // '일반', '스플릿일반', '파이널A', '파이널B', 'Play Off'
+  broadcastName?: string | null; // 'JTBC SPORTS//COUPANGPLAY'
 }
 
 // 라운드 표시 토큰: 정규 'N라운드', 파이널 라운드, K리그2 준PO·PO, 승강 PO N차전
@@ -58,6 +60,7 @@ export function parseKleague(games: KleagueGame[]): SourceMatch[] {
         dateOnly: time ? null : date,
         status: time ? "scheduled" : "time_tbd",
         venue: g.fieldNameFull || g.fieldName || null,
+        broadcast: normalizeBroadcast(g.broadcastName),
       };
     });
 }

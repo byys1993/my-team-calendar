@@ -28,6 +28,7 @@ interface MatchRow {
   status: string;
   venue: string | null;
   is_neutral: boolean;
+  broadcast: string | null;
 }
 
 // 저장할 새 값 (시각은 ISO 문자열)
@@ -151,7 +152,7 @@ async function inChunks<T>(rows: T[], run: (json: string) => Promise<unknown>): 
 
 const MATCH_COLUMNS = `season text, round_label text, title text, home_team_id int, away_team_id int,
   home_placeholder text, away_placeholder text, start_at timestamptz, date_only date, status text, venue text,
-  is_neutral boolean`;
+  is_neutral boolean, broadcast text`;
 
 // 소스 경기 목록을 저장한다. 같은 경기는 기존 ID를 그대로 두고 내용만 갱신한다.
 export async function upsertMatches(
@@ -204,6 +205,7 @@ export async function upsertMatches(
         status: m.status,
         venue: m.venue ?? null,
         is_neutral: m.isNeutral ?? false,
+        broadcast: m.broadcast ?? null,
       },
     });
   }
@@ -259,8 +261,9 @@ export async function upsertMatches(
       result.inserted++;
       continue;
     }
-    // 소스가 장소·라운드·제목을 주지 않으면 기존 값을 지우지 않는다.
+    // 소스가 장소·라운드·제목·중계를 주지 않으면 기존 값을 지우지 않는다.
     const venue = next.venue ?? row.venue;
+    const broadcast = next.broadcast ?? row.broadcast;
     const roundLabel = next.round_label ?? row.round_label;
     const title = next.title ?? row.title;
     const scheduleChanged =
@@ -276,9 +279,10 @@ export async function upsertMatches(
       row.title !== title ||
       row.home_placeholder !== next.home_placeholder ||
       row.away_placeholder !== next.away_placeholder ||
-      row.is_neutral !== next.is_neutral;
+      row.is_neutral !== next.is_neutral ||
+      row.broadcast !== broadcast;
     if (!scheduleChanged && !otherChanged) continue;
-    updates.push({ id: row.id, ...next, venue, round_label: roundLabel, title, bump: scheduleChanged ? 1 : 0 });
+    updates.push({ id: row.id, ...next, venue, broadcast, round_label: roundLabel, title, bump: scheduleChanged ? 1 : 0 });
     result.updated++;
   }
 
@@ -286,9 +290,9 @@ export async function upsertMatches(
   await inChunks(inserts, (json) =>
     db.query(
       `insert into match (id, competition_id, season, round_label, title, home_team_id, away_team_id,
-         home_placeholder, away_placeholder, start_at, date_only, status, venue, is_neutral)
+         home_placeholder, away_placeholder, start_at, date_only, status, venue, is_neutral, broadcast)
        select x.id, $1, x.season, x.round_label, x.title, x.home_team_id, x.away_team_id, x.home_placeholder,
-         x.away_placeholder, x.start_at, x.date_only, x.status, x.venue, x.is_neutral
+         x.away_placeholder, x.start_at, x.date_only, x.status, x.venue, x.is_neutral, x.broadcast
        from jsonb_to_recordset($2::text::jsonb) as x(id uuid, ${MATCH_COLUMNS})`,
       [competitionId, json],
     ),
@@ -306,7 +310,7 @@ export async function upsertMatches(
       `update match m set season = x.season, round_label = x.round_label, title = x.title,
          home_team_id = x.home_team_id, away_team_id = x.away_team_id, home_placeholder = x.home_placeholder,
          away_placeholder = x.away_placeholder, start_at = x.start_at, date_only = x.date_only, status = x.status,
-         venue = x.venue, is_neutral = x.is_neutral, sequence = m.sequence + x.bump, updated_at = now()
+         venue = x.venue, is_neutral = x.is_neutral, broadcast = x.broadcast, sequence = m.sequence + x.bump, updated_at = now()
        from jsonb_to_recordset($1::text::jsonb) as x(id uuid, bump int, ${MATCH_COLUMNS})
        where m.id = x.id`,
       [json],

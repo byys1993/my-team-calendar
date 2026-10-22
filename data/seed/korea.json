@@ -1,6 +1,6 @@
 {
   "competitions": [
-    { "slug": "kbo", "sport": "baseball", "name_ko": "KBO 리그", "type": "league", "display_order": 10,
+    { "slug": "kbo", "broadcast": "TVING", "sport": "baseball", "name_ko": "KBO 리그", "type": "league", "display_order": 10,
       "sources": [{ "source": "kbo", "external_id": "1" }] },
     { "slug": "kbl", "sport": "basketball", "name_ko": "KBL", "type": "league", "display_order": 10,
       "sources": [{ "source": "kbl", "external_id": "kbl" }] }
