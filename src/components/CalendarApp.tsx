@@ -18,6 +18,7 @@ import { viewOf, type Display, type MatchView } from "./matchView";
 import { PALETTE, useSelection } from "./selection";
 import { TimeZoneSelect } from "./TimeZoneSelect";
 import { VisitorStats } from "./VisitorStats";
+import { CalendarSubscribe } from "./CalendarSubscribe";
 import { AUTO, browserTimeZone, isValidTimeZone, TimeZoneProvider, useTimeZonePref } from "./timezone";
 import {
   dateLabel,
@@ -280,6 +281,7 @@ export function CalendarApp({
             </button>
           </span>
         ))}
+        <CalendarSubscribe slugs={selections.filter((s) => s.enabled).map((s) => s.slug)} />
       </section>
 
       {error && <p className="error">{error}</p>}

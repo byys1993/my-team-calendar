@@ -44,6 +44,8 @@ export interface ScheduleMatch {
   status: "scheduled" | "time_tbd" | "conditional" | "draw_pending" | "postponed" | "cancelled";
   venue: string | null;
   isNeutral: boolean;
+  sequence: number; // 일정이 바뀔 때마다 +1 (ICS)
+  updatedAt: string;
 }
 
 // 대회·종목 이름: 한국어면 name_ko, 아니면 그 언어 → 영어 → 한국어 순서로
@@ -119,13 +121,15 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Lo
     status: ScheduleMatch["status"];
     venue: string | null;
     is_neutral: boolean;
+    sequence: number;
+    updated_at: Date;
   }>(
     `select m.id, c.slug as competition, s.slug as sport, m.round_label, m.title, h.slug as home, a.slug as away,
        case when $2 = 'ko' then coalesce(h.short_ko, h.name_ko, m.home_placeholder)
             else coalesce(h.name_en, m.home_placeholder) end as home_label,
        case when $2 = 'ko' then coalesce(a.short_ko, a.name_ko, m.away_placeholder)
             else coalesce(a.name_en, m.away_placeholder) end as away_label,
-       m.start_at, to_char(m.date_only, 'YYYY-MM-DD') as date_only, m.status, m.venue, m.is_neutral
+       m.start_at, to_char(m.date_only, 'YYYY-MM-DD') as date_only, m.status, m.venue, m.is_neutral, m.sequence, m.updated_at
      from match m
      join competition c on c.id = m.competition_id
      join sport s on s.id = c.sport_id
@@ -151,5 +155,7 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Lo
     status: r.status,
     venue: r.venue,
     isNeutral: r.is_neutral,
+    sequence: r.sequence,
+    updatedAt: r.updated_at.toISOString(),
   }));
 }
