@@ -33,10 +33,6 @@ export async function recordVisit(db: Db, id: string, now = new Date()): Promise
     visitor,
   ]);
   if (added.length) await db.query("update visitor_total set count = count + 1 where id = 1");
-  // 가끔 오래된 접속 기록을 지운다
-  if (Math.random() < 0.02) {
-    await db.query("delete from visitor_presence where last_seen < $1", [new Date(now.getTime() - 86_400_000).toISOString()]);
-  }
   return getStats(db, now);
 }
 

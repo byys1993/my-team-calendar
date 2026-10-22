@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { MatchStatus } from "@/collector/types";
 import { adminEnabled, endSession, requireAdmin, startSession } from "@/lib/admin/auth";
 import { checkPassword } from "@/lib/admin/session";
+import { hitRateLimit } from "@/lib/auth/core";
 import { getDb } from "@/lib/db";
 import {
   createManualMatch,
@@ -24,8 +26,15 @@ import {
   type ManualRow,
 } from "@/lib/manual/import";
 
+const ADMIN_LOGIN_LIMIT = 10;
+
 export async function login(_prev: { error?: string }, form: FormData): Promise<{ error?: string }> {
   if (!adminEnabled()) return { error: "ADMIN_PASSWORD 환경변수가 설정되지 않았습니다." };
+  // 비밀번호 무작위 대입을 막기 위해 IP 당 시간당 10번까지만 시도할 수 있다
+  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (!(await hitRateLimit(getDb(), `admin-login:${ip}`, ADMIN_LOGIN_LIMIT, 3600))) {
+    return { error: "시도 횟수가 너무 많습니다. 1시간 뒤에 다시 시도해 주세요." };
+  }
   const ok = checkPassword(String(form.get("password") ?? ""), process.env.ADMIN_PASSWORD!);
   if (!ok) {
     // 무작위 대입을 늦춘다
