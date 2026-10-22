@@ -80,5 +80,14 @@ export function useSelection(validSlugs: string[]) {
     [update],
   );
 
-  return { list, loaded, add, remove, toggle };
+  // 계정에 저장된 목록으로 통째로 바꾼다 (로그인 직후). 지금 목록에 없는 팀은 버린다.
+  const replace = useCallback(
+    (items: Selection[]) => {
+      const valid = new Set(key.split(","));
+      update(() => items.filter((s) => valid.has(s.slug)).slice(0, MAX_TEAMS));
+    },
+    [update, key],
+  );
+
+  return { list, loaded, add, remove, toggle, replace };
 }

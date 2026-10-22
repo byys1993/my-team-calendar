@@ -4,6 +4,7 @@ import type { Locale } from "@/i18n/config";
 import { I18nProvider } from "@/i18n/client";
 import { MESSAGES } from "@/i18n";
 import { getLocale } from "@/i18n/server";
+import { loginEnabled } from "@/lib/auth/mailer";
 import { getDb } from "@/lib/db";
 import { getCatalog } from "@/lib/schedule";
 
@@ -20,7 +21,7 @@ export default async function Home() {
   const locale = await getLocale();
   return (
     <I18nProvider locale={locale} messages={MESSAGES[locale]}>
-      <CalendarApp catalog={await cachedCatalog(locale)} />
+      <CalendarApp catalog={await cachedCatalog(locale)} loginEnabled={loginEnabled()} />
     </I18nProvider>
   );
 }

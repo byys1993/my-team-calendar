@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { LOCALE_COOKIE, isLocale } from "@/i18n/config";
 import { useI18n } from "@/i18n/client";
 import { formatLabel, formatTitle } from "@/i18n/format";
 import { MAX_TEAMS, type Catalog, type ScheduleMatch } from "@/lib/schedule";
 import { SOURCE_CREDITS, SOURCE_LABEL } from "@/lib/sources";
+import { AccountMenu } from "./AccountMenu";
 import { LanguageSelect } from "./LanguageSelect";
+import { useAccount } from "./useAccount";
 import { MatchRow } from "./MatchRow";
 import { MonthCalendar } from "./MonthCalendar";
 import { TeamPicker } from "./TeamPicker";
@@ -25,7 +29,8 @@ import {
 
 const UPCOMING_LIMIT = 15;
 
-export function CalendarApp({ catalog }: { catalog: Catalog }) {
+// loginEnabled: 메일 발송이 설정되지 않은 운영 환경에서는 로그인 버튼을 숨긴다 (로그인 없이도 모든 기능 사용 가능)
+export function CalendarApp({ catalog, loginEnabled }: { catalog: Catalog; loginEnabled: boolean }) {
   const { m: t, t: fmt, intl, locale } = useI18n();
   const display: Display = useMemo(
     () => ({ label: (raw) => formatLabel(raw, t) ?? raw, title: (raw) => formatTitle(raw, t, locale) ?? raw }),
@@ -33,7 +38,45 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
   );
   const teamsBySlug = useMemo(() => new Map(catalog.teams.map((t) => [t.slug, t])), [catalog.teams]);
   const compsBySlug = useMemo(() => new Map(catalog.competitions.map((c) => [c.slug, c])), [catalog.competitions]);
-  const { list: selections, loaded, add, remove, toggle } = useSelection(catalog.teams.map((t) => t.slug));
+  const { list: selections, loaded, add, remove, toggle, replace } = useSelection(catalog.teams.map((t) => t.slug));
+  const auth = useAccount();
+  const { account, checked, save } = auth;
+  const router = useRouter();
+
+  // 로그인하면 계정에 저장된 팀을 불러오고(계정에 없으면 지금 고른 팀을 올리고), 이후 바뀔 때마다 저장한다.
+  // synced: 마지막으로 계정과 맞춘 목록. null 이면 아직 맞추지 않음.
+  const synced = useRef<string | null>(null);
+  useEffect(() => {
+    if (!account) {
+      synced.current = null;
+      return;
+    }
+    if (!loaded || synced.current !== null) return;
+    if (account.selections.length > 0) {
+      synced.current = JSON.stringify(account.selections);
+      replace(account.selections);
+    } else {
+      synced.current = JSON.stringify(selections);
+      void save({ selections, locale });
+    }
+    // 다른 기기에서 고른 언어가 있으면 그 언어로 바꾼다
+    if (account.locale && account.locale !== locale && isLocale(account.locale)) {
+      document.cookie = `${LOCALE_COOKIE}=${account.locale}; path=/; max-age=31536000; samesite=lax`;
+      router.refresh();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 로그인 시점에 한 번만 맞춘다
+  }, [account, loaded]);
+
+  useEffect(() => {
+    if (!account || synced.current === null) return;
+    const json = JSON.stringify(selections);
+    if (json === synced.current) return;
+    const timer = setTimeout(() => {
+      synced.current = json;
+      void save({ selections });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [selections, account, save]);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [matches, setMatches] = useState<ScheduleMatch[]>([]);
@@ -52,8 +95,9 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
   }, []);
 
   useEffect(() => {
-    if (loaded && selections.length === 0) setPickerOpen(true);
-  }, [loaded, selections.length]);
+    // 로그인 확인이 끝난 뒤에도 고른 팀이 없을 때만 팀 선택 창을 연다
+    if (loaded && checked && selections.length === 0 && !account?.selections.length) setPickerOpen(true);
+  }, [loaded, checked, selections.length, account]);
 
   const slugKey = selections.map((s) => s.slug).sort().join(",");
   useEffect(() => {
@@ -133,7 +177,16 @@ export function CalendarApp({ catalog }: { catalog: Catalog }) {
           {now && <span className="tz">{fmt(t.app.timeZone, { tz: browserTimeZone() })}</span>}
         </div>
         <div className="top-actions">
-          <LanguageSelect />
+          <LanguageSelect onChange={(l) => account && void save({ locale: l })} />
+          {(loginEnabled || account) && (
+            <AccountMenu
+              account={account}
+              requestCode={auth.requestCode}
+              verify={auth.verify}
+              logout={auth.logout}
+              deleteAccount={auth.deleteAccount}
+            />
+          )}
           <button type="button" className="primary" onClick={() => setPickerOpen(true)}>
             {t.app.pickTeams}
           </button>

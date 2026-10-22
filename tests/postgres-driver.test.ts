@@ -2,6 +2,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { upsertMatches } from "@/collector/upsert";
+import { hitRateLimit, issueCode, updateUser, userFromToken, verifyCode } from "@/lib/auth/core";
 import { createPostgresDb } from "@/lib/db/postgres";
 import { migrate } from "@/lib/db/migrate";
 import { loadCatalog, seed } from "@/lib/db/seed";
@@ -44,5 +45,19 @@ describe("postgres.js 드라이버 경로", () => {
     // 대체 소스가 장소를 채운 것(+1)과 시각 변경(+1) 모두 일정 변경으로 센다
     const rows = await db.query<{ sequence: number; venue: string }>("select sequence, venue from match");
     expect(rows).toEqual([{ sequence: 2, venue: "Emirates Stadium" }]);
+  });
+
+  it("로그인·내 팀 저장·요청 제한이 동작한다", async () => {
+    const issued = await issueCode(db, "driver@example.com");
+    if (!issued.ok) throw new Error("issue failed");
+    const r = await verifyCode(db, "driver@example.com", issued.code);
+    if (!r.ok) throw new Error("verify failed");
+    await updateUser(db, r.user.id, { selections: [{ slug: "arsenal", color: 2, enabled: true }], locale: "fr" });
+    expect(await userFromToken(db, r.token)).toMatchObject({
+      locale: "fr",
+      selections: [{ slug: "arsenal", color: 2, enabled: true }],
+    });
+    expect(await hitRateLimit(db, "code-ip:test", 1, 3600)).toBe(true);
+    expect(await hitRateLimit(db, "code-ip:test", 1, 3600)).toBe(false);
   });
 });

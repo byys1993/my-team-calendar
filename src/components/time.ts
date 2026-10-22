@@ -14,6 +14,10 @@ function dtf(intl: string, opts: Intl.DateTimeFormatOptions): Intl.DateTimeForma
   return cache.get(key)!;
 }
 
+// 영어는 오전/오후(12시간제), 나머지 언어는 스포츠 일정에서 흔한 24시간제(18:30)
+const clock = (intl: string): Intl.DateTimeFormatOptions =>
+  intl.startsWith("en") ? { hour: "numeric", minute: "2-digit" } : { hour: "2-digit", minute: "2-digit", hourCycle: "h23" };
+
 const utcOf = (key: string) => {
   const [y, m, d] = key.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d));
@@ -34,7 +38,7 @@ export function hasExactTime(m: ScheduleMatch): boolean {
 
 // 시각, 시간 미정이면 tbdText
 export function matchTimeLabel(m: ScheduleMatch, intl: string, tbdText: string): string {
-  return hasExactTime(m) ? dtf(intl, { hour: "numeric", minute: "2-digit" }).format(new Date(m.startAt!)) : tbdText;
+  return hasExactTime(m) ? dtf(intl, clock(intl)).format(new Date(m.startAt!)) : tbdText;
 }
 
 // '10월 24일 (토)', 'Sat, Oct 24' 처럼 그 언어 방식의 날짜
@@ -54,7 +58,7 @@ export function weekdayNames(intl: string): string[] {
 }
 
 export function updatedLabel(iso: string, intl: string): string {
-  return dtf(intl, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+  return dtf(intl, { month: "short", day: "numeric", ...clock(intl) }).format(new Date(iso));
 }
 
 export function daysBetween(fromKey: string, toKey: string): number {
