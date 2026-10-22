@@ -28,7 +28,9 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # 평소 5초. DB 접속 문제로 멈추면 3분 만에 끊어서 다음 실행이 밀리지 않게 한다
       - run: npm run db:setup
+        timeout-minutes: 3
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
       - run: npm run sync -- ${{ inputs.force && '--force' || '' }}

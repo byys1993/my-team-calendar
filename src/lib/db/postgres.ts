@@ -18,6 +18,7 @@ function wrap(sql: Sql): Db {
 
 export function createPostgresDb(url: string, opts: { max?: number } = {}): Db & { end(): Promise<void> } {
   // Supabase 트랜잭션 풀러(6543)는 prepared statement를 지원하지 않는다.
-  const sql = postgres(url, { prepare: false, max: opts.max ?? 5, onnotice: () => {} });
+  // 주소·비밀번호가 틀렸을 때 하염없이 기다리지 않고 15초 안에 오류를 내도록 접속 제한 시간을 둔다.
+  const sql = postgres(url, { prepare: false, max: opts.max ?? 5, connect_timeout: 15, onnotice: () => {} });
   return Object.assign(wrap(sql), { end: () => sql.end() });
 }
