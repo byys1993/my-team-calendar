@@ -4,6 +4,8 @@ import { requireAdmin } from "@/lib/admin/auth";
 import { logout } from "../actions";
 
 export const metadata: Metadata = { title: "관리자 · 마이팀 캘린더", robots: { index: false } };
+// 로그인 확인과 DB 조회가 필요한 화면이라 빌드 때 미리 만들지 않고 요청마다 그린다 (하위 화면 모두 적용)
+export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();

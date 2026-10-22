@@ -4,6 +4,8 @@ import { adminEnabled, isAdmin } from "@/lib/admin/auth";
 import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = { title: "관리자 로그인 · 마이팀 캘린더", robots: { index: false } };
+// 로그인 쿠키를 확인하므로 요청마다 그린다
+export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {
   if (await isAdmin()) redirect("/admin");

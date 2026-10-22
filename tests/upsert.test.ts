@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { upsertMatches } from "@/collector/upsert";
 import { normalizeName } from "@/collector/normalize";
+import { reviewTeams } from "@/lib/manual/admin";
 import type { Db } from "@/lib/db";
 import { espnMatch, fdMatch, setupDb } from "./helpers";
 
@@ -116,6 +117,10 @@ describe("upsertMatches", () => {
       "select slug, name_ko, needs_review from team where needs_review",
     );
     expect(team).toEqual({ slug: "football-data-999", name_ko: "Unknown Rovers FC", needs_review: true });
+    // 관리자 '팀 이름' 화면 목록에 나온 대회와 함께 보인다
+    expect(await reviewTeams(db)).toEqual([
+      expect.objectContaining({ slug: "football-data-999", competitions: "프리미어리그" }),
+    ]);
   });
 
   it("경기가 많아도 질의 수는 일정하다 (멀리 있는 DB 대비)", async () => {

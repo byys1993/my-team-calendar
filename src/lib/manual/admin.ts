@@ -170,10 +170,20 @@ export async function manualTeams(db: Db, league: string) {
 // 자동 생성돼 한국어 이름이 필요한 팀
 export async function reviewTeams(db: Db) {
   return db.query<{ slug: string; name_ko: string; short_ko: string | null; name_en: string; competitions: string }>(
-    `select t.slug, t.name_ko, t.short_ko, t.name_en,
-       coalesce((select string_agg(distinct c.name_ko, ', ') from match m join competition c on c.id = m.competition_id
-                 where t.id in (m.home_team_id, m.away_team_id)), '') as competitions
-     from team t where t.needs_review order by t.name_en`,
+    // 팀마다 경기 전체를 훑지 않도록 (팀, 대회) 쌍을 한 번에 모은 뒤 합친다
+    `with appearances as (
+       select home_team_id as team_id, competition_id from match where home_team_id is not null
+       union
+       select away_team_id, competition_id from match where away_team_id is not null
+     )
+     select t.slug, t.name_ko, t.short_ko, t.name_en,
+       coalesce(string_agg(distinct c.name_ko, ', '), '') as competitions
+     from team t
+     left join appearances a on a.team_id = t.id
+     left join competition c on c.id = a.competition_id
+     where t.needs_review
+     group by t.id
+     order by t.name_en`,
   );
 }
 

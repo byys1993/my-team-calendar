@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import type { MatchStatus } from "@/collector/types";
 import { adminEnabled, endSession, requireAdmin, startSession } from "@/lib/admin/auth";
@@ -76,6 +76,7 @@ export async function uploadCsv(_prev: UploadState, form: FormData): Promise<Upl
     summary.push(`${names.get(id)}: 신규 ${r.inserted} · 수정 ${r.updated} · 변경 없음 ${list.length - r.inserted - r.updated - r.skipped}`);
   }
   revalidatePath("/");
+  revalidateTag("catalog");
   return { done: "saved", rows: parsed.rows, summary };
 }
 
@@ -128,6 +129,7 @@ export async function saveMatch(_prev: { error?: string }, form: FormData): Prom
     return { error: e instanceof Error ? e.message : String(e) };
   }
   revalidatePath("/");
+  revalidateTag("catalog");
   redirect(`/admin/matches?league=${league}&month=${row.date.slice(0, 7)}&saved=1`);
 }
 
@@ -137,6 +139,7 @@ export async function removeMatch(form: FormData): Promise<void> {
   const month = String(form.get("month") ?? "");
   await deleteManualMatch(getDb(), String(form.get("id") ?? ""));
   revalidatePath("/");
+  revalidateTag("catalog");
   redirect(`/admin/matches?league=${league}&month=${month}&deleted=1`);
 }
 
@@ -147,6 +150,7 @@ export async function saveTeam(form: FormData): Promise<void> {
   if (slug && nameKo) {
     await updateTeamName(getDb(), slug, nameKo, String(form.get("short_ko") ?? "").trim() || null);
     revalidatePath("/");
+    revalidateTag("catalog");
   }
   redirect("/admin/teams");
 }
