@@ -39,10 +39,10 @@ export const SOURCE_CREDITS: Record<string, { label: string; url: string; text: 
     url: "https://www.koreabaseball.com/",
     text: { ko: "KBO 리그 일정: KBO 공식 홈페이지", en: "KBO League schedule: KBO official website" },
   },
-  manual: {
+  kbl: {
     label: "KBL",
     url: "https://www.kbl.or.kr/",
-    text: { ko: "KBL 일정: KBL 발표 일정을 운영자가 직접 입력", en: "KBL schedule: entered by the site operator from KBL announcements" },
+    text: { ko: "KBL 일정: KBL 공식 홈페이지", en: "KBL schedule: KBL official website" },
   },
   espn: {
     label: "ESPN",

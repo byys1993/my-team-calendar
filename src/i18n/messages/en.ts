@@ -92,6 +92,9 @@ export const en = {
       kbo_semi: "Semi-playoff",
       kbo_po: "Playoff",
       kbo_ks: "Korean Series",
+      kbl_6po: "First-round playoffs",
+      kbl_4po: "Semifinal playoffs",
+      kbl_final: "Championship Finals",
     },
     lol: {
       swiss: "Swiss stage",

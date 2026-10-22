@@ -28,7 +28,7 @@ describe("CSV 읽기", () => {
   });
 });
 
-describe("KBL 가져오기 (수동 입력)", () => {
+describe("수동 입력 (CSV·관리자 화면)", () => {
   let db: Db & { close(): Promise<void> };
   beforeEach(async () => {
     db = await createMemoryDb();
@@ -37,11 +37,15 @@ describe("KBL 가져오기 (수동 입력)", () => {
   });
   afterEach(() => db.close());
 
-  it("수동 입력 대회는 KBL 뿐이다 (KBO 는 자동 수집)", async () => {
+  it("기본 시드에는 수동 입력 대회가 없다 (KBO·KBL 자동 수집)", async () => {
+    expect(await loadManualCompetitions(db)).toEqual([]);
+    // 아래 테스트는 자동 수집이 실패해 KBL 을 수동 입력으로 돌린 상황을 가정한다
+    await db.query("update competition set feed = 'manual' where slug = 'kbl'");
     expect((await loadManualCompetitions(db)).map((c) => c.slug)).toEqual(["kbl"]);
   });
 
   it("예시 CSV는 오류 없이 읽히고 한국 시간을 UTC로 바꾼다", async () => {
+    await db.query("update competition set feed = 'manual' where slug = 'kbl'");
     const comps = await loadManualCompetitions(db);
     const kbl = comps.find((c) => c.slug === "kbl")!;
     const parsed = parseImport(decodeCsv(new Uint8Array(await readFile("public/samples/kbl_sample.csv"))), comps);
@@ -60,6 +64,7 @@ describe("KBL 가져오기 (수동 입력)", () => {
   });
 
   it("잘못된 줄은 줄 번호와 함께 모두 알려준다", async () => {
+    await db.query("update competition set feed = 'manual' where slug = 'kbl'");
     const csv = [
       HEADER,
       "k1,KBL,2027-02-30,18:30,SK,LG,,,,,", // 없는 날짜
@@ -77,6 +82,7 @@ describe("KBL 가져오기 (수동 입력)", () => {
   });
 
   it("같은 game_key 로 다시 올리면 같은 경기 ID로 날짜만 바뀐다", async () => {
+    await db.query("update competition set feed = 'manual' where slug = 'kbl'");
     const comps = await loadManualCompetitions(db);
     const kbl = comps.find((c) => c.slug === "kbl")!;
     const load = (date: string) =>
@@ -97,6 +103,7 @@ describe("KBL 가져오기 (수동 입력)", () => {
   });
 
   it("관리자 화면 수정: 시간을 지우면 시간 미정, 장소를 비우면 지운다", async () => {
+    await db.query("update competition set feed = 'manual' where slug = 'kbl'");
     const comps = await loadManualCompetitions(db);
     const kbl = comps.find((c) => c.slug === "kbl")!;
     await saveManualMatches(

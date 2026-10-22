@@ -91,6 +91,9 @@ export const ja: Messages = {
       kbo_semi: "準プレーオフ",
       kbo_po: "プレーオフ",
       kbo_ks: "韓国シリーズ",
+      kbl_6po: "プレーオフ 1 回戦",
+      kbl_4po: "プレーオフ準決勝",
+      kbl_final: "チャンピオンシップファイナル",
     },
     lol: {
       swiss: "スイスステージ",

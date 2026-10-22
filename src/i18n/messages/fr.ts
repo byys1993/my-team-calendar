@@ -92,6 +92,9 @@ export const fr: Messages = {
       kbo_semi: "Semi-play-off",
       kbo_po: "Play-off",
       kbo_ks: "Série de Corée",
+      kbl_6po: "Premier tour des play-offs",
+      kbl_4po: "Demi-finales des play-offs",
+      kbl_final: "Finale du championnat",
     },
     lol: {
       swiss: "Phase suisse",

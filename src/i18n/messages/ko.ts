@@ -91,6 +91,9 @@ export const ko: Messages = {
       kbo_semi: "준플레이오프",
       kbo_po: "플레이오프",
       kbo_ks: "한국시리즈",
+      kbl_6po: "6강 플레이오프",
+      kbl_4po: "4강 플레이오프",
+      kbl_final: "챔피언결정전",
     },
     lol: {
       swiss: "스위스 스테이지",

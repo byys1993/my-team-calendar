@@ -4,10 +4,11 @@ import { UploadForm } from "./UploadForm";
 export default function UploadPage() {
   return (
     <>
-      <h1>CSV 올리기 (KBL)</h1>
+      <h1>CSV 올리기</h1>
       <p>
         시즌 전체 일정을 한 번에 올립니다. 같은 <code>game_key</code> 로 다시 올리면 새 경기를 만들지 않고 그 경기를
-        고칩니다. 파일에 없는 기존 경기는 그대로 둡니다. KBO 는 공식 사이트에서 자동으로 수집합니다.
+        고칩니다. 파일에 없는 기존 경기는 그대로 둡니다. 지금은 KBO·KBL 모두 공식 홈페이지에서 자동 수집하므로, 자동 수집이
+        실패하는 대회를 시드에서 수동 입력(feed: manual)으로 바꿨을 때만 씁니다.
       </p>
       <ul className="muted">
         <li>

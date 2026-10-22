@@ -33,7 +33,7 @@
 | NBA, NFL | ESPN | (없음: NBA 공식 CDN은 서버 접근 차단, balldontlie는 키 필요) |
 | LCK, LoL 퍼스트 스탠드, MSI, 월드 챔피언십 | LoL Esports 비공식 API (사이트 공개 키) | (없음: PandaScore는 키 필요) |
 | KBO 리그 (정규시즌·포스트시즌) | KBO 공식 홈페이지 일정 화면 데이터 | (없음) |
-| KBL | 관리자 수동 입력 (CSV·화면) | — |
+| KBL (1군 정규시즌·플레이오프·챔피언결정전) | KBL 공식 홈페이지 일정 데이터 (api.kbl.or.kr) | (없음) |
 
 대회·팀 추가는 `data/seed/*.json`(파일명 순서대로 합쳐짐)에 항목을 넣고 `npm run db:setup`을 실행하면 됩니다.
 F1은 팀 대신 시리즈 하나(`f1` 팀)를 선택하고, 세션은 제목(`match.title`)이 있는 이벤트로 저장됩니다.
@@ -59,7 +59,10 @@ npm run dev                    # http://localhost:3000
 
 `npm test`는 메모리 DB로 수집기(ID 유지, 대체 소스 전환, 갱신 주기)와 CSV 가져오기를 검증합니다.
 
-## KBL 관리자 (`/admin`)
+## 관리자 (`/admin`)
+
+지금은 KBO·KBL 모두 자동 수집이라 수동 입력 대회가 없습니다. 자동 수집이 막히면 시드에서 그 대회의 `feed` 를 `manual` 로 바꾸고
+`npm run db:setup` 하면 아래 CSV·경기 수정 기능으로 직접 입력할 수 있습니다 (팀의 `manual` 연결은 시드에 남겨 둠).
 
 환경변수 `ADMIN_PASSWORD`를 설정하면 켜집니다(비워 두면 꺼짐). 로그인은 7일 유지되고, 비밀번호를 바꾸면 모든 로그인이 풀립니다.
 
@@ -118,4 +121,4 @@ Actions는 매시간 돕니다. 대회별로 마지막 전체 수집 후 11시�
 - MLB Stats API (© MLB Advanced Media, 개인·비상업 이용), NHL 공개 API
 - ESPN (비공식 엔드포인트)
 - LoL Esports (Riot Games, 비공식 엔드포인트)
-- KBO 공식 홈페이지 (일정 화면 데이터, 비공식 이용)
+- KBO·KBL 공식 홈페이지 (일정 화면 데이터, 비공식 이용)

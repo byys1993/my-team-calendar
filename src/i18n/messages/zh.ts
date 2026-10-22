@@ -91,6 +91,9 @@ export const zh: Messages = {
       kbo_semi: "准季后赛",
       kbo_po: "季后赛",
       kbo_ks: "韩国大赛",
+      kbl_6po: "季后赛首轮",
+      kbl_4po: "季后赛半决赛",
+      kbl_final: "总决赛",
     },
     lol: {
       swiss: "瑞士轮",

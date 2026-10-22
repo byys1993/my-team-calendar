@@ -17,9 +17,20 @@ export default async function MatchesPage({
 }) {
   const sp = await searchParams;
   const db = getDb();
-  // 수동 입력 대회만 (현재 KBL. KBO 는 공식 사이트에서 자동 수집)
+  // 수동 입력 대회만 (현재는 없음: KBO·KBL 모두 공식 사이트에서 자동 수집)
   const leagues = (await loadManualCompetitions(db)).map((c) => ({ slug: c.slug, name: c.slug.toUpperCase() }));
-  const league = leagues.find((l) => l.slug === sp.league)?.slug ?? leagues[0]?.slug ?? "kbl";
+  if (leagues.length === 0) {
+    return (
+      <>
+        <h1>경기 수정</h1>
+        <p className="muted">
+          지금은 수동 입력 대회가 없습니다. KBO·KBL 은 공식 홈페이지에서 자동 수집합니다. 자동 수집이 실패하는 대회는 시드에서
+          feed 를 manual 로 바꾸면 여기서 직접 입력할 수 있습니다.
+        </p>
+      </>
+    );
+  }
+  const league = leagues.find((l) => l.slug === sp.league)?.slug ?? leagues[0].slug;
   const month = /^\d{4}-\d{2}$/.test(sp.month ?? "") ? sp.month! : toKst(new Date()).date.slice(0, 7);
   const matches = await listManualMatches(db, league, month);
   const href = (l: string, m: string) => `/admin/matches?league=${l}&month=${m}`;

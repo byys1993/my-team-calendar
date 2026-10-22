@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { espn, espnTeamId, monthRange, parseEspnEvent } from "@/collector/sources/espn";
 import { parseJolpica, parseOpenF1 } from "@/collector/sources/f1";
 import { markConditional, parseKboMonth, type KboGame } from "@/collector/sources/kbo";
+import { parseKbl, type KblGame } from "@/collector/sources/kbl";
 import { parseLolEvent } from "@/collector/sources/lolesports";
 import { parseMlb } from "@/collector/sources/mlb";
 import { parseNhlGame } from "@/collector/sources/nhl";
@@ -205,6 +206,84 @@ describe("KBO 공식 사이트", () => {
       },
     ];
     expect(parseKboMonth({ rows }, 2026, true)[0].winner).toBe("HT");
+  });
+});
+
+describe("KBL 공식 홈페이지", () => {
+  // 실제 응답(api.kbl.or.kr/match/list) 모양
+  const g = (over: Partial<KblGame>): KblGame => ({
+    gmkey: "S49G01N1",
+    gameDate: "20261003",
+    gameStart: "1400",
+    gameNo: 1,
+    seasonGrade: 1,
+    seasonCategory: "R",
+    seasonName1: "2026-2027",
+    tcodeH: "60",
+    tcodeA: "50",
+    tnameH: "부산 KCC",
+    tnameA: "창원 LG",
+    stadiumnameF: "부산사직체육관",
+    isEnded: 0,
+    scoreH: null,
+    scoreA: null,
+    ...over,
+  });
+
+  it("정규시즌 1군 경기만 남기고 한국 시간을 UTC로", () => {
+    const out = parseKbl([
+      g({}),
+      g({ gmkey: "D1", seasonGrade: 2, seasonCategory: "D1" }), // D리그
+      g({ gmkey: "EA1", seasonCategory: "EA", tcodeH: "757", tnameH: "나가사키 벨카" }), // EASL
+      g({ gmkey: "OM1", seasonCategory: "OM" }), // 시범 경기
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({
+      externalId: "S49G01N1",
+      season: "2026-27",
+      roundLabel: null,
+      home: { externalId: "60" },
+      away: { externalId: "50" },
+      startAt: "2026-10-03T05:00:00.000Z",
+      venue: "부산사직체육관",
+      status: "scheduled",
+    });
+  });
+
+  it("플레이오프: 6강(1~10번)·4강(11~20번)을 시리즈별 차전으로, 남은 경기는 승패로 '진출 시' 계산", () => {
+    const po = (no: number, h: string, a: string, sh: number | null = null, sa: number | null = null) =>
+      g({ gmkey: `S47G03N${no}`, gameNo: no, seasonCategory: "PO", tcodeH: h, tcodeA: a, isEnded: sh == null ? 0 : 1, scoreH: sh, scoreA: sa });
+    const out = parseKbl([
+      // 6강: SK(55)-소노(66) 두 경기 SK 2승, DB(16)-KCC(60) 아직 시작 전
+      po(1, "55", "66", 80, 70),
+      po(2, "16", "60"),
+      po(3, "55", "66", 75, 60),
+      po(4, "16", "60"),
+      po(5, "66", "55"),
+      po(6, "60", "16"),
+      po(7, "55", "66"),
+      po(9, "66", "55"),
+      // 4강
+      po(11, "50", "66"),
+    ]);
+    const byId = Object.fromEntries(out.map((m) => [m.externalId, m]));
+    expect(byId.S47G03N1.roundLabel).toBe("@series:kbl_6po|@game:1");
+    expect(byId.S47G03N3.roundLabel).toBe("@series:kbl_6po|@game:2");
+    expect(byId.S47G03N2.roundLabel).toBe("@series:kbl_6po|@game:1");
+    expect(byId.S47G03N11.roundLabel).toBe("@series:kbl_4po|@game:1");
+    // SK 2승: 3차전은 확정, 4·5차전은 진출 시
+    expect(byId.S47G03N5.status).toBe("scheduled");
+    expect(byId.S47G03N7.status).toBe("conditional");
+    expect(byId.S47G03N9.status).toBe("conditional");
+    // 시작 전 시리즈: 1~3차전 확정
+    expect([byId.S47G03N2, byId.S47G03N4, byId.S47G03N6].map((m) => m.status)).toEqual(["scheduled", "scheduled", "scheduled"]);
+  });
+
+  it("챔피언결정전은 7전 4선승", () => {
+    const cp = (no: number) => g({ gmkey: `CP${no}`, gameNo: no, seasonCategory: "CP" });
+    const out = parseKbl([1, 2, 3, 4, 5, 6, 7].map(cp));
+    expect(out.map((m) => m.status)).toEqual(["scheduled", "scheduled", "scheduled", "scheduled", "conditional", "conditional", "conditional"]);
+    expect(out[4].roundLabel).toBe("@series:kbl_final|@game:5");
   });
 });
 

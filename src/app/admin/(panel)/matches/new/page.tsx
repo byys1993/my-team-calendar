@@ -12,7 +12,10 @@ export default async function NewMatchPage({
   const sp = await searchParams;
   const db = getDb();
   const leagues = (await loadManualCompetitions(db)).map((c) => c.slug);
-  const league = leagues.includes(sp.league ?? "") ? sp.league! : (leagues[0] ?? "kbl");
+  if (leagues.length === 0) {
+    return <p className="muted">수동 입력 대회가 없습니다.</p>;
+  }
+  const league = leagues.includes(sp.league ?? "") ? sp.league! : leagues[0];
   const date = normalizeDate(sp.date ?? "") ?? undefined;
   const teams = await manualTeams(db, league);
   return (
