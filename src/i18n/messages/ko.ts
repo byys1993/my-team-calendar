@@ -13,6 +13,8 @@ export const ko: Messages = {
     emptyHint: "응원하는 팀을 골라 주세요. 최대 {max}팀까지 선택할 수 있어요.",
     toggleHide: "눌러서 숨기기",
     toggleShow: "눌러서 보이기",
+    changeColor: "색 바꾸기",
+    colorTitle: "{team} 색 고르기",
     loadError: "일정을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
     loading: "불러오는 중…",
     noNext: "예정된 경기 없음",

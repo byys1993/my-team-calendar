@@ -13,6 +13,8 @@ export const ar: Messages = {
     emptyHint: "اختر الفرق التي تشجعها. يمكنك اختيار حتى {max} فرق.",
     toggleHide: "انقر للإخفاء",
     toggleShow: "انقر للإظهار",
+    changeColor: "تغيير اللون",
+    colorTitle: "اختر لونًا لـ {team}",
     loadError: "تعذّر تحميل الجدول. حاول مرة أخرى بعد قليل.",
     loading: "جارٍ التحميل…",
     noNext: "لا توجد مباريات قادمة",

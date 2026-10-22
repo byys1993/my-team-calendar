@@ -13,6 +13,8 @@ export const ja: Messages = {
     emptyHint: "応援するチームを選んでください。最大 {max} チームまで選べます。",
     toggleHide: "クリックで非表示",
     toggleShow: "クリックで表示",
+    changeColor: "色を変える",
+    colorTitle: "{team} の色を選ぶ",
     loadError: "日程を読み込めませんでした。しばらくしてからもう一度お試しください。",
     loading: "読み込み中…",
     noNext: "予定された試合はありません",

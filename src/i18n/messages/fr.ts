@@ -13,6 +13,8 @@ export const fr: Messages = {
     emptyHint: "Choisissez les équipes que vous soutenez. Jusqu'à {max} équipes.",
     toggleHide: "Cliquer pour masquer",
     toggleShow: "Cliquer pour afficher",
+    changeColor: "Changer la couleur",
+    colorTitle: "Choisir une couleur pour {team}",
     loadError: "Impossible de charger le calendrier. Réessayez dans un instant.",
     loading: "Chargement…",
     noNext: "Aucun match à venir",

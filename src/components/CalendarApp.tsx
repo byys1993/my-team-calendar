@@ -8,6 +8,7 @@ import { formatLabel, formatTitle } from "@/i18n/format";
 import { MAX_TEAMS, type Catalog, type ScheduleMatch } from "@/lib/schedule";
 import { SOURCE_CREDITS, SOURCE_LABEL } from "@/lib/sources";
 import { AccountMenu } from "./AccountMenu";
+import { ColorPicker } from "./ColorPicker";
 import { LanguageSelect } from "./LanguageSelect";
 import { useAccount } from "./useAccount";
 import { MatchRow } from "./MatchRow";
@@ -46,7 +47,7 @@ export function CalendarApp({
   );
   const teamsBySlug = useMemo(() => new Map(catalog.teams.map((t) => [t.slug, t])), [catalog.teams]);
   const compsBySlug = useMemo(() => new Map(catalog.competitions.map((c) => [c.slug, c])), [catalog.competitions]);
-  const { list: selections, loaded, add, remove, toggle, replace, clear } = useSelection(catalog.teams.map((t) => t.slug));
+  const { list: selections, loaded, add, remove, toggle, replace, clear, setColor } = useSelection(catalog.teams.map((t) => t.slug));
   const auth = useAccount();
   const { account, checked, save } = auth;
   const router = useRouter();
@@ -87,6 +88,7 @@ export function CalendarApp({
   }, [selections, account, save]);
 
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [colorFor, setColorFor] = useState<string | null>(null);
   const [matches, setMatches] = useState<ScheduleMatch[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -204,18 +206,31 @@ export function CalendarApp({
       <section className="team-bar" aria-label={t.app.pickTeams}>
         {selections.length === 0 && loaded && <p className="muted">{fmt(t.app.emptyHint, { max: MAX_TEAMS })}</p>}
         {selections.map((s) => (
-          <button
+          // 색 점을 누르면 색 고르기, 이름을 누르면 켜기/끄기
+          <span
             key={s.slug}
-            type="button"
             className={s.enabled ? "team-chip" : "team-chip off"}
             style={{ "--team": PALETTE[s.color] } as React.CSSProperties}
-            aria-pressed={s.enabled}
-            title={s.enabled ? t.app.toggleHide : t.app.toggleShow}
-            onClick={() => toggle(s.slug)}
           >
-            <span className="dot" />
-            {teamName(s.slug)}
-          </button>
+            <button
+              type="button"
+              className="chip-color"
+              title={t.app.changeColor}
+              aria-label={fmt(t.app.colorTitle, { team: teamName(s.slug) })}
+              onClick={() => setColorFor(s.slug)}
+            >
+              <span className="dot" />
+            </button>
+            <button
+              type="button"
+              className="chip-name"
+              aria-pressed={s.enabled}
+              title={s.enabled ? t.app.toggleHide : t.app.toggleShow}
+              onClick={() => toggle(s.slug)}
+            >
+              {teamName(s.slug)}
+            </button>
+          </span>
         ))}
       </section>
 
@@ -354,6 +369,15 @@ export function CalendarApp({
           </p>
         </div>
       </footer>
+
+      {colorFor && (
+        <ColorPicker
+          teamName={teamName(colorFor)}
+          current={selections.find((s) => s.slug === colorFor)?.color ?? 0}
+          onPick={(c) => setColor(colorFor, c)}
+          onClose={() => setColorFor(null)}
+        />
+      )}
 
       {pickerOpen && (
         <TeamPicker

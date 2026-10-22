@@ -91,7 +91,8 @@ describe("이메일 코드 로그인", () => {
 
   it("선택 목록 검증", () => {
     expect(cleanSelections([{ slug: "bad slug!", color: 0 }])).toBeNull();
-    expect(cleanSelections([{ slug: "arsenal", color: 12 }])).toBeNull();
+    expect(cleanSelections([{ slug: "arsenal", color: 20 }])).toBeNull(); // 색상표는 0~19
+    expect(cleanSelections([{ slug: "arsenal", color: 19 }])).toEqual([{ slug: "arsenal", color: 19, enabled: true }]);
     expect(cleanSelections(Array.from({ length: 11 }, (_, i) => ({ slug: `t${i}`, color: 0 })))).toBeNull();
     expect(cleanSelections([{ slug: "arsenal", color: 1 }, { slug: "arsenal", color: 2 }])).toEqual([
       { slug: "arsenal", color: 1, enabled: true },

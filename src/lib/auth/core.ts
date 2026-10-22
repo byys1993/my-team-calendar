@@ -1,5 +1,6 @@
 import { createHash, createHmac, randomBytes, randomInt } from "node:crypto";
 import type { Db } from "@/lib/db";
+import { isPaletteIndex } from "@/lib/palette";
 import { MAX_TEAMS } from "@/lib/schedule";
 
 // 이메일 인증코드 로그인의 DB 쪽 규칙. 화면·메일 발송과 분리해 테스트할 수 있게 둔다.
@@ -122,7 +123,7 @@ export function cleanSelections(raw: unknown): SelectionItem[] | null {
   for (const s of raw) {
     if (typeof s?.slug !== "string" || !/^[a-z0-9-]{1,64}$/.test(s.slug)) return null;
     const color = Number(s.color);
-    if (!Number.isInteger(color) || color < 0 || color > 9) return null;
+    if (!isPaletteIndex(color)) return null;
     if (out.some((o) => o.slug === s.slug)) continue;
     out.push({ slug: s.slug, color, enabled: s.enabled !== false });
   }

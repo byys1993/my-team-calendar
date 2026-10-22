@@ -13,6 +13,8 @@ export const es: Messages = {
     emptyHint: "Elige los equipos que sigues. Puedes elegir hasta {max}.",
     toggleHide: "Haz clic para ocultar",
     toggleShow: "Haz clic para mostrar",
+    changeColor: "Cambiar color",
+    colorTitle: "Elige un color para {team}",
     loadError: "No se pudo cargar el calendario. Inténtalo de nuevo en unos minutos.",
     loading: "Cargando…",
     noNext: "Sin partidos próximos",

@@ -148,13 +148,68 @@ a {
 .team-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   border: 1.5px solid var(--team);
   background: color-mix(in srgb, var(--team) 12%, var(--surface));
   border-radius: 999px;
-  padding: 4px 12px;
   font-weight: 600;
   font-size: 14px;
+}
+
+/* 칩 안의 두 버튼: 색 점(색 고르기) + 팀 이름(켜기/끄기) */
+.chip-color,
+.chip-name {
+  background: none;
+  border: 0;
+  font: inherit;
+  color: inherit;
+}
+
+.chip-color {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 4px 4px 10px;
+  padding-inline: 10px 4px;
+  border-radius: 999px;
+}
+
+.chip-color .dot {
+  width: 14px !important;
+  height: 14px !important;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.chip-color:hover .dot {
+  transform: scale(1.2);
+}
+
+.chip-name {
+  padding-block: 4px;
+  padding-inline: 2px 12px;
+}
+
+/* 색 고르기 창 */
+.color-dialog {
+  width: min(360px, calc(100vw - 32px));
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 4px 16px 18px;
+}
+
+.swatch {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  outline: 2px solid transparent;
+}
+
+.swatch.on {
+  border-color: var(--surface);
+  outline-color: var(--text);
 }
 
 .team-chip .dot,

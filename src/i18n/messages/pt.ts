@@ -13,6 +13,8 @@ export const pt: Messages = {
     emptyHint: "Escolha os times que você acompanha. Até {max} times.",
     toggleHide: "Clique para ocultar",
     toggleShow: "Clique para mostrar",
+    changeColor: "Mudar cor",
+    colorTitle: "Escolha uma cor para {team}",
     loadError: "Não foi possível carregar a agenda. Tente novamente em instantes.",
     loading: "Carregando…",
     noNext: "Nenhum jogo agendado",

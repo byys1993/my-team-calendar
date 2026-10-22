@@ -13,6 +13,8 @@ export const de: Messages = {
     emptyHint: "Wähle die Teams, die du unterstützt. Bis zu {max} Teams.",
     toggleHide: "Zum Ausblenden klicken",
     toggleShow: "Zum Einblenden klicken",
+    changeColor: "Farbe ändern",
+    colorTitle: "Farbe für {team} wählen",
     loadError: "Der Spielplan konnte nicht geladen werden. Bitte versuche es gleich noch einmal.",
     loading: "Wird geladen…",
     noNext: "Keine anstehenden Spiele",

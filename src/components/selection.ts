@@ -1,21 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { PALETTE } from "@/lib/palette";
 import { MAX_TEAMS } from "@/lib/schedule";
 
-// 팀별 색상: 선택 순서대로 비어 있는 색을 배정한다 (팀을 빼도 다른 팀 색은 그대로)
-export const PALETTE = [
-  "#2563eb",
-  "#dc2626",
-  "#16a34a",
-  "#d97706",
-  "#9333ea",
-  "#db2777",
-  "#0891b2",
-  "#65a30d",
-  "#64748b",
-  "#ea580c",
-];
+// 팀별 색상: 새 팀에는 아직 안 쓴 색을 순서대로 배정하고, 사용자가 색을 직접 바꿀 수 있다
+export { PALETTE } from "@/lib/palette";
 
 export interface Selection {
   slug: string;
@@ -90,6 +80,10 @@ export function useSelection(validSlugs: string[]) {
   );
 
   const clear = useCallback(() => update(() => []), [update]);
+  const setColor = useCallback(
+    (slug: string, color: number) => update((prev) => prev.map((s) => (s.slug === slug ? { ...s, color } : s))),
+    [update],
+  );
 
-  return { list, loaded, add, remove, toggle, replace, clear };
+  return { list, loaded, add, remove, toggle, replace, clear, setColor };
 }

@@ -13,6 +13,8 @@ export const en = {
     emptyHint: "Pick the teams you support. You can choose up to {max}.",
     toggleHide: "Click to hide",
     toggleShow: "Click to show",
+    changeColor: "Change color",
+    colorTitle: "Pick a color for {team}",
     loadError: "Couldn't load the schedule. Please try again shortly.",
     loading: "Loading…",
     noNext: "No upcoming matches",
