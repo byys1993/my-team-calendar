@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isLocale } from "@/i18n/config";
-import { cleanSelections, deleteUser, updateUser } from "@/lib/auth/core";
+import { cleanSelections, deleteUser, isTimeZone, updateUser } from "@/lib/auth/core";
 import { bad, clearSessionCookie, currentUser, publicUser, readJson } from "@/lib/auth/http";
 import { getDb } from "@/lib/db";
 
@@ -12,7 +12,7 @@ export async function GET() {
   return NextResponse.json({ user: user ? publicUser(user) : null }, { headers: noStore });
 }
 
-// PUT /api/me {selections?, locale?} → 내 팀·언어 저장
+// PUT /api/me {selections?, locale?, timeZone?} → 내 팀·언어·시간대 저장 (timeZone: null 이면 자동)
 export async function PUT(req: Request) {
   const user = await currentUser();
   if (!user) return bad("unauthorized", 401);
@@ -21,7 +21,8 @@ export async function PUT(req: Request) {
   const selections = body.selections === undefined ? undefined : cleanSelections(body.selections);
   if (selections === null) return bad("bad_selections");
   const locale = isLocale(body.locale) ? body.locale : undefined;
-  await updateUser(getDb(), user.id, { selections, locale });
+  const timeZone = body.timeZone === null ? null : isTimeZone(body.timeZone) ? body.timeZone : undefined;
+  await updateUser(getDb(), user.id, { selections, locale, timeZone });
   return NextResponse.json({ ok: true }, { headers: noStore });
 }
 

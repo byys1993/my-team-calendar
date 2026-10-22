@@ -132,9 +132,15 @@ a {
   font-weight: 800;
 }
 
-.tz {
-  color: var(--muted);
+.tz-select {
+  font: inherit;
   font-size: 13px;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 6px;
+  max-width: 100%;
 }
 
 /* 내 팀 켜기/끄기 */

@@ -16,13 +16,15 @@ import { MonthCalendar } from "./MonthCalendar";
 import { TeamPicker } from "./TeamPicker";
 import { viewOf, type Display, type MatchView } from "./matchView";
 import { PALETTE, useSelection } from "./selection";
+import { TimeZoneSelect } from "./TimeZoneSelect";
+import { AUTO, browserTimeZone, isValidTimeZone, TimeZoneProvider, useTimeZonePref } from "./timezone";
 import {
-  browserTimeZone,
   dateLabel,
   daysBetween,
   dDayLabel,
   matchDateKey,
   matchSortTime,
+  keyParts,
   matchTimeLabel,
   toDateKey,
   updatedLabel,
@@ -68,6 +70,9 @@ export function CalendarApp({
       synced.current = JSON.stringify(selections);
       void save({ selections, locale });
     }
+    // 다른 기기에서 고른 시간대가 있으면 그대로 쓴다
+    if (account.timeZone && isValidTimeZone(account.timeZone)) setTzPref(account.timeZone);
+    else if (tzPref !== AUTO) void save({ timeZone: tzPref });
     // 다른 기기에서 고른 언어가 있으면 그 언어로 바꾼다
     if (account.locale && account.locale !== locale && isLocale(account.locale)) {
       document.cookie = `${LOCALE_COOKIE}=${account.locale}; path=/; max-age=31536000; samesite=lax`;
@@ -96,12 +101,16 @@ export function CalendarApp({
   const [now, setNow] = useState<Date | null>(null);
   const [cursor, setCursor] = useState<{ y: number; m: number } | null>(null);
   const [selectedKey, setSelectedKey] = useState<string>("");
+  // 화면 시간대: '자동'이면 브라우저 시간대 (브라우저 값은 화면이 뜬 뒤에만 알 수 있다)
+  const { pref: tzPref, setPref: setTzPref } = useTimeZonePref();
+  const tz = now ? (tzPref === AUTO ? browserTimeZone() : tzPref) : "UTC";
 
   useEffect(() => {
     const d = new Date();
+    const today = keyParts(toDateKey(d, browserTimeZone()));
     setNow(d);
-    setCursor({ y: d.getFullYear(), m: d.getMonth() });
-    setSelectedKey(toDateKey(d));
+    setCursor({ y: today.y, m: today.m });
+    setSelectedKey(toDateKey(d, browserTimeZone()));
   }, []);
 
   useEffect(() => {
@@ -140,12 +149,12 @@ export function CalendarApp({
   const byDay = useMemo(() => {
     const map = new Map<string, MatchView[]>();
     for (const v of views) {
-      const key = matchDateKey(v.match);
+      const key = matchDateKey(v.match, tz);
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(v);
     }
     return map;
-  }, [views]);
+  }, [views, tz]);
 
   const nowMs = now?.getTime() ?? 0;
   // 킥오프 후 2시간까지는 '진행 중'으로 보고 목록에 남긴다
@@ -176,15 +185,24 @@ export function CalendarApp({
     return catalog.competitions.filter((c) => slugs.has(c.slug));
   }, [selections, matches, teamsBySlug, catalog.competitions]);
 
-  const todayKey = now ? toDateKey(now) : "";
+  const todayKey = now ? toDateKey(now, tz) : "";
   const dayItems = byDay.get(selectedKey) ?? [];
 
   return (
+    <TimeZoneProvider tz={tz}>
     <div className="app">
       <header className="top">
         <div className="brand">
           <h1>{t.app.title}</h1>
-          {now && <span className="tz">{fmt(t.app.timeZone, { tz: browserTimeZone() })}</span>}
+          {now && (
+            <TimeZoneSelect
+              value={tzPref}
+              onChange={(v) => {
+                setTzPref(v);
+                if (account) void save({ timeZone: v === AUTO ? null : v });
+              }}
+            />
+          )}
         </div>
         <div className="top-actions">
           <LanguageSelect onChange={(l) => account && void save({ locale: l })} />
@@ -240,7 +258,7 @@ export function CalendarApp({
         <section className="next-cards" aria-label={t.app.upcoming}>
           {selections.map((s) => {
             const v = nextByTeam.get(s.slug);
-            const days = v && todayKey ? daysBetween(todayKey, matchDateKey(v.match)) : null;
+            const days = v && todayKey ? daysBetween(todayKey, matchDateKey(v.match, tz)) : null;
             return (
               <article
                 key={s.slug}
@@ -256,7 +274,7 @@ export function CalendarApp({
                       {v.side && v.side !== "vs" && <span className={`side side-${v.side}`}>{t.match[v.side]}</span>}
                     </div>
                     <div className="next-when">
-                      {dateLabel(matchDateKey(v.match), intl)} {matchTimeLabel(v.match, intl, t.match.timeTbd)}
+                      {dateLabel(matchDateKey(v.match, tz), intl)} {matchTimeLabel(v.match, intl, t.match.timeTbd, tz)}
                     </div>
                     <div className="next-comp">{competitionName(v.match.competition)}</div>
                   </>
@@ -287,7 +305,8 @@ export function CalendarApp({
                 })
               }
               onToday={() => {
-                setCursor({ y: now!.getFullYear(), m: now!.getMonth() });
+                const today = keyParts(todayKey);
+                setCursor({ y: today.y, m: today.m });
                 setSelectedKey(todayKey);
               }}
             />
@@ -335,7 +354,7 @@ export function CalendarApp({
             <ul>
               {relevantComps.map((c) => (
                 <li key={c.slug}>
-                  {c.name} · {c.lastSuccessAt && now ? updatedLabel(c.lastSuccessAt, intl) : t.app.never}
+                  {c.name} · {c.lastSuccessAt && now ? updatedLabel(c.lastSuccessAt, intl, tz) : t.app.never}
                   {c.lastSource && <span className="muted"> ({SOURCE_LABEL(c.lastSource)})</span>}
                 </li>
               ))}
@@ -390,5 +409,6 @@ export function CalendarApp({
         />
       )}
     </div>
+    </TimeZoneProvider>
   );
 }

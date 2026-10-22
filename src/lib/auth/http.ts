@@ -40,6 +40,11 @@ export function clearSessionCookie(res: NextResponse) {
   res.cookies.set(SESSION_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
 }
 
-export const publicUser = (u: User) => ({ email: u.email, locale: u.locale, selections: u.selections });
+export const publicUser = (u: User) => ({
+  email: u.email,
+  locale: u.locale,
+  timeZone: u.timeZone,
+  selections: u.selections,
+});
 
 export const bad = (error: string, status = 400) => NextResponse.json({ error }, { status });

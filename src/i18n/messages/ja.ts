@@ -8,6 +8,10 @@ export const ja: Messages = {
   app: {
     title: "マイチーム・カレンダー",
     timeZone: "タイムゾーン：{tz}",
+    tzLabel: "タイムゾーン",
+    tzAuto: "自動（{tz}）",
+    tzCommon: "よく使うタイムゾーン",
+    tzAll: "すべてのタイムゾーン",
     pickTeams: "チームを選ぶ",
     language: "言語",
     emptyHint: "応援するチームを選んでください。最大 {max} チームまで選べます。",

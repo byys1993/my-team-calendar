@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   cleanSelections,
+  isTimeZone,
   deleteUser,
   endSession,
   hitRateLimit,
@@ -81,7 +82,11 @@ describe("이메일 코드 로그인", () => {
     ])!;
     await updateUser(db, r.user.id, { selections, locale: "ja" });
     const me = await userFromToken(db, r.token, at(2));
-    expect(me).toMatchObject({ locale: "ja", selections });
+    expect(me).toMatchObject({ locale: "ja", selections, timeZone: null });
+    await updateUser(db, r.user.id, { timeZone: "America/New_York" });
+    expect(await userFromToken(db, r.token, at(2))).toMatchObject({ locale: "ja", timeZone: "America/New_York" });
+    await updateUser(db, r.user.id, { timeZone: null });
+    expect((await userFromToken(db, r.token, at(2)))?.timeZone).toBeNull();
 
     await deleteUser(db, me!);
     expect(await userFromToken(db, r.token, at(3))).toBeNull();
@@ -97,6 +102,13 @@ describe("이메일 코드 로그인", () => {
     expect(cleanSelections([{ slug: "arsenal", color: 1 }, { slug: "arsenal", color: 2 }])).toEqual([
       { slug: "arsenal", color: 1, enabled: true },
     ]);
+  });
+
+  it("시간대 검증", () => {
+    expect(isTimeZone("Asia/Seoul")).toBe(true);
+    expect(isTimeZone("UTC")).toBe(true);
+    expect(isTimeZone("Mars/Base")).toBe(false);
+    expect(isTimeZone(9)).toBe(false);
   });
 
   it("IP 당 요청 제한", async () => {

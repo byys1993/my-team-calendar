@@ -8,6 +8,10 @@ export const ar: Messages = {
   app: {
     title: "تقويم فريقي",
     timeZone: "المنطقة الزمنية: {tz}",
+    tzLabel: "المنطقة الزمنية",
+    tzAuto: "تلقائي ({tz})",
+    tzCommon: "مناطق زمنية شائعة",
+    tzAll: "كل المناطق الزمنية",
     pickTeams: "اختيار الفرق",
     language: "اللغة",
     emptyHint: "اختر الفرق التي تشجعها. يمكنك اختيار حتى {max} فرق.",

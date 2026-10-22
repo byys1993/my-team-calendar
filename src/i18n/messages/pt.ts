@@ -8,6 +8,10 @@ export const pt: Messages = {
   app: {
     title: "Calendário do Meu Time",
     timeZone: "Fuso horário: {tz}",
+    tzLabel: "Fuso horário",
+    tzAuto: "Automático ({tz})",
+    tzCommon: "Fusos mais usados",
+    tzAll: "Todos os fusos",
     pickTeams: "Escolher times",
     language: "Idioma",
     emptyHint: "Escolha os times que você acompanha. Até {max} times.",

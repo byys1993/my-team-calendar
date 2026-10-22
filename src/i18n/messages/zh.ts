@@ -8,6 +8,10 @@ export const zh: Messages = {
   app: {
     title: "我的球队日历",
     timeZone: "时区：{tz}",
+    tzLabel: "时区",
+    tzAuto: "自动（{tz}）",
+    tzCommon: "常用时区",
+    tzAll: "所有时区",
     pickTeams: "选择球队",
     language: "语言",
     emptyHint: "请选择你支持的球队，最多可选 {max} 支。",

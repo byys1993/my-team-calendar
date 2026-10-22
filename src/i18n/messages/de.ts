@@ -8,6 +8,10 @@ export const de: Messages = {
   app: {
     title: "Mein Team Kalender",
     timeZone: "Zeitzone: {tz}",
+    tzLabel: "Zeitzone",
+    tzAuto: "Automatisch ({tz})",
+    tzCommon: "Häufige Zeitzonen",
+    tzAll: "Alle Zeitzonen",
     pickTeams: "Teams wählen",
     language: "Sprache",
     emptyHint: "Wähle die Teams, die du unterstützt. Bis zu {max} Teams.",

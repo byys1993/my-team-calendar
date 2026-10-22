@@ -8,6 +8,10 @@ export const es: Messages = {
   app: {
     title: "Calendario de Mi Equipo",
     timeZone: "Zona horaria: {tz}",
+    tzLabel: "Zona horaria",
+    tzAuto: "Automática ({tz})",
+    tzCommon: "Zonas horarias comunes",
+    tzAll: "Todas las zonas horarias",
     pickTeams: "Elegir equipos",
     language: "Idioma",
     emptyHint: "Elige los equipos que sigues. Puedes elegir hasta {max}.",

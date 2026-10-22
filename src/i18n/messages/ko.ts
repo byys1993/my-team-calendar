@@ -8,6 +8,10 @@ export const ko: Messages = {
   app: {
     title: "마이팀 캘린더",
     timeZone: "시간대: {tz}",
+    tzLabel: "시간대",
+    tzAuto: "자동 ({tz})",
+    tzCommon: "자주 쓰는 시간대",
+    tzAll: "모든 시간대",
     pickTeams: "팀 선택",
     language: "언어",
     emptyHint: "응원하는 팀을 골라 주세요. 최대 {max}팀까지 선택할 수 있어요.",

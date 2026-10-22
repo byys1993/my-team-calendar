@@ -17,7 +17,19 @@ export interface User {
   id: string;
   email: string;
   locale: string | null;
+  timeZone: string | null; // null = 브라우저 자동
   selections: SelectionItem[];
+}
+
+// 'Asia/Seoul' 같은 IANA 시간대 이름인지
+export function isTimeZone(tz: unknown): tz is string {
+  if (typeof tz !== "string" || tz.length > 64) return false;
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function normalizeEmail(raw: unknown): string | null {
@@ -89,7 +101,7 @@ export async function verifyCode(db: Db, email: string, code: string, now = new 
   const [user] = await db.query<User>(
     `insert into app_user (email, last_login_at) values ($1, $2)
      on conflict (email) do update set last_login_at = excluded.last_login_at
-     returning id, email, locale, selections`,
+     returning id, email, locale, time_zone as "timeZone", selections`,
     [email, now.toISOString()],
   );
   const token = randomBytes(32).toString("base64url");
@@ -105,7 +117,7 @@ export async function verifyCode(db: Db, email: string, code: string, now = new 
 export async function userFromToken(db: Db, token: string | undefined, now = new Date()): Promise<User | null> {
   if (!token) return null;
   const [user] = await db.query<User>(
-    `select u.id, u.email, u.locale, u.selections from user_session s join app_user u on u.id = s.user_id
+    `select u.id, u.email, u.locale, u.time_zone as "timeZone", u.selections from user_session s join app_user u on u.id = s.user_id
      where s.token_hash = $1 and s.expires_at > $2`,
     [hashToken(token), now.toISOString()],
   );
@@ -133,12 +145,15 @@ export function cleanSelections(raw: unknown): SelectionItem[] | null {
 export async function updateUser(
   db: Db,
   userId: string,
-  patch: { selections?: SelectionItem[]; locale?: string },
+  patch: { selections?: SelectionItem[]; locale?: string; timeZone?: string | null },
 ): Promise<void> {
   if (patch.selections) {
     await db.query("update app_user set selections = $2::text::jsonb where id = $1", [userId, JSON.stringify(patch.selections)]);
   }
   if (patch.locale) await db.query("update app_user set locale = $2 where id = $1", [userId, patch.locale]);
+  if (patch.timeZone !== undefined) {
+    await db.query("update app_user set time_zone = $2 where id = $1", [userId, patch.timeZone]);
+  }
 }
 
 // 계정과 세션·코드를 모두 지운다

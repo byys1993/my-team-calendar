@@ -1,11 +1,7 @@
 import type { ScheduleMatch } from "@/lib/schedule";
 
-// 모든 표시는 사용자 브라우저 시간대 기준이고, 날짜·요일·시각 표기는 화면 언어(intl)를 따른다.
+// 날짜·시각은 사용자가 고른 시간대(tz, 기본은 브라우저 시간대)로, 표기 방식은 화면 언어(intl)로 보여준다.
 // (서버 렌더링 시점에는 쓰지 않는다)
-
-export const browserTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-const dateKeyFmt = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" });
 
 const cache = new Map<string, Intl.DateTimeFormat>();
 function dtf(intl: string, opts: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
@@ -23,13 +19,21 @@ const utcOf = (key: string) => {
   return new Date(Date.UTC(y, m - 1, d));
 };
 
-// 'YYYY-MM-DD' (브라우저 시간대)
-export function toDateKey(d: Date): string {
-  return dateKeyFmt.format(d);
+// 'YYYY-MM-DD' 만들기·나누기 (달력 칸은 시간대와 무관하게 숫자로 만든다)
+export const keyOf = (y: number, m: number, d: number) =>
+  `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+export const keyParts = (key: string) => {
+  const [y, m, d] = key.split("-").map(Number);
+  return { y, m: m - 1, d };
+};
+
+// 그 순간이 tz 에서 며칠인지 'YYYY-MM-DD'
+export function toDateKey(d: Date, tz: string): string {
+  return dtf("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: tz }).format(d);
 }
 
-export function matchDateKey(m: ScheduleMatch): string {
-  return m.startAt ? toDateKey(new Date(m.startAt)) : m.dateOnly!;
+export function matchDateKey(m: ScheduleMatch, tz: string): string {
+  return m.startAt ? toDateKey(new Date(m.startAt), tz) : m.dateOnly!;
 }
 
 export function hasExactTime(m: ScheduleMatch): boolean {
@@ -37,11 +41,11 @@ export function hasExactTime(m: ScheduleMatch): boolean {
 }
 
 // 시각, 시간 미정이면 tbdText
-export function matchTimeLabel(m: ScheduleMatch, intl: string, tbdText: string): string {
-  return hasExactTime(m) ? dtf(intl, clock(intl)).format(new Date(m.startAt!)) : tbdText;
+export function matchTimeLabel(m: ScheduleMatch, intl: string, tbdText: string, tz: string): string {
+  return hasExactTime(m) ? dtf(intl, { ...clock(intl), timeZone: tz }).format(new Date(m.startAt!)) : tbdText;
 }
 
-// '10월 24일 (토)', 'Sat, Oct 24' 처럼 그 언어 방식의 날짜
+// '10월 24일 (토)', 'Sat, Oct 24' 처럼 그 언어 방식의 날짜 (날짜 키 자체라 시간대와 무관)
 export function dateLabel(key: string, intl: string): string {
   return dtf(intl, { month: "short", day: "numeric", weekday: "short", timeZone: "UTC" }).format(utcOf(key));
 }
@@ -57,8 +61,8 @@ export function weekdayNames(intl: string): string[] {
   return Array.from({ length: 7 }, (_, i) => f.format(new Date(Date.UTC(2026, 9, 4 + i))));
 }
 
-export function updatedLabel(iso: string, intl: string): string {
-  return dtf(intl, { month: "short", day: "numeric", ...clock(intl) }).format(new Date(iso));
+export function updatedLabel(iso: string, intl: string, tz: string): string {
+  return dtf(intl, { month: "short", day: "numeric", ...clock(intl), timeZone: tz }).format(new Date(iso));
 }
 
 export function daysBetween(fromKey: string, toKey: string): number {

@@ -8,6 +8,10 @@ export const fr: Messages = {
   app: {
     title: "Calendrier de Mon Équipe",
     timeZone: "Fuseau horaire : {tz}",
+    tzLabel: "Fuseau horaire",
+    tzAuto: "Automatique ({tz})",
+    tzCommon: "Fuseaux courants",
+    tzAll: "Tous les fuseaux",
     pickTeams: "Choisir des équipes",
     language: "Langue",
     emptyHint: "Choisissez les équipes que vous soutenez. Jusqu'à {max} équipes.",

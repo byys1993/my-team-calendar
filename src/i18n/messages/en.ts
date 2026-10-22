@@ -8,6 +8,10 @@ export const en = {
   app: {
     title: "My Team Calendar",
     timeZone: "Time zone: {tz}",
+    tzLabel: "Time zone",
+    tzAuto: "Auto ({tz})",
+    tzCommon: "Common time zones",
+    tzAll: "All time zones",
     pickTeams: "Pick teams",
     language: "Language",
     emptyHint: "Pick the teams you support. You can choose up to {max}.",

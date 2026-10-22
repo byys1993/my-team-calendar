@@ -6,6 +6,7 @@ import type { Selection } from "./selection";
 export interface Account {
   email: string;
   locale: string | null;
+  timeZone: string | null;
   selections: Selection[];
 }
 
@@ -68,7 +69,7 @@ export function useAccount() {
     setAccount(null);
   }, []);
 
-  const save = useCallback(async (patch: { selections?: Selection[]; locale?: string }) => {
+  const save = useCallback(async (patch: { selections?: Selection[]; locale?: string; timeZone?: string | null }) => {
     await call("PUT", "/api/me", patch).catch(() => {});
   }, []);
 

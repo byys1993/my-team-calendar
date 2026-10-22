@@ -8,6 +8,10 @@ export const ru: Messages = {
   app: {
     title: "Календарь моей команды",
     timeZone: "Часовой пояс: {tz}",
+    tzLabel: "Часовой пояс",
+    tzAuto: "Автоматически ({tz})",
+    tzCommon: "Популярные пояса",
+    tzAll: "Все часовые пояса",
     pickTeams: "Выбрать команды",
     language: "Язык",
     emptyHint: "Выберите команды, за которые болеете. Можно выбрать до {max}.",
