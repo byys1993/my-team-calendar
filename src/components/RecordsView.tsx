@@ -10,7 +10,9 @@ import type { Selection } from "./selection";
 import { updatedLabel } from "./time";
 import { useTz } from "./timezone";
 
-type StatKey = "gp" | "w" | "d" | "l" | "otl" | "pts" | "gf" | "ga" | "gd" | "pct" | "gb" | "wins";
+type StatKey = "gp" | "w" | "d" | "l" | "otl" | "pts" | "gf" | "ga" | "gd" | "pct" | "gb" | "wins" | "value";
+// 순위표 칸 (개인 순위의 value 는 칸이 아니다)
+type ColKey = Exclude<StatKey, "value">;
 
 interface Row {
   rank: number;
@@ -21,7 +23,7 @@ interface Row {
   stats: Partial<Record<StatKey, number | string | null>>;
 }
 interface Table {
-  kind: "teams" | "drivers" | "constructors";
+  kind: "teams" | "drivers" | "constructors" | "leaders";
   season: string | null;
   source: string;
   updatedAt: string;
@@ -29,7 +31,7 @@ interface Table {
 }
 
 // 종목별로 보여 줄 칸 (모든 줄이 비어 있는 칸은 숨긴다)
-const COLUMNS: Record<string, StatKey[]> = {
+const COLUMNS: Record<string, ColKey[]> = {
   soccer: ["gp", "w", "d", "l", "gd", "pts"],
   baseball: ["gp", "w", "l", "d", "pct", "gb"],
   basketball: ["gp", "w", "l", "pct", "gb"],
@@ -73,8 +75,11 @@ export function RecordsView({ catalog, selections }: { catalog: Catalog; selecti
   const [current, setCurrent] = useState<string | null>(null);
   const [tables, setTables] = useState<Table[] | null>(null);
   const [error, setError] = useState(false);
+  // 팀 순위 / 개인 순위
+  const [sub, setSub] = useState<"teams" | "players">("teams");
 
   const teamName = useMemo(() => new Map(catalog.teams.map((t) => [t.slug, t.name])), [catalog.teams]);
+  const teamShort = useMemo(() => new Map(catalog.teams.map((t) => [t.slug, t.short])), [catalog.teams]);
   const mine = useMemo(() => new Map(selections.map((s) => [s.slug, s.color])), [selections]);
   // 내 팀이 속한 대회를 앞에
   const myComps = useMemo(() => {
@@ -107,8 +112,10 @@ export function RecordsView({ catalog, selections }: { catalog: Catalog; selecti
   }, [current, locale]);
 
   const sport = list?.find((c) => c.slug === current)?.sport ?? "soccer";
+  const leaders = tables?.find((t) => t.kind === "leaders") ?? null;
+  const teamTables = tables?.filter((t) => t.kind !== "leaders");
   const columns = COLUMNS[sport] ?? COLUMNS.soccer;
-  const label = (k: StatKey) => (sport === "motorsport" && k === "pts" ? m.records.points : m.records.cols[k]);
+  const label = (k: ColKey) => (sport === "motorsport" && k === "pts" ? m.records.points : m.records.cols[k]);
 
   if (error) return <p className="error">{m.records.error}</p>;
   if (!list) return <p className="muted">{m.app.loading}</p>;
@@ -131,70 +138,120 @@ export function RecordsView({ catalog, selections }: { catalog: Catalog; selecti
         ))}
       </div>
 
+      {leaders && (
+        <div className="records-sub" role="tablist">
+          <button type="button" role="tab" aria-selected={sub === "teams"} onClick={() => setSub("teams")}>
+            {m.records.teamsTab}
+          </button>
+          <button type="button" role="tab" aria-selected={sub === "players"} onClick={() => setSub("players")}>
+            {m.records.playersTab}
+          </button>
+        </div>
+      )}
+
       {!tables && <p className="muted">{m.app.loading}</p>}
       {tables?.length === 0 && <p className="muted">{m.records.empty}</p>}
-      {tables?.map((t) => {
-        const cols = columns.filter((k) => t.groups.some((g) => g.rows.some((r) => r.stats[k] != null && r.stats[k] !== "")));
-        const nameHeader = t.kind === "drivers" ? m.records.driver : t.kind === "constructors" ? m.records.constructor : m.records.team;
-        return (
-          <div key={t.kind} className="standing">
-            {t.kind !== "teams" && <h3>{t.kind === "drivers" ? m.records.drivers : m.records.constructors}</h3>}
-            {t.groups.map((g, gi) => (
-              <div key={gi} className="standing-group">
-                {g.name && <h4>{locale === "ko" ? (GROUP_KO[g.name] ?? g.name) : g.name}</h4>}
-                <div className="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th className="num">{m.records.rank}</th>
-                        <th className="name">{nameHeader}</th>
-                        {cols.map((k) => (
-                          <th key={k} className="num">
-                            {label(k)}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {g.rows.map((r, i) => {
-                        const color = r.team != null ? mine.get(r.team) : undefined;
-                        const display =
-                          t.kind === "drivers"
-                            ? f1Driver(r.driverId ?? "", r.name, locale)
-                            : t.kind === "constructors"
-                              ? f1Team(r.name, locale)
-                              : ((r.team && teamName.get(r.team)) ?? r.name);
-                        return (
-                          <tr
-                            key={`${r.rank}-${r.name}-${i}`}
-                            className={color != null ? "mine" : undefined}
-                            style={color != null ? (teamVars(color) as React.CSSProperties) : undefined}
-                          >
-                            <td className="num">{r.rank}</td>
-                            <td className="name">
-                              {display}
-                              {r.sub && <span className="muted"> · {f1Team(r.sub, locale)}</span>}
-                            </td>
-                            {cols.map((k) => (
-                              <td key={k} className="num">
-                                {format(k, r.stats[k])}
+
+      {leaders && sub === "players" && (
+        <div className="leaders">
+          {leaders.groups.map((g) => (
+            <div key={g.name} className="leader-card">
+              <h4>
+                {(g.name && (m.records.leaders as Record<string, string>)[g.name]) ?? g.name} <span className="muted">{m.records.top}</span>
+              </h4>
+              <ol>
+                {g.rows.map((r, i) => {
+                  const color = r.team != null ? mine.get(r.team) : undefined;
+                  const player = r.driverId ? f1Driver(r.driverId, r.name, locale) : r.name;
+                  const team = r.driverId ? f1Team(r.sub ?? "", locale) : ((r.team && teamShort.get(r.team)) ?? r.sub ?? "");
+                  return (
+                    <li
+                      key={`${r.rank}-${r.name}-${i}`}
+                      className={color != null ? "mine" : undefined}
+                      style={color != null ? (teamVars(color) as React.CSSProperties) : undefined}
+                    >
+                      <span className="lr-rank">{r.rank}</span>
+                      <span className="lr-name">
+                        {player}
+                        {team && <span className="muted"> {team}</span>}
+                      </span>
+                      <span className="lr-value">{r.stats.value}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          ))}
+          <p className="muted small">
+            {leaders.season && `${leaders.season} · `}
+            {updatedLabel(leaders.updatedAt, intl, tz)} · {SOURCE_LABEL(leaders.source)}
+          </p>
+        </div>
+      )}
+
+      {(sub === "teams" || !leaders) &&
+        teamTables?.map((t) => {
+          const cols = columns.filter((k) => t.groups.some((g) => g.rows.some((r) => r.stats[k] != null && r.stats[k] !== "")));
+          const nameHeader = t.kind === "drivers" ? m.records.driver : t.kind === "constructors" ? m.records.constructor : m.records.team;
+          return (
+            <div key={t.kind} className="standing">
+              {t.kind !== "teams" && <h3>{t.kind === "drivers" ? m.records.drivers : m.records.constructors}</h3>}
+              {t.groups.map((g, gi) => (
+                <div key={gi} className="standing-group">
+                  {g.name && <h4>{locale === "ko" ? (GROUP_KO[g.name] ?? g.name) : g.name}</h4>}
+                  <div className="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th className="num">{m.records.rank}</th>
+                          <th className="name">{nameHeader}</th>
+                          {cols.map((k) => (
+                            <th key={k} className="num">
+                              {label(k)}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {g.rows.map((r, i) => {
+                          const color = r.team != null ? mine.get(r.team) : undefined;
+                          const display =
+                            t.kind === "drivers"
+                              ? f1Driver(r.driverId ?? "", r.name, locale)
+                              : t.kind === "constructors"
+                                ? f1Team(r.name, locale)
+                                : ((r.team && teamName.get(r.team)) ?? r.name);
+                          return (
+                            <tr
+                              key={`${r.rank}-${r.name}-${i}`}
+                              className={color != null ? "mine" : undefined}
+                              style={color != null ? (teamVars(color) as React.CSSProperties) : undefined}
+                            >
+                              <td className="num">{r.rank}</td>
+                              <td className="name">
+                                {display}
+                                {r.sub && <span className="muted"> · {f1Team(r.sub, locale)}</span>}
                               </td>
-                            ))}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                              {cols.map((k) => (
+                                <td key={k} className="num">
+                                  {format(k, r.stats[k])}
+                                </td>
+                              ))}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            ))}
-            <p className="muted small">
-              {t.season && `${t.season} · `}
-              {updatedLabel(t.updatedAt, intl, tz)} · {SOURCE_LABEL(t.source)}
-            </p>
-          </div>
-        );
-      })}
+              ))}
+              <p className="muted small">
+                {t.season && `${t.season} · `}
+                {updatedLabel(t.updatedAt, intl, tz)} · {SOURCE_LABEL(t.source)}
+              </p>
+            </div>
+          );
+        })}
     </section>
   );
 }

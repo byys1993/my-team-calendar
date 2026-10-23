@@ -1,12 +1,13 @@
 import type { Db } from "@/lib/db";
 import { TEAM_CODE as KBO_TEAM_CODE } from "./sources/kbo";
 import { getJson, request, sleep, SourceError } from "./sources/http";
+import { fetchLeaders } from "./leaders";
 import type { Fetcher } from "./types";
 
 // 리그 순위표 수집. 경기 일정과 따로 몇 시간마다 받아 standing 표에 저장하고, 화면은 저장된 것을 보여 준다.
 // 각 출처의 표를 아래 공통 모양으로 바꾼다. 팀은 출처의 팀 ID로 우리 팀(slug)에 연결해 '내 팀'을 강조할 수 있게 한다.
 
-export type StatKey = "gp" | "w" | "d" | "l" | "otl" | "pts" | "gf" | "ga" | "gd" | "pct" | "gb" | "wins";
+export type StatKey = "gp" | "w" | "d" | "l" | "otl" | "pts" | "gf" | "ga" | "gd" | "pct" | "gb" | "wins" | "value";
 
 export interface StandingRowIn {
   rank: number;
@@ -19,7 +20,8 @@ export interface StandingRowIn {
 }
 
 export interface StandingTableIn {
-  kind: "teams" | "drivers" | "constructors";
+  // leaders: 개인 순위 TOP 5 (그룹 이름 = 부문 키, 예: 'hr', 'goals')
+  kind: "teams" | "drivers" | "constructors" | "leaders";
   season: string | null;
   groups: { name: string | null; rows: StandingRowIn[] }[];
 }
@@ -481,6 +483,12 @@ async function teamResolver(db: Db, sport: string) {
   for (const t of teams) {
     for (const n of [t.name_en, t.name_ko, t.short_ko, ...(t.aliases ?? [])]) if (n) byName.set(norm(n), t.slug);
   }
+  // 'Wild' 처럼 팀 별칭만 올 때: 정식 영문명이 그 별칭으로 끝나는 팀이 하나뿐이면 그 팀
+  const bySuffix = (n: string) => {
+    if (n.length < 4) return null;
+    const hits = teams.filter((t) => norm(t.name_en).endsWith(n));
+    return hits.length === 1 ? hits[0].slug : null;
+  };
   return (ref: StandingRowIn["ref"]): string | null => {
     if (!ref) return null;
     // 'Arsenal FC' 처럼 FC·CF 가 붙은 이름도 맞춰 본다
@@ -489,6 +497,7 @@ async function teamResolver(db: Db, sport: string) {
       (ref.externalId && byRef.get(`${ref.source}|${ref.externalId}`)) ||
       byName.get(norm(ref.name)) ||
       byName.get(norm(bare)) ||
+      bySuffix(norm(ref.name)) ||
       null
     );
   };
@@ -506,8 +515,17 @@ export interface StandingsResult {
 // 순위표를 받아 저장한다. 대회마다 3시간에 한 번 (force 면 전부).
 export async function syncStandings(
   db: Db,
-  opts: { force?: boolean; only?: string[]; log?: (s: string) => void; fetcher?: Fetcher; footballDataKey?: string; now?: Date } = {},
+  opts: {
+    force?: boolean;
+    only?: string[];
+    log?: (s: string) => void;
+    fetcher?: Fetcher;
+    footballDataKey?: string;
+    now?: Date;
+    footballDataGapMs?: number;
+  } = {},
 ): Promise<StandingsResult[]> {
+  const gap = opts.footballDataGapMs ?? 7000;
   const log = opts.log ?? (() => {});
   const now = opts.now ?? new Date();
   const comps = await db.query<{ id: number; slug: string; sport: string; updated_at: Date | null }>(
@@ -524,11 +542,23 @@ export async function syncStandings(
     try {
       // football-data 무료 키는 분당 10회: 순위표 요청 사이를 7초 띄운다
       if (spec.source === "football-data") {
-        const wait = lastFootballData + 7000 - Date.now();
+        const wait = lastFootballData + gap - Date.now();
         if (wait > 0) await sleep(wait);
         lastFootballData = Date.now();
       }
       const tables = await fetchStandings(spec, { fetcher: opts.fetcher, footballDataKey: opts.footballDataKey, now });
+      // 개인 순위 TOP 5: 실패해도 순위표는 저장한다
+      try {
+        if (spec.source === "football-data") {
+          const wait = lastFootballData + gap - Date.now();
+          if (wait > 0) await sleep(wait);
+          lastFootballData = Date.now();
+        }
+        const leaders = await fetchLeaders(spec, { fetcher: opts.fetcher, footballDataKey: opts.footballDataKey, now });
+        if (leaders?.groups.length) tables.push(leaders);
+      } catch (err) {
+        log(`${c.slug} 개인 순위 실패: ${err instanceof Error ? err.message : String(err)}`);
+      }
       const resolve = await teamResolver(db, c.sport);
       for (const t of tables) {
         const groups = t.groups.map((g) => ({

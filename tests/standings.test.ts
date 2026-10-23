@@ -139,8 +139,11 @@ describe("순위표 저장", () => {
 
   it("팀을 우리 팀에 연결해 저장하고, 3시간 안에는 다시 받지 않는다", async () => {
     let calls = 0;
-    const fetcher = (async () => {
+    const fetcher = (async (url: string) => {
       calls++;
+      if (url.includes("/scorers")) {
+        return new Response(JSON.stringify({ scorers: [{ player: { name: "Saka" }, team: { id: 999, name: "Arsenal FC" }, goals: 7 }] }));
+      }
       return new Response(
         JSON.stringify({
           season: { startDate: "2026-08-15" },
@@ -158,18 +161,23 @@ describe("순위표 저장", () => {
       );
     }) as typeof fetch;
     const now = new Date("2026-10-23T00:00:00Z");
-    const r = await syncStandings(db, { fetcher, footballDataKey: "k", now, only: ["epl"] });
-    expect(r).toEqual([{ competition: "epl", ok: true, tables: 1 }]);
+    const r = await syncStandings(db, { fetcher, footballDataKey: "k", now, only: ["epl"], footballDataGapMs: 0 });
+    // 순위표 + 개인 순위(득점)
+    expect(r).toEqual([{ competition: "epl", ok: true, tables: 2 }]);
     const [row] = await db.query<{ groups: { rows: { team: string | null; name: string }[] }[]; season: string }>(
-      "select groups, season from standing",
+      "select groups, season from standing where kind = 'teams'",
     );
+    const [lead] = await db.query<{ groups: { name: string; rows: { team: string | null; name: string }[] }[] }>(
+      "select groups from standing where kind = 'leaders'",
+    );
+    expect(lead.groups[0]).toMatchObject({ name: "goals", rows: [{ name: "Saka", team: "arsenal" }] });
     // ID 연결이 없어도 이름(별칭)으로 연결, 모르는 팀은 null
     expect(row.season).toBe("2026");
     expect(row.groups[0].rows.map((x) => x.team)).toEqual(["arsenal", null]);
 
-    await syncStandings(db, { fetcher, footballDataKey: "k", now: new Date("2026-10-23T02:00:00Z"), only: ["epl"] });
-    expect(calls).toBe(1);
-    await syncStandings(db, { fetcher, footballDataKey: "k", now: new Date("2026-10-23T03:30:00Z"), only: ["epl"] });
+    await syncStandings(db, { fetcher, footballDataKey: "k", now: new Date("2026-10-23T02:00:00Z"), only: ["epl"], footballDataGapMs: 0 });
     expect(calls).toBe(2);
+    await syncStandings(db, { fetcher, footballDataKey: "k", now: new Date("2026-10-23T03:30:00Z"), only: ["epl"], footballDataGapMs: 0 });
+    expect(calls).toBe(4);
   });
 });

@@ -1395,3 +1395,102 @@ a {
   font-size: 12px;
   margin: 6px 2px 0;
 }
+
+/* 순위 탭: 팀 순위 / 개인 순위 */
+.records-sub {
+  display: inline-flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px;
+  margin-bottom: 12px;
+}
+
+.records-sub button {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 14px;
+  cursor: pointer;
+}
+
+.records-sub button[aria-selected="true"] {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 18%, transparent);
+}
+
+.leaders {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.leaders > .small {
+  grid-column: 1 / -1;
+}
+
+.leader-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.leader-card h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.leader-card h4 .muted {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.leader-card ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.leader-card li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.leader-card li.mine {
+  background: color-mix(in srgb, var(--team) 16%, var(--surface));
+  font-weight: 700;
+}
+
+.lr-rank {
+  width: 16px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.lr-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lr-name .muted {
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.lr-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
