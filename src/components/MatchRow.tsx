@@ -23,7 +23,7 @@ export function MatchRow({ view, teamName, competitionName, showDate = true }: P
   return (
     <li
       className={`match-row${isTentative(m) ? " tentative" : ""}${m.status === "cancelled" ? " cancelled" : ""}`}
-      style={{ "--team": view.color } as React.CSSProperties}
+      style={view.colors as React.CSSProperties}
     >
       <div className="when">
         {showDate && <span className="date">{dateLabel(matchDateKey(m, tz), intl)}</span>}

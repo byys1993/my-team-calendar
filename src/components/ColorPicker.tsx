@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useI18n } from "@/i18n/client";
-import { PALETTE } from "@/lib/palette";
+import { PALETTE, PICKER_ORDER } from "@/lib/palette";
 
 interface Props {
   teamName: string;
@@ -27,21 +27,24 @@ export function ColorPicker({ teamName, current, onPick, onClose }: Props) {
         </button>
       </div>
       <div className="swatches" role="radiogroup" aria-label={m.app.changeColor}>
-        {PALETTE.map((color, i) => (
-          <button
-            key={color}
-            type="button"
-            role="radio"
-            aria-checked={i === current}
-            aria-label={color}
-            className={i === current ? "swatch on" : "swatch"}
-            style={{ background: color }}
-            onClick={() => {
-              onPick(i);
-              dialog.current?.close();
-            }}
-          />
-        ))}
+        {PICKER_ORDER.map((i) => {
+          const color = PALETTE[i];
+          return (
+            <button
+              key={i}
+              type="button"
+              role="radio"
+              aria-checked={i === current}
+              aria-label={color}
+              className={i === current ? "swatch on" : "swatch"}
+              style={{ background: color }}
+              onClick={() => {
+                onPick(i);
+                dialog.current?.close();
+              }}
+            />
+          );
+        })}
       </div>
     </dialog>
   );

@@ -91,7 +91,7 @@ export function MonthCalendar({ year, month, todayKey, selectedKey, byDay, teamS
                     <span
                       key={v.match.id}
                       className={`chip${isTentative(v.match) ? " tentative" : ""}${v.match.status === "cancelled" ? " cancelled" : ""}`}
-                      style={{ "--team": v.color } as React.CSSProperties}
+                      style={v.colors as React.CSSProperties}
                     >
                       {r ? (
                         <span className={`chip-time chip-result result-${r.outcome}`}>
@@ -117,7 +117,7 @@ export function MonthCalendar({ year, month, todayKey, selectedKey, byDay, teamS
                   <span
                     key={v.match.id}
                     className={`dot${isTentative(v.match) ? " tentative" : ""}`}
-                    style={{ "--team": v.color } as React.CSSProperties}
+                    style={v.colors as React.CSSProperties}
                   />
                 ))}
               </span>

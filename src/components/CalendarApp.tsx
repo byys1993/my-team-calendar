@@ -15,7 +15,8 @@ import { MatchRow } from "./MatchRow";
 import { MonthCalendar } from "./MonthCalendar";
 import { TeamPicker } from "./TeamPicker";
 import { viewOf, type Display, type MatchView } from "./matchView";
-import { PALETTE, useSelection } from "./selection";
+import { teamVars } from "@/lib/palette";
+import { useSelection } from "./selection";
 import { TimeZoneSelect } from "./TimeZoneSelect";
 import { VisitorStats } from "./VisitorStats";
 import { CalendarSubscribe } from "./CalendarSubscribe";
@@ -262,7 +263,7 @@ export function CalendarApp({
           <span
             key={s.slug}
             className={s.enabled ? "team-chip" : "team-chip off"}
-            style={{ "--team": PALETTE[s.color] } as React.CSSProperties}
+            style={teamVars(s.color) as React.CSSProperties}
           >
             <button
               type="button"
@@ -299,7 +300,7 @@ export function CalendarApp({
               <article
                 key={s.slug}
                 className={`next-card${s.enabled ? "" : " off"}${v && v.match.status !== "scheduled" ? " tentative" : ""}`}
-                style={{ "--team": PALETTE[s.color] } as React.CSSProperties}
+                style={teamVars(s.color) as React.CSSProperties}
               >
                 <div className="next-team">{teamName(s.slug)}</div>
                 {v ? (

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { MAX_TEAMS, type Catalog } from "@/lib/schedule";
-import { PALETTE, type Selection } from "./selection";
+import { PALETTE, teamInk } from "@/lib/palette";
+import type { Selection } from "./selection";
 
 interface Props {
   catalog: Catalog;
@@ -82,7 +83,7 @@ export function TeamPicker({ catalog, selections, onAdd, onRemove, onClear, onCl
                     key={team.slug}
                     type="button"
                     className={sel ? "team-btn on" : "team-btn"}
-                    style={sel ? { borderColor: PALETTE[sel.color] } : undefined}
+                    style={sel ? { borderColor: teamInk(sel.color) } : undefined}
                     aria-pressed={!!sel}
                     disabled={!sel && full}
                     onClick={() => (sel ? onRemove(team.slug) : onAdd(team.slug))}
