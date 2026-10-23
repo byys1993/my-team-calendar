@@ -6,7 +6,7 @@
       "sources": [{ "source": "lolesports", "external_id": "113464388705111224" }] },
     { "slug": "msi", "sport": "esports", "name_ko": "MSI", "type": "intl", "display_order": 22,
       "sources": [{ "source": "lolesports", "external_id": "98767991325878492" }] },
-    { "slug": "worlds", "sport": "esports", "name_ko": "LoL 월드 챔피언십", "type": "intl", "display_order": 23,
+    { "slug": "worlds", "broadcast": "유튜브, 치지직, SOOP", "sport": "esports", "name_ko": "LoL 월드 챔피언십", "type": "intl", "display_order": 23,
       "sources": [{ "source": "lolesports", "external_id": "98767975604431411" }] }
   ],
   "teams": [
