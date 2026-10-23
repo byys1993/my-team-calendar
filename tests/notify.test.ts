@@ -92,3 +92,35 @@ describe("경기 알림 메일", () => {
     expect(again.sent).toBe(1);
   });
 });
+
+describe("동시 호출", () => {
+  let db2: Db & { close(): Promise<void> };
+  afterEach(() => db2?.close());
+
+  it("두 곳에서 동시에 불러도 한 통만 보내고, 발송이 실패하면 다음에 다시 보낸다", async () => {
+    const { db: d, eplId } = (await setupDb()) as { db: Db & { close(): Promise<void> }; eplId: number };
+    db2 = d;
+    await upsertMatches(d, eplId, "espn", [
+      espnMatch({ externalId: "1", startAt: "2026-10-24T14:00:00Z", home: { externalId: "359", name: "Arsenal" }, away: { externalId: "368", name: "Everton" } }),
+    ]);
+    const { code } = (await issueCode(d, "two@example.com")) as { code: string };
+    const r = await verifyCode(d, "two@example.com", code);
+    if (!r.ok) throw new Error("login failed");
+    await updateUser(d, r.user.id, { selections: [{ slug: "arsenal", color: 0, enabled: true }], timeZone: "Asia/Seoul", notifyMode: "daily" });
+
+    const now = new Date("2026-10-24T09:10:00+09:00");
+    // 발송 실패 → 표시가 되돌려져 다음 실행에서 다시 보낸다
+    await expect(runNotifications(d, async () => Promise.reject(new Error("resend down")), { siteUrl: "https://x", now })).rejects.toThrow();
+    const sent: OutgoingEmail[] = [];
+    const send = async (e: OutgoingEmail[]) => {
+      await new Promise((ok) => setTimeout(ok, 20));
+      sent.push(...e);
+    };
+    const [a, b] = await Promise.all([
+      runNotifications(d, send, { siteUrl: "https://x", now }),
+      runNotifications(d, send, { siteUrl: "https://x", now }),
+    ]);
+    expect(sent).toHaveLength(1);
+    expect(a.sent + b.sent).toBe(1);
+  });
+});

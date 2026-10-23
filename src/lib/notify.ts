@@ -146,7 +146,8 @@ export async function runNotifications(
   );
   const catalogs = new Map<Locale, Catalog>();
   const result: NotifyResult = { checked: rows.length, sent: 0, empty: 0, deferred: 0 };
-  const outgoing: { email: OutgoingEmail; userId: string; today: string }[] = [];
+  // prev: 읽었을 때의 '마지막 알림 날짜' (선점할 때 그 사이 다른 곳이 먼저 보냈는지 확인용)
+  const outgoing: { email: OutgoingEmail; userId: string; today: string; prev: string | null }[] = [];
   const emptyDone: { userId: string; today: string }[] = [];
 
   for (const r of rows) {
@@ -169,6 +170,7 @@ export async function runNotifications(
     outgoing.push({
       userId: r.id,
       today,
+      prev: r.last_notified_on,
       email: composeEmail({
         to: r.email,
         locale,
@@ -194,12 +196,32 @@ export async function runNotifications(
 
   await mark(emptyDone);
   result.empty = emptyDone.length;
-  // Resend 배치는 한 번에 100통까지
+  // Resend 배치는 한 번에 100통까지.
+  // 여러 곳(GitHub Actions·Cloudflare)이 동시에 불러도 한 사람에게 하루 한 통만 가도록,
+  // 보내기 전에 '오늘 보냄'으로 먼저 표시(선점)하고 선점에 성공한 사람에게만 보낸다. 발송이 실패하면 표시를 되돌린다.
   for (let i = 0; i < outgoing.length; i += 100) {
     const chunk = outgoing.slice(i, i + 100);
-    await send(chunk.map((o) => o.email));
-    await mark(chunk);
-    result.sent += chunk.length;
+    const claimed = await db.query<{ id: string; prev: string | null }>(
+      `update app_user u set last_notified_on = x.today::date
+       from jsonb_to_recordset($1::text::jsonb) as x(id uuid, today text, prev text)
+       where u.id = x.id and u.last_notified_on is not distinct from x.prev::date
+       returning u.id, x.prev`,
+      [JSON.stringify(chunk.map((x) => ({ id: x.userId, today: x.today, prev: x.prev })))],
+    );
+    const ids = new Set(claimed.map((c) => c.id));
+    const mine = chunk.filter((x) => ids.has(x.userId));
+    if (mine.length === 0) continue;
+    try {
+      await send(mine.map((o) => o.email));
+    } catch (err) {
+      await db.query(
+        `update app_user u set last_notified_on = x.prev::date
+         from jsonb_to_recordset($1::text::jsonb) as x(id uuid, prev text) where u.id = x.id`,
+        [JSON.stringify(mine.map((x) => ({ id: x.userId, prev: x.prev })))],
+      );
+      throw err;
+    }
+    result.sent += mine.length;
   }
   return result;
 }

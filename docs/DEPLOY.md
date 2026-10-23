@@ -111,3 +111,14 @@ GitHub Actions 의 매시간 수집이 끝나면 사이트의 `/api/cron/notify`
 Supabase 는 public 테이블을 공개 API(anon 키)로 노출합니다. 이 사이트는 그 API 를 쓰지 않으므로 모든 테이블에 RLS 를 켜 두었습니다
 (`db/migrations/010_enable_rls.sql`, 정책 없음 = 공개 API 로는 읽기·쓰기 불가, 서버 접속 계정은 테이블 주인이라 영향 없음).
 새 테이블을 추가하면 같은 마이그레이션 줄을 넣어야 하며, `tests/rls.test.ts` 가 빠진 것을 잡아냅니다.
+
+## 8. 알림 메일을 정시에 보내기 (Cloudflare Workers, 선택)
+
+GitHub Actions 예약 실행은 무료 플랜에서 정시 실행을 보장하지 않아, 알림 메일이 몇 시간 늦게 갈 수 있습니다.
+Cloudflare Workers 의 Cron Triggers(무료)로 10분마다 발송을 호출하면 정한 시각 10분 안에 도착합니다.
+
+1. https://dash.cloudflare.com → 왼쪽 **Compute (Workers)** → **Workers & Pages** → **Create** → **Start with Hello World!**
+2. 이름 `my-team-calendar-cron` → **Deploy** → **Edit code** → 내용을 `cloudflare/notify-cron.js` 로 바꾸고 **Deploy**
+3. Worker 화면 **Settings → Variables and Secrets → Add** → Type **Secret**, 이름 `CRON_SECRET`, 값은 Vercel 과 같은 값 → Deploy
+4. **Settings → Trigger events → Add → Cron Triggers** → `*/10 * * * *` (10분마다) → Add
+5. 10분쯤 뒤 Worker 의 **Logs**(Observability)에 `200 {"checked":..}` 이 찍히면 됩니다.
