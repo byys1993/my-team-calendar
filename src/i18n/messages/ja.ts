@@ -97,7 +97,7 @@ export const ja: Messages = {
     spoilerHint: "オンにすると終了した試合のスコアと勝敗を隠します（見逃し配信で見るとき）",
   },
   records: {
-    tab: "記録",
+    tab: "順位",
     calendarTab: "カレンダー",
     title: "リーグ順位",
     rank: "順位",

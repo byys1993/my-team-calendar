@@ -112,7 +112,7 @@ export function CalendarApp({
   const [now, setNow] = useState<Date | null>(null);
   const [cursor, setCursor] = useState<{ y: number; m: number } | null>(null);
   const [selectedKey, setSelectedKey] = useState<string>("");
-  // 화면: 캘린더 / 기록(리그 순위표)
+  // 화면: 캘린더 / 순위(리그 순위표)
   const [view, setView] = useState<"calendar" | "records">("calendar");
   // 화면 시간대: '자동'이면 브라우저 시간대 (브라우저 값은 화면이 뜬 뒤에만 알 수 있다)
   const { pref: tzPref, setPref: setTzPref } = useTimeZonePref();

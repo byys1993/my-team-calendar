@@ -97,7 +97,7 @@ export const ko: Messages = {
     spoilerHint: "켜면 끝난 경기의 점수와 승패를 가립니다 (다시보기로 볼 때)",
   },
   records: {
-    tab: "기록",
+    tab: "순위",
     calendarTab: "캘린더",
     title: "리그 순위",
     rank: "순위",

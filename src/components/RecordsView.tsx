@@ -65,7 +65,7 @@ const GROUP_KO: Record<string, string> = {
   "League Phase": "리그 페이즈",
 };
 
-// 기록 탭: 리그를 고르면 순위표. 내가 고른 팀은 팀 색으로 강조한다.
+// 순위 탭: 리그를 고르면 순위표. 내가 고른 팀은 팀 색으로 강조한다.
 export function RecordsView({ catalog, selections }: { catalog: Catalog; selections: Selection[] }) {
   const { m, locale, intl } = useI18n();
   const tz = useTz();
