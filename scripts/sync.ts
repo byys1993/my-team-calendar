@@ -3,6 +3,7 @@
 import { config } from "dotenv";
 import { defaultAdapters } from "../src/collector/adapters";
 import { syncAll } from "../src/collector/run";
+import { syncStandings } from "../src/collector/standings";
 import { createPostgresDb } from "../src/lib/db/postgres";
 
 config({ path: [".env.local", ".env"], quiet: true });
@@ -16,6 +17,8 @@ async function main() {
   const db = createPostgresDb(process.env.DATABASE_URL!, { max: 1 });
   try {
     const results = await syncAll(db, defaultAdapters(), { force, only, log: console.log });
+    // 순위표 (3시간마다). 실패해도 일정 수집 결과에는 영향을 주지 않는다.
+    await syncStandings(db, { force, only, log: console.log, footballDataKey: process.env.FOOTBALL_DATA_API_KEY });
     // 대회 하나라도 모든 소스가 실패하면 Actions 실행을 실패로 표시해 알 수 있게 한다.
     if (results.some((r) => !r.ok)) process.exitCode = 1;
   } finally {

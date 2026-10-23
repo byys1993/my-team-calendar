@@ -4,7 +4,7 @@ import { formatLabel } from "@/i18n/format";
 import { useI18n } from "@/i18n/client";
 import { isTentative, type MatchView } from "./matchView";
 import { dateLabel, isDawn, matchDateKey, matchTimeLabel } from "./time";
-import { MatchResult } from "./spoiler";
+import { MatchResult, PodiumResult } from "./spoiler";
 import { useTz } from "./timezone";
 
 interface Props {
@@ -43,7 +43,7 @@ export function MatchRow({ view, teamName, competitionName, showDate = true }: P
           <span>{view.opponent}</span>
           {view.side && view.side !== "vs" && <span className={`side side-${view.side}`}>{t.match[view.side]}</span>}
           {status && <span className="status">{status}</span>}
-          <MatchResult match={m} team={view.team} />
+          {view.side ? <MatchResult match={m} team={view.team} /> : <PodiumResult match={m} />}
         </div>
         <div className="meta">
           {competitionName(m.competition)}

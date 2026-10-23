@@ -11,7 +11,7 @@ const SEASON_MONTHS = [3, 4, 5, 6, 7, 8, 9, 10, 11];
 const POSTSEASON_MONTHS = [9, 10, 11];
 
 // 화면에 나오는 팀 이름 → KBO 팀 코드 (경기 ID에 쓰이는 코드)
-const TEAM_CODE: Record<string, string> = {
+export const TEAM_CODE: Record<string, string> = {
   KIA: "HT",
   두산: "OB",
   LG: "LG",

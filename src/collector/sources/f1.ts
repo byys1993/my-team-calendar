@@ -1,5 +1,5 @@
-import type { Fetcher, SourceAdapter, SourceMatch, SourceTeam } from "../types";
-import { getJson } from "./http";
+import type { Fetcher, Podium, SourceAdapter, SourceMatch, SourceTeam } from "../types";
+import { getJson, sleep } from "./http";
 
 // F1은 팀 대신 '시리즈' 하나(시드의 f1 팀)를 선택하고, 그랑프리의 결승·예선·스프린트를 이벤트로 저장한다.
 const SERIES: SourceTeam = { externalId: "f1", name: "Formula 1" };
@@ -49,15 +49,69 @@ export function parseJolpica(races: JolpicaRace[]): SourceMatch[] {
   ]);
 }
 
-export function jolpica(fetcher: Fetcher = fetch): SourceAdapter {
+interface JolpicaResult {
+  position: string;
+  Driver: { driverId: string; code?: string; familyName: string };
+  Constructor: { name: string };
+}
+interface JolpicaResultRace {
+  season: string;
+  round: string;
+  Results?: JolpicaResult[];
+  SprintResults?: JolpicaResult[];
+  QualifyingResults?: JolpicaResult[];
+}
+
+// 결과 요청 종류: 경로, 세션, 몇 위까지
+const RESULT_QUERIES: { path: string; kind: SessionKind; positions: number[] }[] = [
+  { path: "results", kind: "race", positions: [1, 2, 3] },
+  { path: "sprint", kind: "sprint", positions: [1, 2, 3] },
+  { path: "qualifying", kind: "quali", positions: [1] },
+];
+
+// 경기 ID('2026-17-race') → 순위별 결과
+export function addPodiums(matches: SourceMatch[], results: { kind: SessionKind; races: JolpicaResultRace[] }[]) {
+  const byId = new Map<string, Podium[]>();
+  for (const { kind, races } of results) {
+    for (const r of races) {
+      const list = r.Results ?? r.SprintResults ?? r.QualifyingResults ?? [];
+      const id = `${r.season}-${r.round}-${kind}`;
+      for (const x of list) {
+        const p: Podium = {
+          pos: Number(x.position),
+          driverId: x.Driver.driverId,
+          code: x.Driver.code ?? null,
+          name: x.Driver.familyName,
+          team: x.Constructor.name,
+        };
+        byId.set(id, [...(byId.get(id) ?? []).filter((q) => q.pos !== p.pos), p].sort((a, b) => a.pos - b.pos));
+      }
+    }
+  }
+  return matches.map((m) => (byId.has(m.externalId) ? { ...m, podium: byId.get(m.externalId)! } : m));
+}
+
+export function jolpica(fetcher: Fetcher = fetch, opts: { delayMs?: number } = {}): SourceAdapter {
+  const delayMs = opts.delayMs ?? 300;
+  const base = "https://api.jolpi.ca/ergast/f1";
   return {
     source: "jolpica",
     async fetchMatches(season) {
-      const json = await getJson<{ MRData: { RaceTable: { Races: JolpicaRace[] } } }>(
-        fetcher,
-        `https://api.jolpi.ca/ergast/f1/${encodeURIComponent(season)}/races/?limit=100`,
-      );
-      return parseJolpica(json.MRData.RaceTable.Races);
+      const s = encodeURIComponent(season);
+      const json = await getJson<{ MRData: { RaceTable: { Races: JolpicaRace[] } } }>(fetcher, `${base}/${s}/races/?limit=100`);
+      // 끝난 세션의 1~3위 (예선은 폴 포지션). 순위별로 한 번씩 받으면 시즌 전체가 한 페이지에 들어온다.
+      const results: { kind: SessionKind; races: JolpicaResultRace[] }[] = [];
+      for (const q of RESULT_QUERIES) {
+        for (const pos of q.positions) {
+          if (delayMs) await sleep(delayMs);
+          const r = await getJson<{ MRData: { RaceTable: { Races: JolpicaResultRace[] } } }>(
+            fetcher,
+            `${base}/${s}/${q.path}/${pos}/?limit=100`,
+          );
+          results.push({ kind: q.kind, races: r.MRData.RaceTable.Races });
+        }
+      }
+      return addPodiums(parseJolpica(json.MRData.RaceTable.Races), results);
     },
   };
 }

@@ -30,6 +30,16 @@ export interface SourceMatch {
   // 끝난 경기의 점수 (e스포츠는 세트 승수). 끝나지 않았으면 비워 둔다.
   homeScore?: number | null;
   awayScore?: number | null;
+  // 순위 경기(F1)의 결과: 결승·스프린트는 1~3위, 예선은 폴 포지션
+  podium?: Podium[] | null;
+}
+
+export interface Podium {
+  pos: number;
+  driverId: string;
+  code: string | null;
+  name: string; // 영문 성 (화면에서 한국어 이름으로 바꾼다)
+  team: string;
 }
 
 export interface SourceAdapter {

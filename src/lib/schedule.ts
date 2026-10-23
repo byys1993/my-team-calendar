@@ -1,4 +1,5 @@
 import { INTL_LOCALE, type Locale } from "@/i18n/config";
+import type { Podium } from "@/collector/types";
 import type { Db } from "./db";
 
 // 사이트(서버)와 화면(클라이언트)이 함께 쓰는 응답 타입.
@@ -44,6 +45,7 @@ export interface ScheduleMatch {
   status: "scheduled" | "time_tbd" | "conditional" | "draw_pending" | "postponed" | "cancelled";
   venue: string | null;
   isNeutral: boolean;
+  podium: Podium[] | null; // F1 결과 (결승·스프린트 1~3위, 예선 폴 포지션)
   homeScore: number | null; // 끝난 경기 결과 (e스포츠는 세트 승수)
   awayScore: number | null;
   broadcast: string | null; // 국내 중계 ('SPOTV, TVING'): 경기별 채널 + 대회 기본 플랫폼
@@ -136,6 +138,7 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Lo
     comp_broadcast: string | null;
     home_score: number | null;
     away_score: number | null;
+    podium: Podium[] | null;
   }>(
     `select m.id, c.slug as competition, s.slug as sport, m.round_label, m.title, h.slug as home, a.slug as away,
        case when $2 = 'ko' then coalesce(h.short_ko, h.name_ko, m.home_placeholder)
@@ -143,7 +146,7 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Lo
        case when $2 = 'ko' then coalesce(a.short_ko, a.name_ko, m.away_placeholder)
             else coalesce(a.name_en, m.away_placeholder) end as away_label,
        m.start_at, to_char(m.date_only, 'YYYY-MM-DD') as date_only, m.status, m.venue, m.is_neutral, m.sequence, m.updated_at,
-       m.broadcast, c.broadcast as comp_broadcast, m.home_score, m.away_score
+       m.broadcast, c.broadcast as comp_broadcast, m.home_score, m.away_score, m.podium
      from match m
      join competition c on c.id = m.competition_id
      join sport s on s.id = c.sport_id
@@ -169,6 +172,7 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Lo
     status: r.status,
     venue: r.venue,
     isNeutral: r.is_neutral,
+    podium: r.podium,
     homeScore: r.home_score,
     awayScore: r.away_score,
     broadcast: mergeBroadcast(r.broadcast, r.comp_broadcast),

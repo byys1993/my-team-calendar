@@ -21,6 +21,7 @@ import { TimeZoneSelect } from "./TimeZoneSelect";
 import { VisitorStats } from "./VisitorStats";
 import { CalendarSubscribe } from "./CalendarSubscribe";
 import { SpoilerProvider, SpoilerToggle } from "./spoiler";
+import { RecordsView } from "./RecordsView";
 import { AUTO, browserTimeZone, isValidTimeZone, TimeZoneProvider, useTimeZonePref } from "./timezone";
 import {
   dateLabel,
@@ -111,6 +112,8 @@ export function CalendarApp({
   const [now, setNow] = useState<Date | null>(null);
   const [cursor, setCursor] = useState<{ y: number; m: number } | null>(null);
   const [selectedKey, setSelectedKey] = useState<string>("");
+  // 화면: 캘린더 / 기록(리그 순위표)
+  const [view, setView] = useState<"calendar" | "records">("calendar");
   // 화면 시간대: '자동'이면 브라우저 시간대 (브라우저 값은 화면이 뜬 뒤에만 알 수 있다)
   const { pref: tzPref, setPref: setTzPref } = useTimeZonePref();
   const tz = now ? (tzPref === AUTO ? browserTimeZone() : tzPref) : "UTC";
@@ -291,7 +294,18 @@ export function CalendarApp({
 
       {error && <p className="error">{error}</p>}
 
-      {selections.length > 0 && (
+      <nav className="view-tabs" role="tablist">
+        <button type="button" role="tab" aria-selected={view === "calendar"} onClick={() => setView("calendar")}>
+          📅 {t.records.calendarTab}
+        </button>
+        <button type="button" role="tab" aria-selected={view === "records"} onClick={() => setView("records")}>
+          📊 {t.records.tab}
+        </button>
+      </nav>
+
+      {view === "records" && <RecordsView catalog={catalog} selections={selections} />}
+
+      {view === "calendar" && selections.length > 0 && (
         <section className="next-cards" aria-label={t.app.upcoming}>
           {cardOrder.map((s) => {
             const v = nextByTeam.get(s.slug);
@@ -335,65 +349,67 @@ export function CalendarApp({
         </section>
       )}
 
-      <div className="main-grid">
-        <div>
-          {cursor && (
-            <MonthCalendar
-              year={cursor.y}
-              month={cursor.m}
-              todayKey={todayKey}
-              selectedKey={selectedKey}
-              byDay={byDay}
-              teamShort={teamShort}
-              onSelectDay={setSelectedKey}
-              onMove={(delta) =>
-                setCursor((c) => {
-                  const d = new Date(c!.y, c!.m + delta, 1);
-                  return { y: d.getFullYear(), m: d.getMonth() };
-                })
-              }
-              onToday={() => {
-                const today = keyParts(todayKey);
-                setCursor({ y: today.y, m: today.m });
-                setSelectedKey(todayKey);
-              }}
-            />
-          )}
-          {selectedKey && (
-            <section className="card day-list" aria-live="polite">
-              <h2>{dateLabel(selectedKey, intl)}</h2>
-              {dayItems.length === 0 ? (
-                <p className="muted">{t.app.noMatchesDay}</p>
-              ) : (
-                <ul className="matches">
-                  {dayItems.map((v) => (
-                    <MatchRow key={v.match.id} view={v} teamName={teamName} competitionName={competitionName} showDate={false} />
-                  ))}
-                </ul>
-              )}
-            </section>
-          )}
-        </div>
+      {view === "calendar" && (
+        <div className="main-grid">
+          <div>
+            {cursor && (
+              <MonthCalendar
+                year={cursor.y}
+                month={cursor.m}
+                todayKey={todayKey}
+                selectedKey={selectedKey}
+                byDay={byDay}
+                teamShort={teamShort}
+                onSelectDay={setSelectedKey}
+                onMove={(delta) =>
+                  setCursor((c) => {
+                    const d = new Date(c!.y, c!.m + delta, 1);
+                    return { y: d.getFullYear(), m: d.getMonth() };
+                  })
+                }
+                onToday={() => {
+                  const today = keyParts(todayKey);
+                  setCursor({ y: today.y, m: today.m });
+                  setSelectedKey(todayKey);
+                }}
+              />
+            )}
+            {selectedKey && (
+              <section className="card day-list" aria-live="polite">
+                <h2>{dateLabel(selectedKey, intl)}</h2>
+                {dayItems.length === 0 ? (
+                  <p className="muted">{t.app.noMatchesDay}</p>
+                ) : (
+                  <ul className="matches">
+                    {dayItems.map((v) => (
+                      <MatchRow key={v.match.id} view={v} teamName={teamName} competitionName={competitionName} showDate={false} />
+                    ))}
+                  </ul>
+                )}
+              </section>
+            )}
+          </div>
 
-        <section className="card upcoming" aria-label={t.app.upcoming}>
-          <h2>{t.app.upcoming}</h2>
-          {loading && matches.length === 0 && <p className="muted">{t.app.loading}</p>}
-          {!loading && upcoming.length === 0 && <p className="muted">{t.app.noUpcoming}</p>}
-          <ul className="matches">
-            {upcoming.slice(0, UPCOMING_LIMIT).map((v) => (
-              <MatchRow key={v.match.id} view={v} teamName={teamName} competitionName={competitionName} />
-            ))}
-          </ul>
-          <p className="legend">
-            <span className="legend-item">
-              <span className="legend-box" /> {t.app.legendConfirmed}
-            </span>
-            <span className="legend-item">
-              <span className="legend-box tentative" /> {t.app.legendTentative}
-            </span>
-          </p>
-        </section>
-      </div>
+          <section className="card upcoming" aria-label={t.app.upcoming}>
+            <h2>{t.app.upcoming}</h2>
+            {loading && matches.length === 0 && <p className="muted">{t.app.loading}</p>}
+            {!loading && upcoming.length === 0 && <p className="muted">{t.app.noUpcoming}</p>}
+            <ul className="matches">
+              {upcoming.slice(0, UPCOMING_LIMIT).map((v) => (
+                <MatchRow key={v.match.id} view={v} teamName={teamName} competitionName={competitionName} />
+              ))}
+            </ul>
+            <p className="legend">
+              <span className="legend-item">
+                <span className="legend-box" /> {t.app.legendConfirmed}
+              </span>
+              <span className="legend-item">
+                <span className="legend-box tentative" /> {t.app.legendTentative}
+              </span>
+            </p>
+          </section>
+        </div>
+      )}
 
       <footer className="foot">
         {relevantComps.length > 0 && (
