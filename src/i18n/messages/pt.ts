@@ -3,9 +3,11 @@ import type { Messages } from "./en";
 export const pt: Messages = {
   meta: {
     title: "Calendário do Meu Time",
-    description: "Os jogos de liga, copa e competições internacionais dos seus times em um só calendário",
+    tagline: "jogos, resultados e transmissões dos seus times em um calendário",
+    description: "Agenda, resultados e onde assistir aos seus times da KBO, K League, KBL, Premier League, NBA, MLB, F1, LCK e mais, em um só calendário no seu fuso horário. Assinatura gratuita no Google e Apple Calendar e alertas por e-mail.",
   },
   app: {
+    about: "Sobre",
     scale: "{c} ligas e competições · {t} times · atualizado a cada hora com dados oficiais",
     updatedAgo: "Agenda atualizada {ago}",
     title: "Calendário do Meu Time",
@@ -176,6 +178,18 @@ export const pt: Messages = {
     sent: "Enviado. Obrigado pela sugestão!",
     tooShort: "Escreva pelo menos 5 caracteres.",
     privacy: "Seu e-mail é usado apenas para responder e não é salvo.",
+  },
+  aboutPage: {
+    title: "Sobre o My Team Calendar",
+    lead: "O My Team Calendar é um serviço gratuito que reúne em um calendário os jogos de liga, copa, seleções e esports dos times que você acompanha, de vários esportes e países, no seu fuso horário.",
+    featuresTitle: "O que você pode fazer",
+    features: ["28 ligas e competições e quase 300 times","Contagem regressiva, calendário mensal e resultados (com modo sem spoiler)","Onde assistir na Coreia e marcação de jogos de madrugada","Classificações e top 5 de jogadores","Assinatura no Google / Apple Calendar (widgets no celular e no Mac)","Alertas por e-mail, 10 idiomas, qualquer fuso horário"],
+    dataTitle: "De onde vêm os dados",
+    data: "Coletamos as agendas a cada hora nos sites oficiais das ligas e em dados esportivos públicos. Elas podem mudar, então confira também os comunicados oficiais para jogos importantes. Todas as fontes estão no rodapé da página inicial.",
+    whoTitle: "Quem mantém",
+    who: "Um fã de esportes mantém o site como projeto pessoal e não comercial. Sem anúncios, tudo funciona sem login e só tratamos os dados pessoais estritamente necessários.",
+    contact: "Quer outra liga ou viu um horário errado? Use “Enviar sugestão” no rodapé da página inicial.",
+    back: "Ir para o calendário",
   },
   stats: {
     label: "Visitantes",

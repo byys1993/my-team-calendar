@@ -40,8 +40,9 @@ export function isLocale(v: unknown): v is Locale {
 }
 
 // Accept-Language 헤더('ko-KR,ko;q=0.9,en;q=0.8')에서 지원하는 언어 중 가장 선호하는 것
+// 언어 정보가 아예 없으면(구글·네이버 검색 수집기 등) 주 사용자층인 한국어로 보여 준다.
 export function matchLocale(header: string | null | undefined): Locale {
-  if (!header) return DEFAULT_LOCALE;
+  if (!header?.trim()) return "ko";
   const prefs = header
     .split(",")
     .map((part) => {

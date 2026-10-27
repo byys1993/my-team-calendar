@@ -3,9 +3,11 @@ import type { Messages } from "./en";
 export const fr: Messages = {
   meta: {
     title: "Calendrier de Mon Équipe",
-    description: "Les matchs de championnat, de coupe et internationaux de vos équipes dans un seul calendrier",
+    tagline: "matchs, résultats et diffusions de vos équipes dans un calendrier",
+    description: "Le calendrier, les résultats et les diffuseurs de vos équipes en KBO, K League, KBL, Premier League, NBA, MLB, F1, LCK et plus, réunis dans un seul calendrier à votre fuseau horaire. Abonnement Google / Apple Agenda et alertes e-mail gratuits.",
   },
   app: {
+    about: "À propos",
     scale: "{c} championnats et compétitions · {t} équipes · mis à jour chaque heure avec des données officielles",
     updatedAgo: "Calendrier mis à jour {ago}",
     title: "Calendrier de Mon Équipe",
@@ -176,6 +178,18 @@ export const fr: Messages = {
     sent: "Envoyé. Merci pour votre avis !",
     tooShort: "Écrivez au moins 5 caractères.",
     privacy: "Votre e-mail sert uniquement à répondre et n'est pas conservé.",
+  },
+  aboutPage: {
+    title: "À propos de My Team Calendar",
+    lead: "My Team Calendar est un service gratuit qui rassemble dans un seul calendrier les matchs de championnat, de coupe, internationaux et d'esport des équipes que vous suivez, tous sports et pays confondus, à votre fuseau horaire.",
+    featuresTitle: "Ce que vous pouvez faire",
+    features: ["28 championnats et compétitions, près de 300 équipes","Compte à rebours, calendrier mensuel et résultats (avec mode anti-spoiler)","Diffuseurs en Corée et repère des matchs en pleine nuit","Classements et top 5 des joueurs","Abonnement Google / Apple Agenda (widgets mobile et Mac)","Alertes e-mail, 10 langues, tout fuseau horaire"],
+    dataTitle: "D'où viennent les données",
+    data: "Nous récupérons les calendriers chaque heure sur les sites officiels des ligues et des données sportives publiques. Ils peuvent changer : vérifiez aussi les annonces officielles pour les matchs importants. Toutes les sources figurent en bas de la page d'accueil.",
+    whoTitle: "Qui le gère",
+    who: "Un passionné de sport le gère à titre personnel et non commercial. Pas de publicité, toutes les fonctions sans connexion, et seulement les données personnelles strictement nécessaires.",
+    contact: "Une ligue à ajouter ou un horaire erroné ? Utilisez « Envoyer un avis » en bas de la page d'accueil.",
+    back: "Aller au calendrier",
   },
   stats: {
     label: "Visiteurs",

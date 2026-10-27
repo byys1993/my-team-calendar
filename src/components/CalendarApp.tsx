@@ -472,7 +472,8 @@ export function CalendarApp({
             </div>
           )}
           <p className="muted">{t.app.disclaimer}</p>
-          <p>
+          <p className="foot-links">
+            <a href="/about">{t.app.about}</a>
             <a href="/privacy">{t.app.privacy}</a>
           </p>
         </div>

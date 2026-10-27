@@ -3,9 +3,11 @@ import type { Messages } from "./en";
 export const zh: Messages = {
   meta: {
     title: "我的球队日历",
-    description: "在一个日历里查看你支持的球队的联赛、杯赛和国际赛事赛程",
+    tagline: "你的球队赛程、比分和转播尽在一个日历",
+    description: "KBO、K联赛、KBL、英超、NBA、MLB、F1、LCK 等你支持的球队赛程、比分与转播信息，按你的时区汇总到一个日历。免费提供 Google·Apple 日历订阅和比赛提醒邮件。",
   },
   app: {
+    about: "关于",
     scale: "{c} 个联赛和赛事 · {t} 支球队 · 依据官方数据每小时自动更新",
     updatedAgo: "赛程更新于{ago}",
     title: "我的球队日历",
@@ -175,6 +177,18 @@ export const zh: Messages = {
     sent: "已发送，感谢你的意见！",
     tooShort: "请至少填写 5 个字。",
     privacy: "你填写的邮箱仅用于回复，不会保存。",
+  },
+  aboutPage: {
+    title: "关于 My Team Calendar",
+    lead: "My Team Calendar 是一项免费服务：选择你支持的球队，联赛、杯赛、国际赛和电竞赛程就会汇总到一个日历中，不论项目和国家，都按你的时区显示。",
+    featuresTitle: "功能",
+    features: ["28 个联赛和赛事、近 300 支球队","下一场倒计时、月历和比分（可防剧透）","韩国转播频道和凌晨比赛标记","联赛积分榜和个人数据前 5 名","Google·Apple 日历订阅（手机和 Mac 小组件）","比赛提醒邮件、10 种语言、任意时区"],
+    dataTitle: "数据来源",
+    data: "我们每小时从各联赛官网和公开体育数据自动获取赛程。赛程可能变动，重要比赛请同时查看官方公告。所有来源都列在首页底部。",
+    whoTitle: "运营者",
+    who: "由一位体育爱好者以非商业方式个人运营。没有广告，不登录也能使用全部功能，只处理必要的个人信息。",
+    contact: "想添加联赛或发现赛程错误？请使用首页底部的“发送意见”。",
+    back: "前往日历",
   },
   stats: {
     label: "访问人数",

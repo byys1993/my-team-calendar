@@ -3,9 +3,11 @@ import type { Messages } from "./en";
 export const de: Messages = {
   meta: {
     title: "Mein Team Kalender",
-    description: "Liga-, Pokal- und internationale Spiele deiner Teams in einem Kalender",
+    tagline: "Spiele, Ergebnisse und TV deiner Teams in einem Kalender",
+    description: "Spielplan, Ergebnisse und Übertragungen deiner Teams aus KBO, K League, KBL, Premier League, NBA, MLB, F1, LCK und mehr – in einem Kalender in deiner Zeitzone. Kostenlose Google- und Apple-Kalender-Abos und Spiel-Erinnerungen per E-Mail.",
   },
   app: {
+    about: "Über",
     scale: "{c} Ligen & Wettbewerbe · {t} Teams · stündlich aus offiziellen Daten aktualisiert",
     updatedAgo: "Spielplan aktualisiert {ago}",
     title: "Mein Team Kalender",
@@ -176,6 +178,18 @@ export const de: Messages = {
     sent: "Gesendet. Danke für dein Feedback!",
     tooShort: "Bitte mindestens 5 Zeichen schreiben.",
     privacy: "Deine E-Mail wird nur für die Antwort genutzt und nicht gespeichert.",
+  },
+  aboutPage: {
+    title: "Über My Team Calendar",
+    lead: "My Team Calendar ist ein kostenloser Dienst, der Liga-, Pokal-, Länder- und E-Sport-Spiele deiner Teams in einem Kalender sammelt – über Sportarten und Länder hinweg, in deiner Zeitzone.",
+    featuresTitle: "Was du tun kannst",
+    features: ["28 Ligen und Wettbewerbe, fast 300 Teams","Countdown zum nächsten Spiel, Monatskalender und Ergebnisse (mit Spoiler-Schutz)","TV-Sender in Korea und Kennzeichnung nächtlicher Spiele","Tabellen und Top-5-Spielerstatistiken","Google- / Apple-Kalender-Abo (Widgets auf Handy und Mac)","Spiel-Erinnerungen per E-Mail, 10 Sprachen, jede Zeitzone"],
+    dataTitle: "Woher die Daten kommen",
+    data: "Wir holen die Spielpläne stündlich von den offiziellen Ligaseiten und aus öffentlichen Sportdaten. Termine können sich ändern – prüfe wichtige Spiele bitte auch in offiziellen Mitteilungen. Alle Quellen stehen unten auf der Startseite.",
+    whoTitle: "Wer dahintersteht",
+    who: "Ein Sportfan betreibt die Seite privat und nicht kommerziell. Keine Werbung, alle Funktionen ohne Anmeldung, und nur unbedingt nötige personenbezogene Daten.",
+    contact: "Eine Liga fehlt oder ein Termin stimmt nicht? Nutze „Feedback senden“ unten auf der Startseite.",
+    back: "Zum Kalender",
   },
   stats: {
     label: "Besucher",

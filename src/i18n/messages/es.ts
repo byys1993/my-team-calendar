@@ -3,9 +3,11 @@ import type { Messages } from "./en";
 export const es: Messages = {
   meta: {
     title: "Calendario de Mi Equipo",
-    description: "Los partidos de liga, copa y torneos internacionales de tus equipos en un solo calendario",
+    tagline: "partidos, resultados y TV de tus equipos en un calendario",
+    description: "Calendario, resultados y dónde ver a tus equipos de KBO, K League, KBL, Premier League, NBA, MLB, F1, LCK y más, en un solo calendario y en tu zona horaria. Suscripción gratuita a Google y Apple Calendar y avisos por correo.",
   },
   app: {
+    about: "Acerca de",
     scale: "{c} ligas y torneos · {t} equipos · actualizado cada hora con datos oficiales",
     updatedAgo: "Calendario actualizado {ago}",
     title: "Calendario de Mi Equipo",
@@ -176,6 +178,18 @@ export const es: Messages = {
     sent: "Enviado. ¡Gracias por tus comentarios!",
     tooShort: "Escribe al menos 5 caracteres.",
     privacy: "Tu correo solo se usa para responder y no se guarda.",
+  },
+  aboutPage: {
+    title: "Acerca de My Team Calendar",
+    lead: "My Team Calendar es un servicio gratuito que reúne en un calendario los partidos de liga, copa, internacionales y esports de los equipos que sigues, de distintos deportes y países, en tu zona horaria.",
+    featuresTitle: "Qué puedes hacer",
+    features: ["28 ligas y competiciones y casi 300 equipos","Cuenta atrás al próximo partido, calendario mensual y resultados (con modo sin spoilers)","Dónde verlo en Corea y aviso de partidos de madrugada","Clasificaciones y top 5 de jugadores","Suscripción a Google / Apple Calendar (widgets en móvil y Mac)","Avisos por correo, 10 idiomas y cualquier zona horaria"],
+    dataTitle: "De dónde salen los datos",
+    data: "Recogemos los calendarios cada hora de las webs oficiales de las ligas y de datos deportivos públicos. Pueden cambiar, así que confirma los partidos importantes con los anuncios oficiales. Todas las fuentes figuran al pie de la página principal.",
+    whoTitle: "Quién lo gestiona",
+    who: "Un aficionado al deporte lo mantiene como proyecto no comercial. Sin anuncios, todo funciona sin iniciar sesión y solo tratamos los datos personales imprescindibles.",
+    contact: "¿Quieres otra liga o viste un horario incorrecto? Usa «Enviar comentarios» al pie de la página principal.",
+    back: "Ir al calendario",
   },
   stats: {
     label: "Visitantes",

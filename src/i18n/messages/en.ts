@@ -3,9 +3,11 @@
 export const en = {
   meta: {
     title: "My Team Calendar",
-    description: "All your teams' league, cup and international fixtures in one calendar",
+    tagline: "your teams' fixtures, results and TV in one calendar",
+    description: "Fixtures, results and where to watch for your teams across KBO, K League, KBL, the Premier League, NBA, MLB, F1, LCK and more — in one calendar in your time zone. Free calendar subscriptions (Google, Apple) and match alert emails.",
   },
   app: {
+    about: "About",
     scale: "{c} leagues & competitions · {t} teams · auto-updated hourly from official data",
     updatedAgo: "Schedules updated {ago}",
     title: "My Team Calendar",
@@ -176,6 +178,18 @@ export const en = {
     sent: "Sent. Thanks for your feedback!",
     tooShort: "Please write at least 5 characters.",
     privacy: "Your email is used only to reply and is not stored.",
+  },
+  aboutPage: {
+    title: "About My Team Calendar",
+    lead: "My Team Calendar is a free service that collects league, cup, international and esports fixtures for the teams you follow into one calendar — across sports and countries, in your own time zone.",
+    featuresTitle: "What you can do",
+    features: ["28 leagues and competitions and nearly 300 teams: KBO, K League, KBL, Europe's top 5 leagues, UCL, NBA, MLB, NFL, NHL, F1, LCK and more","Next-match countdown, monthly calendar and results (with a spoiler guard)","Where to watch in Korea and late-night match markers","League standings and top-5 player leaders","Google / Apple Calendar subscriptions (phone and Mac widgets)","Match alert emails, 10 languages, any time zone"],
+    dataTitle: "Where the data comes from",
+    data: "We collect schedules every hour from official league websites and public sports data. Schedules can change, so please also check official announcements for important matches. All sources are listed at the bottom of the home page.",
+    whoTitle: "Who runs it",
+    who: "An individual sports fan runs it as a non-commercial project. No ads, every feature works without signing in, and we handle only the personal data we strictly need.",
+    contact: "Want another league or found a wrong schedule? Use “Send feedback” at the bottom of the home page.",
+    back: "Go to the calendar",
   },
   stats: {
     label: "Visitors",

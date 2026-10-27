@@ -11,7 +11,8 @@ describe("언어 고르기", () => {
     expect(matchLocale("it-IT,it;q=0.9,de;q=0.7")).toBe("de");
     expect(matchLocale("pt-BR")).toBe("pt");
     expect(matchLocale("it-IT")).toBe("en"); // 지원하지 않으면 영어
-    expect(matchLocale(null)).toBe("en");
+    expect(matchLocale(null)).toBe("ko"); // 언어 정보 없음(검색 수집기) → 한국어
+    expect(matchLocale("")).toBe("ko");
   });
 
   it("모든 언어 문구가 같은 자리 표시({max} 등)를 가진다", () => {
