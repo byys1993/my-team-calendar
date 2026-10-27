@@ -1655,3 +1655,36 @@ a {
 .league-links {
   margin-bottom: 14px;
 }
+
+/* 헤더: 좁은 화면에서는 제목·시간대 아래로 버튼 줄이 내려오게 (가로로 넘치지 않도록) */
+.brand {
+  min-width: 0;
+}
+
+.scale-line {
+  flex-basis: 100%;
+}
+
+.tz-select {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .top {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .brand {
+    flex: 1 1 100%;
+  }
+
+  .top-actions {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+
+  .top-actions .primary {
+    margin-inline-start: auto;
+  }
+}
