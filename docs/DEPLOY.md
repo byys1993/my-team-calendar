@@ -112,13 +112,17 @@ Supabase 는 public 테이블을 공개 API(anon 키)로 노출합니다. 이 �
 (`db/migrations/010_enable_rls.sql`, 정책 없음 = 공개 API 로는 읽기·쓰기 불가, 서버 접속 계정은 테이블 주인이라 영향 없음).
 새 테이블을 추가하면 같은 마이그레이션 줄을 넣어야 하며, `tests/rls.test.ts` 가 빠진 것을 잡아냅니다.
 
-## 8. 알림 메일을 정시에 보내기 (Cloudflare Workers, 선택)
+## 8. 정시 작업을 Cloudflare Workers 로 (알림 메일 · 일정 수집)
 
-GitHub Actions 예약 실행은 무료 플랜에서 정시 실행을 보장하지 않아, 알림 메일이 몇 시간 늦게 갈 수 있습니다.
-Cloudflare Workers 의 Cron Triggers(무료)로 10분마다 발송을 호출하면 정한 시각 10분 안에 도착합니다.
+GitHub Actions 예약 실행은 무료 플랜에서 정시 실행을 보장하지 않아 몇 시간씩 밀리기도 합니다.
+Cloudflare Workers 의 Cron Triggers(무료)로 정시에 부르면 알림 메일은 정한 시각 10분 안에, 일정 수집은 매시 7분에 시작합니다.
 
-1. https://dash.cloudflare.com → 왼쪽 **Compute (Workers)** → **Workers & Pages** → **Create** → **Start with Hello World!**
-2. 이름 `my-team-calendar-cron` → **Deploy** → **Edit code** → 내용을 `cloudflare/notify-cron.js` 로 바꾸고 **Deploy**
-3. Worker 화면 **Settings → Variables and Secrets → Add** → Type **Secret**, 이름 `CRON_SECRET`, 값은 Vercel 과 같은 값 → Deploy
-4. **Settings → Trigger events → Add → Cron Triggers** → `*/10 * * * *` (10분마다) → Add
-5. 10분쯤 뒤 Worker 의 **Logs**(Observability)에 `200 {"checked":..}` 이 찍히면 됩니다.
+1. https://dash.cloudflare.com → **Workers & Pages** → **Create** → **Start with Hello World!** → 이름 `my-team-calendar-cron` → **Deploy**
+2. **Edit code** → 내용을 `cloudflare/notify-cron.js` 로 바꾸고 **Deploy**
+3. **Settings → Variables and Secrets** 에 Secret 두 개
+   - `CRON_SECRET`: Vercel 과 같은 값
+   - `GITHUB_TOKEN`: GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate
+     (Repository access: Only select → `my-team-calendar`, Permissions: **Actions → Read and write**, 만료 1년)
+4. **Settings → Trigger events → Cron Triggers** 에 두 개: `*/10 * * * *`, `7 * * * *`
+5. Worker **Logs** 에 `notify 200`(10분마다), `sync 204`(매시 7분)가 찍히면 됩니다.
+   GitHub 토큰은 만료일 전에 새로 만들어 바꿔 넣어야 합니다.
