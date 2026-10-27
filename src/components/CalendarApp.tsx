@@ -145,8 +145,19 @@ export function CalendarApp({
     setSelectedKey(toDateKey(d, browserTimeZone()));
   }, []);
 
+  // 팀 페이지의 '이 팀을 추가' 버튼: /?add=팀 으로 오면 그 팀을 내 팀에 넣고 주소에서 지운다
+  const addFromLink = useRef(typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("add") : null);
   useEffect(() => {
-    // 로그인 확인이 끝난 뒤에도 고른 팀이 없을 때만 팀 선택 창을 연다
+    const slug = addFromLink.current;
+    if (!loaded || !slug) return;
+    if (teamsBySlug.has(slug)) add(slug);
+    addFromLink.current = null;
+    window.history.replaceState(null, "", window.location.pathname);
+  }, [loaded, teamsBySlug, add]);
+
+  useEffect(() => {
+    // 로그인 확인이 끝난 뒤에도 고른 팀이 없을 때만 팀 선택 창을 연다 (링크로 팀을 추가하는 중이면 열지 않는다)
+    if (addFromLink.current) return;
     if (loaded && checked && selections.length === 0 && !account?.selections.length) setPickerOpen(true);
   }, [loaded, checked, selections.length, account]);
 
@@ -452,6 +463,17 @@ export function CalendarApp({
             </ul>
           </div>
         )}
+        {/* 리그별 페이지 링크 (검색엔진이 팀·리그 페이지를 찾아가는 길) */}
+        <div className="league-links">
+          <h2>{t.app.leagues}</h2>
+          <ul>
+            {catalog.competitions.map((c) => (
+              <li key={c.slug}>
+                <a href={`/league/${c.slug}`}>{c.name}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
         <div className="credits">
           <h2>{t.app.dataSources}</h2>
           <ul>

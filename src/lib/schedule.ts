@@ -114,36 +114,37 @@ export async function getCatalog(db: Db, locale: Locale): Promise<Catalog> {
   };
 }
 
-// 선택한 팀들의 경기. 지난 경기는 두 달 전까지만 (달력에서 지난 달을 볼 수 있도록)
-export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Locale): Promise<ScheduleMatch[]> {
-  if (teamSlugs.length === 0) return [];
-  const rows = await db.query<{
-    id: string;
-    competition: string;
-    sport: string;
-    round_label: string | null;
-    title: string | null;
-    home: string | null;
-    away: string | null;
-    home_label: string | null;
-    away_label: string | null;
-    start_at: Date | null;
-    date_only: string | Date | null;
-    status: ScheduleMatch["status"];
-    venue: string | null;
-    is_neutral: boolean;
-    sequence: number;
-    updated_at: Date;
-    broadcast: string | null;
-    comp_broadcast: string | null;
-    home_score: number | null;
-    away_score: number | null;
-    podium: Podium[] | null;
-  }>(
+interface MatchRowDb {
+  id: string;
+  competition: string;
+  sport: string;
+  round_label: string | null;
+  title: string | null;
+  home: string | null;
+  away: string | null;
+  home_label: string | null;
+  away_label: string | null;
+  start_at: Date | null;
+  date_only: string | Date | null;
+  status: ScheduleMatch["status"];
+  venue: string | null;
+  is_neutral: boolean;
+  sequence: number;
+  updated_at: Date;
+  broadcast: string | null;
+  comp_broadcast: string | null;
+  home_score: number | null;
+  away_score: number | null;
+  podium: Podium[] | null;
+}
+
+// 경기 목록 공통 조회. $1 = 언어, where 는 $2 부터 쓰는 조건
+async function queryMatches(db: Db, locale: Locale, where: string, params: unknown[]): Promise<ScheduleMatch[]> {
+  const rows = await db.query<MatchRowDb>(
     `select m.id, c.slug as competition, s.slug as sport, m.round_label, m.title, h.slug as home, a.slug as away,
-       case when $2 = 'ko' then coalesce(h.short_ko, h.name_ko, m.home_placeholder)
+       case when $1 = 'ko' then coalesce(h.short_ko, h.name_ko, m.home_placeholder)
             else coalesce(h.name_en, m.home_placeholder) end as home_label,
-       case when $2 = 'ko' then coalesce(a.short_ko, a.name_ko, m.away_placeholder)
+       case when $1 = 'ko' then coalesce(a.short_ko, a.name_ko, m.away_placeholder)
             else coalesce(a.name_en, m.away_placeholder) end as away_label,
        m.start_at, to_char(m.date_only, 'YYYY-MM-DD') as date_only, m.status, m.venue, m.is_neutral, m.sequence, m.updated_at,
        m.broadcast, c.broadcast as comp_broadcast, m.home_score, m.away_score, m.podium
@@ -152,10 +153,9 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Lo
      join sport s on s.id = c.sport_id
      left join team h on h.id = m.home_team_id
      left join team a on a.id = m.away_team_id
-     where (h.slug = any(string_to_array($1, ',')) or a.slug = any(string_to_array($1, ',')))
-       and coalesce(m.start_at, m.date_only::timestamptz) >= now() - interval '62 days'
+     where ${where}
      order by coalesce(m.start_at, m.date_only::timestamptz)`,
-    [teamSlugs.join(","), locale],
+    [locale, ...params],
   );
   return rows.map((r) => ({
     id: r.id,
@@ -179,4 +179,32 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Lo
     sequence: r.sequence,
     updatedAt: r.updated_at.toISOString(),
   }));
+}
+
+// 선택한 팀들의 경기. 지난 경기는 두 달 전까지만 (달력에서 지난 달을 볼 수 있도록)
+export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Locale): Promise<ScheduleMatch[]> {
+  if (teamSlugs.length === 0) return [];
+  return queryMatches(
+    db,
+    locale,
+    `(h.slug = any(string_to_array($2, ',')) or a.slug = any(string_to_array($2, ',')))
+       and coalesce(m.start_at, m.date_only::timestamptz) >= now() - interval '62 days'`,
+    [teamSlugs.join(",")],
+  );
+}
+
+// 한 대회의 [from, to) 기간 경기 (리그 페이지의 '이번 주 경기')
+export async function getMatchesForCompetition(
+  db: Db,
+  competition: string,
+  locale: Locale,
+  from: Date,
+  to: Date,
+): Promise<ScheduleMatch[]> {
+  return queryMatches(
+    db,
+    locale,
+    `c.slug = $2 and coalesce(m.start_at, m.date_only::timestamptz) >= $3 and coalesce(m.start_at, m.date_only::timestamptz) < $4`,
+    [competition, from.toISOString(), to.toISOString()],
+  );
 }

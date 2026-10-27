@@ -1555,3 +1555,103 @@ a {
   font-size: 17px;
   margin: 22px 0 6px;
 }
+
+/* 팀·리그 페이지 */
+.page h1 {
+  font-size: 26px;
+  margin: 6px 0 4px;
+}
+
+.page section {
+  margin-top: 22px;
+}
+
+.page h2 {
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+
+.crumbs {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 4px;
+}
+
+.page-actions a {
+  text-decoration: none;
+  padding: 9px 16px;
+  font-weight: 600;
+}
+
+.page-actions a.ghost {
+  color: var(--text);
+}
+
+.page-matches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.page-matches li {
+  display: grid;
+  grid-template-columns: minmax(130px, auto) 1fr;
+  gap: 2px 12px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.page-matches li:last-child {
+  border-bottom: 0;
+}
+
+.pm-when {
+  white-space: nowrap;
+}
+
+.pm-what {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: baseline;
+}
+
+.pm-meta {
+  grid-column: 2;
+  font-size: 12px;
+}
+
+@media (max-width: 560px) {
+  .page-matches li {
+    grid-template-columns: 1fr;
+  }
+
+  .pm-meta {
+    grid-column: 1;
+  }
+}
+
+.page-links,
+.league-links ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 14px;
+}
+
+.league-links {
+  margin-bottom: 14px;
+}

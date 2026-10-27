@@ -122,7 +122,8 @@ export function parseKboMonth(json: KboResponse, year: number, postseason: boole
     const note = cells[cells.length - 1];
     const venue = cells[cells.length - 2] || null;
     // 칸 순서: … TV, 라디오, 구장, 비고
-    const broadcast = kboBroadcast(cells[cells.length - 4]);
+    // 채널이 둘 이상이면 <br> 로 나뉘어 오므로 태그를 지우기 전에 쉼표로 바꾼다 ('KN-T<br>SPO-T')
+    const broadcast = kboBroadcast(strip((row[row.length - 4]?.Text ?? "").replace(/<br\s*\/?>/gi, ",")));
 
     // 공식 경기 ID (예: 20261025HTSS0). 링크가 없는 취소 경기는 같은 규칙으로 만든다.
     const linked = row.map((c) => c.Text.match(/gameId=(\d{8}[A-Z]{4}\d)/)?.[1]).find(Boolean);
