@@ -181,3 +181,61 @@ describe("순위표 저장", () => {
     expect(calls).toBe(4);
   });
 });
+
+describe("시즌 전환", () => {
+  let db: Db & { close(): Promise<void> };
+  beforeEach(async () => {
+    ({ db } = (await setupDb()) as { db: Db & { close(): Promise<void> } });
+  });
+  afterEach(() => db.close());
+
+  const table = (rows: { id: number; name: string }[]) =>
+    new Response(
+      JSON.stringify({
+        season: { startDate: "2027-08-15" },
+        standings: [
+          {
+            type: "TOTAL",
+            group: null,
+            table: rows.map((r, i) => ({
+              position: i + 1,
+              team: { id: r.id, name: r.name },
+              playedGames: 0,
+              won: 0,
+              draw: 0,
+              lost: 0,
+              points: 0,
+              goalsFor: 0,
+              goalsAgainst: 0,
+              goalDifference: 0,
+            })),
+          },
+        ],
+      }),
+    );
+
+  it("다른 리그 소속(시드)이던 팀이 이 리그 순위표에 있으면 지금 리그로 옮겨 보여 준다", async () => {
+    // 에버턴이 시드상 2부(champ) 소속이었다가 1부(epl)로 승격한 상황
+    await db.query(
+      "insert into competition (sport_id, slug, name_ko, type) select sport_id, 'champ', '챔피언십', 'league' from competition where slug = 'epl'",
+    );
+    await db.query("update team set primary_competition_id = (select id from competition where slug = 'champ') where slug = 'everton'");
+    const { getCatalog } = await import("@/lib/schedule");
+    expect((await getCatalog(db, "ko")).teams.find((t) => t.slug === "everton")?.competition).toBe("champ");
+
+    const fetcher = (async (url: string) =>
+      url.includes("/scorers") ? new Response(JSON.stringify({ scorers: [] })) : table([{ id: 1, name: "Arsenal FC" }, { id: 2, name: "Everton FC" }])) as typeof fetch;
+    await syncStandings(db, { fetcher, footballDataKey: "k", only: ["epl"], footballDataGapMs: 0 });
+    expect((await getCatalog(db, "ko")).teams.find((t) => t.slug === "everton")?.competition).toBe("epl");
+  });
+
+  it("출처가 빈 순위표를 주면(새 시즌 시작 전) 지난 표를 지우지 않는다", async () => {
+    const full = (async (url: string) =>
+      url.includes("/scorers") ? new Response(JSON.stringify({ scorers: [] })) : table([{ id: 1, name: "Arsenal FC" }])) as typeof fetch;
+    const empty = (async (url: string) => (url.includes("/scorers") ? new Response(JSON.stringify({ scorers: [] })) : table([]))) as typeof fetch;
+    await syncStandings(db, { fetcher: full, footballDataKey: "k", only: ["epl"], footballDataGapMs: 0 });
+    await syncStandings(db, { fetcher: empty, footballDataKey: "k", only: ["epl"], footballDataGapMs: 0, force: true });
+    const [row] = await db.query<{ groups: { rows: unknown[] }[] }>("select groups from standing where kind = 'teams'");
+    expect(row.groups[0].rows).toHaveLength(1);
+  });
+});

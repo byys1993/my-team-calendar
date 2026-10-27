@@ -34,7 +34,8 @@
 - `src/lib/notify.ts` 알림 메일(각자 시간대·시각, 하루 1통, 보내기 전 선점으로 중복 방지), `ics.ts` 캘린더 구독, `visitors.ts` 방문자 수, `cleanup.ts` 오래된 기록 정리
 - `src/components/CalendarApp.tsx` 메인 화면(캘린더 / 순위 탭), `RecordsView.tsx` 순위 탭, `spoiler.tsx` 결과·스포일러 방지
 - `src/app/admin` 관리자(ADMIN_PASSWORD, IP당 시간당 10회)
-- 자세한 배포·설정 절차: `docs/DEPLOY.md`
+- 자세한 배포·설정 절차: `docs/DEPLOY.md`, 시즌 전환: `docs/SEASON.md`
+- 운영 점검: 데이터 이상 감지 메일(`src/lib/health.ts`, 10분마다 점검), 관리자 현황의 이용 흐름(`src/lib/events.ts`)
 
 ## 로컬 개발 (Windows)
 ```bash

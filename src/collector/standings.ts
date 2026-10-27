@@ -528,8 +528,8 @@ export async function syncStandings(
   const gap = opts.footballDataGapMs ?? 7000;
   const log = opts.log ?? (() => {});
   const now = opts.now ?? new Date();
-  const comps = await db.query<{ id: number; slug: string; sport: string; updated_at: Date | null }>(
-    `select c.id, c.slug, s.slug as sport, (select min(st.updated_at) from standing st where st.competition_id = c.id) as updated_at
+  const comps = await db.query<{ id: number; slug: string; sport: string; type: string; updated_at: Date | null }>(
+    `select c.id, c.slug, s.slug as sport, c.type, (select min(st.updated_at) from standing st where st.competition_id = c.id) as updated_at
      from competition c join sport s on s.id = c.sport_id order by c.id`,
   );
   const results: StandingsResult[] = [];
@@ -561,6 +561,8 @@ export async function syncStandings(
       }
       const resolve = await teamResolver(db, c.sport);
       for (const t of tables) {
+        // 새 시즌 시작 전처럼 출처가 빈 표를 주면 지난 표를 그대로 둔다
+        if (t.groups.every((g) => g.rows.length === 0)) continue;
         const groups = t.groups.map((g) => ({
           name: g.name,
           rows: g.rows.map((r) => ({
@@ -579,6 +581,18 @@ export async function syncStandings(
              source = excluded.source, updated_at = excluded.updated_at`,
           [c.id, t.kind, t.season, JSON.stringify(groups), spec.source, now.toISOString()],
         );
+        // 승격·강등: 리그 순위표에 있는 팀은 지금 이 리그에서 뛰는 것으로 본다 (팀 선택·팀 페이지에 반영)
+        if (t.kind === "teams" && c.type === "league") {
+          const slugs = groups.flatMap((g) => g.rows.map((r) => r.team)).filter((x): x is string => !!x);
+          const moved = await db.query<{ slug: string }>(
+            `update team set current_competition_id = case when primary_competition_id = $1 then null else $1 end
+             where slug = any(string_to_array($2, ','))
+               and current_competition_id is distinct from (case when primary_competition_id = $1 then null else $1 end)
+             returning slug`,
+            [c.id, slugs.join(",")],
+          );
+          if (moved.length) log(`${c.slug}: 소속 리그 갱신 ${moved.map((m) => m.slug).join(", ")}`);
+        }
       }
       log(`${c.slug} 순위표: ${spec.source} ${tables.map((t) => `${t.kind} ${t.groups.reduce((n, g) => n + g.rows.length, 0)}줄`).join(", ")}`);
       results.push({ competition: c.slug, ok: true, tables: tables.length });
