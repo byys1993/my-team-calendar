@@ -1,4 +1,4 @@
-import { matchDateKey, matchSortTime, matchTimeLabel, dateLabel, daysBetween, toDateKey } from "@/components/time";
+import { dateLabel, daysBetween, hasExactTime, matchDateKey, matchSortTime, matchTimeLabel, toDateKey } from "@/components/time";
 import { INTL_LOCALE, isLocale, type Locale } from "@/i18n/config";
 import { fmt, MESSAGES } from "@/i18n";
 import { formatLabel, formatTitle } from "@/i18n/format";
@@ -53,13 +53,39 @@ export function isDue(
   return true;
 }
 
-// 알림에 넣을 경기: 매일은 오늘, 매주는 오늘부터 7일. 취소 경기는 뺀다.
-export function pickMatches(matches: ScheduleMatch[], mode: NotifyMode, now: Date, tz: string): ScheduleMatch[] {
+// 그 시간대의 'YYYY-MM-DD hh:00' 이 UTC 로 몇 시인지 (서머타임 변경일도 맞도록 두 번 보정)
+export function zonedHourToUtc(dateKey: string, hour: number, tz: string): Date {
+  const [y, mo, d] = dateKey.split("-").map(Number);
+  const want = Date.UTC(y, mo - 1, d, hour);
+  let t = want;
+  for (let i = 0; i < 2; i++) {
+    const p = Object.fromEntries(
+      new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric" })
+        .formatToParts(new Date(t))
+        .map((x) => [x.type, x.value]),
+    );
+    const shown = Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day), Number(p.hour), Number(p.minute));
+    t += want - shown;
+  }
+  return new Date(t);
+}
+
+// 알림에 넣을 경기: 정해 둔 시각부터 24시간(매일) 또는 7일(매주) 안에 시작하는 경기.
+// 새벽 경기는 전날 메일에 미리 들어가고, 메일이 늦게 가더라도 이미 시작한 경기는 뺀다.
+// 기준은 '실제 보낸 순간'이 아니라 '정해 둔 시각'이라 매일 9시~다음 날 9시가 빈틈·겹침 없이 이어진다.
+// 시간 미정(날짜만) 경기는 기간이 시작하는 날짜부터 하루(매일) 또는 7일(매주) 안이면 넣는다.
+export function pickMatches(matches: ScheduleMatch[], mode: NotifyMode, now: Date, tz: string, hour: number): ScheduleMatch[] {
   const today = toDateKey(now, tz);
   const days = mode === "weekly" ? 7 : 1;
+  const from = zonedHourToUtc(today, hour, tz).getTime();
+  const to = from + days * 86_400_000;
   return matches
     .filter((m) => m.status !== "cancelled")
     .filter((m) => {
+      if (hasExactTime(m)) {
+        const t = new Date(m.startAt!).getTime();
+        return t >= Math.max(from, now.getTime()) && t < to;
+      }
       const d = daysBetween(today, matchDateKey(m, tz));
       return d >= 0 && d < days;
     })
@@ -76,22 +102,32 @@ export function composeEmail(opts: {
   tz: string;
   now: Date;
   matches: ScheduleMatch[];
+  teams: string[]; // 켜 둔 내 팀 (slug, 고른 순서) — 경기마다 내 팀을 앞에 쓴다
   catalog: Catalog;
   siteUrl: string;
   unsubscribeUrl: string;
 }): OutgoingEmail {
-  const { locale, mode, tz, now, matches, catalog, siteUrl, unsubscribeUrl } = opts;
+  const { locale, mode, tz, now, matches, teams, catalog, siteUrl, unsubscribeUrl } = opts;
   const m = MESSAGES[locale];
   const intl = INTL_LOCALE[locale];
   const today = toDateKey(now, tz);
   const compName = new Map(catalog.competitions.map((c) => [c.slug, c.name]));
   const label = (s: string) => formatLabel(s, m) ?? s;
+  // '내 팀 vs 상대 (홈/원정)'. e스포츠는 홈·원정이 없고, 내 팀끼리 맞붙으면 먼저 고른 팀 기준
+  const versus = (x: ScheduleMatch) => {
+    const mine = teams.find((t) => t === x.home || t === x.away);
+    if (!mine) return `${label(x.homeLabel)} ${m.match.vs} ${label(x.awayLabel)}`;
+    const isHome = x.home === mine;
+    const side = x.sport === "esports" ? null : x.isNeutral ? m.match.neutral : isHome ? m.match.home : m.match.away;
+    const pair = isHome ? [x.homeLabel, x.awayLabel] : [x.awayLabel, x.homeLabel];
+    return `${label(pair[0])} ${m.match.vs} ${label(pair[1])}${side ? ` (${side})` : ""}`;
+  };
 
   // 날짜별로 묶는다 (매일 알림은 한 묶음)
   const byDay = new Map<string, string[]>();
   for (const x of matches) {
     const key = matchDateKey(x, tz);
-    const who = x.title && !x.away ? formatTitle(x.title, m, locale)! : `${label(x.homeLabel)} ${m.match.vs} ${label(x.awayLabel)}`;
+    const who = x.title && !x.away ? formatTitle(x.title, m, locale)! : versus(x);
     const extra = [compName.get(x.competition), formatLabel(x.roundLabel, m)].filter(Boolean).join(" · ");
     const note = x.status !== "scheduled" && x.status !== "time_tbd" ? ` (${m.status[x.status]})` : "";
     const tv = x.broadcast ? `  📺 ${x.broadcast}` : "";
@@ -156,7 +192,7 @@ export async function runNotifications(
     const today = toDateKey(now, tz);
     const slugs = (r.selections ?? []).filter((s) => s.enabled).map((s) => s.slug);
     const locale: Locale = isLocale(r.locale) ? r.locale : "ko";
-    const matches = pickMatches(await getMatchesForTeams(db, slugs, locale), r.notify_mode, now, tz);
+    const matches = pickMatches(await getMatchesForTeams(db, slugs, locale), r.notify_mode, now, tz, r.notify_hour);
     if (matches.length === 0) {
       emptyDone.push({ userId: r.id, today });
       continue;
@@ -178,6 +214,7 @@ export async function runNotifications(
         tz,
         now,
         matches,
+        teams: slugs,
         catalog: catalogs.get(locale)!,
         siteUrl: opts.siteUrl,
         unsubscribeUrl,

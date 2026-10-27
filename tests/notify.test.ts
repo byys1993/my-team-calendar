@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { upsertMatches } from "@/collector/upsert";
 import { issueCode, unsubscribe, unsubscribeSig, updateUser, verifyCode } from "@/lib/auth/core";
-import { isDue, runNotifications, type OutgoingEmail } from "@/lib/notify";
+import { isDue, runNotifications, zonedHourToUtc, type OutgoingEmail } from "@/lib/notify";
 import type { Db } from "@/lib/db";
 import { espnMatch, setupDb } from "./helpers";
 
@@ -48,7 +48,7 @@ describe("경기 알림 메일", () => {
     expect(isDue(w, seoul("2026-10-26T10:00:00"), "Asia/Seoul")).toBe(true); // 월요일
   });
 
-  it("경기 있는 날 아침에 한 번 보내고, 경기 없는 날은 보내지 않는다", async () => {
+  it("정한 시각부터 24시간 안의 경기를 하루 한 번 보내고, 경기가 없으면 보내지 않는다", async () => {
     const sent: OutgoingEmail[] = [];
     const send = async (e: OutgoingEmail[]) => void sent.push(...e);
     const opts = { siteUrl: "https://example.com" };
@@ -56,16 +56,33 @@ describe("경기 알림 메일", () => {
     const r1 = await runNotifications(db, send, { ...opts, now: seoul("2026-10-24T09:10:00") });
     expect(r1).toMatchObject({ sent: 1, empty: 0 });
     expect(sent[0].to).toBe("fan@example.com");
-    expect(sent[0].subject).toContain("오늘 경기 1개");
-    expect(sent[0].text).toContain("23:00  아스널 vs 에버턴");
+    expect(sent[0].subject).toContain("앞으로 24시간 경기 1개 · 10월 24일 (토)");
+    // 내 팀을 앞에, 홈·원정 표시
+    expect(sent[0].text).toContain("23:00  아스널 vs 에버턴 (홈)");
     expect(sent[0].text).toContain("프리미어리그");
     expect(sent[0].unsubscribeUrl).toBe(`https://example.com/unsubscribe?u=${userId}&s=${unsubscribeSig(userId)}`);
 
     // 같은 날 다시 돌려도 안 보낸다
     expect((await runNotifications(db, send, { ...opts, now: seoul("2026-10-24T10:10:00") })).sent).toBe(0);
-    // 다음 날(경기 없음)은 보내지 않는다
+    // 다음 날(25일 9시 ~ 26일 9시) 경기 없음 → 보내지 않는다
     expect(await runNotifications(db, send, { ...opts, now: seoul("2026-10-25T09:10:00") })).toMatchObject({ sent: 0, empty: 1 });
-    expect(sent).toHaveLength(1);
+    // 27일 새벽 4시 경기는 26일 아침 메일에 미리 들어간다
+    expect((await runNotifications(db, send, { ...opts, now: seoul("2026-10-26T09:10:00") })).sent).toBe(1);
+    expect(sent[1].text).toContain("[10월 27일 (화)]\n04:00  아스널 vs 맨체스터 시티 (원정)");
+    // 27일 아침에는 이미 끝난 새벽 경기를 다시 보내지 않는다
+    expect(await runNotifications(db, send, { ...opts, now: seoul("2026-10-27T09:10:00") })).toMatchObject({ sent: 0, empty: 1 });
+    expect(sent).toHaveLength(2);
+  });
+
+  it("메일이 늦게 가면 그 사이 이미 시작한 경기는 뺀다", async () => {
+    const r = await runNotifications(db, async () => {}, { siteUrl: "https://x", now: seoul("2026-10-24T23:30:00") });
+    expect(r).toMatchObject({ sent: 0, empty: 1 });
+  });
+
+  it("시간대의 정한 시각을 UTC 로 (서머타임 끝나는 날 포함)", () => {
+    expect(zonedHourToUtc("2026-10-24", 9, "Asia/Seoul").toISOString()).toBe("2026-10-24T00:00:00.000Z");
+    expect(zonedHourToUtc("2026-10-31", 9, "America/New_York").toISOString()).toBe("2026-10-31T13:00:00.000Z");
+    expect(zonedHourToUtc("2026-11-01", 9, "America/New_York").toISOString()).toBe("2026-11-01T14:00:00.000Z");
   });
 
   it("매주 알림은 월요일에 7일 치를 날짜별로 묶어 보낸다", async () => {
@@ -74,8 +91,8 @@ describe("경기 알림 메일", () => {
     await runNotifications(db, async (e) => void sent.push(...e), { siteUrl: "https://x", now: seoul("2026-10-26T09:00:00") });
     expect(sent).toHaveLength(1);
     // 10/27 04:00 경기만 (11/5 는 7일 밖, 10/24 는 지남)
-    expect(sent[0].subject).toContain("이번 주 경기 1개");
-    expect(sent[0].text).toContain("[10월 27일 (화)]\n04:00  맨체스터 시티 vs 아스널");
+    expect(sent[0].subject).toContain("이번 주 경기 1개 · 10월 26일 (월)부터");
+    expect(sent[0].text).toContain("[10월 27일 (화)]\n04:00  아스널 vs 맨체스터 시티 (원정)");
   });
 
   it("수신 거부 링크는 서명이 맞아야 하고, 끄면 더 보내지 않는다", async () => {

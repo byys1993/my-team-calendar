@@ -42,7 +42,8 @@ export async function sendNotifyEmails(
   emails: { to: string; subject: string; text: string; html: string; unsubscribeUrl: string }[],
 ): Promise<void> {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.MAIL_FROM;
+  // 알림 메일은 로그인 코드 주소(login@)가 아니라 같은 도메인의 alert@ 에서 보낸다 (NOTIFY_FROM 으로 따로 지정 가능)
+  const from = process.env.NOTIFY_FROM ?? process.env.MAIL_FROM?.replace(/\blogin@/, "alert@");
   if (!key || !from) {
     if (process.env.NODE_ENV === "production") throw new Error("메일 발송 설정(RESEND_API_KEY, MAIL_FROM)이 없습니다.");
     for (const e of emails) console.log(`[dev] 알림 메일 ${e.to}: ${e.subject}\n${e.text}`);
