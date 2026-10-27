@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { unstable_cache } from "next/cache";
 import Link from "next/link";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { PageMatchList, PAGE_TZ } from "@/components/PageMatchList";
 import { dateLabel, matchDateKey } from "@/components/time";
@@ -12,10 +12,9 @@ import { getTeamPage } from "@/lib/pages";
 import { SITE_URL } from "@/lib/site";
 
 // 팀 페이지: '○○ 경기 일정' 검색으로 들어오는 입구. 서버에서 그리고 10분 캐시한다.
-const cached = unstable_cache((slug: string, locale: Locale) => getTeamPage(getDb(), slug, locale), ["team-page"], {
-  revalidate: 600,
-  tags: ["catalog"],
-});
+// 같은 요청 안에서 제목(메타데이터)과 본문이 한 번만 조회하도록 묶는다.
+// (unstable_cache 는 Vercel 에서 이 페이지가 응답하지 않는 문제가 있어 쓰지 않는다)
+const cached = cache((slug: string, locale: Locale) => getTeamPage(getDb(), slug, locale));
 
 type Props = { params: Promise<{ slug: string }> };
 

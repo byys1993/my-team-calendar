@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { unstable_cache } from "next/cache";
 import Link from "next/link";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { PageMatchList } from "@/components/PageMatchList";
 import { COLUMNS, format, GROUP_KO, type ColKey } from "@/components/standingFormat";
@@ -13,10 +13,9 @@ import { getLeaguePage } from "@/lib/pages";
 import { SITE_URL } from "@/lib/site";
 
 // 리그 페이지: '○○리그 일정·순위' 검색으로 들어오는 입구. 이번 주 경기, 순위표, 개인 순위, 팀 페이지 링크.
-const cached = unstable_cache((slug: string, locale: Locale) => getLeaguePage(getDb(), slug, locale), ["league-page"], {
-  revalidate: 600,
-  tags: ["catalog"],
-});
+// 같은 요청 안에서 제목(메타데이터)과 본문이 한 번만 조회하도록 묶는다.
+// (unstable_cache 는 Vercel 에서 이 페이지가 응답하지 않는 문제가 있어 쓰지 않는다)
+const cached = cache((slug: string, locale: Locale) => getLeaguePage(getDb(), slug, locale));
 
 type Props = { params: Promise<{ slug: string }> };
 
