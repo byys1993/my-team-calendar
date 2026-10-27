@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendNotifyEmails } from "@/lib/auth/mailer";
 import { cleanupExpired } from "@/lib/cleanup";
+import { checkHealth, pickAlerts, sendAlertMail } from "@/lib/health";
 import { getDb } from "@/lib/db";
 import { runNotifications } from "@/lib/notify";
 
@@ -18,5 +19,15 @@ export async function GET(req: Request) {
   const db = getDb();
   const result = await runNotifications(db, sendNotifyEmails, { siteUrl });
   const cleaned = await cleanupExpired(db);
-  return NextResponse.json({ ...result, cleaned });
+  // 데이터 이상 점검 → 새 문제만 운영자에게 메일 (실패해도 알림 발송 결과에는 영향 없음)
+  let health: { issues: number; alerted: number; error?: string } = { issues: 0, alerted: 0 };
+  try {
+    const issues = await checkHealth(db);
+    const due = await pickAlerts(db, issues);
+    if (due.length) await sendAlertMail(due, siteUrl);
+    health = { issues: issues.length, alerted: due.length };
+  } catch (err) {
+    health.error = err instanceof Error ? err.message : String(err);
+  }
+  return NextResponse.json({ ...result, cleaned, health });
 }
