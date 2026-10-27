@@ -35,11 +35,16 @@ export interface FunnelRow {
 
 // 최근 N일 동안 행동별로 '한 번이라도 한 사람' 수
 export async function funnel(db: Db, days: number, now = new Date()): Promise<FunnelRow> {
+  // now 를 포함한 N일 (한국 날짜 기준 from ~ to)
   const from = seoulDay(new Date(now.getTime() - (days - 1) * 86_400_000));
-  const [v] = await db.query<{ n: number }>("select count(distinct visitor)::int as n from visitor_day where day >= $1", [from]);
+  const to = seoulDay(now);
+  const [v] = await db.query<{ n: number }>(
+    "select count(distinct visitor)::int as n from visitor_day where day between $1 and $2",
+    [from, to],
+  );
   const rows = await db.query<{ event: string; n: number }>(
-    "select event, count(distinct visitor)::int as n from event_day where day >= $1 group by event",
-    [from],
+    "select event, count(distinct visitor)::int as n from event_day where day between $1 and $2 group by event",
+    [from, to],
   );
   const events = Object.fromEntries(EVENTS.map((e) => [e, 0])) as Record<EventName, number>;
   for (const r of rows) if (isEventName(r.event)) events[r.event] = r.n;

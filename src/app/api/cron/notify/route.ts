@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { sendNotifyEmails } from "@/lib/auth/mailer";
 import { cleanupExpired } from "@/lib/cleanup";
-import { checkHealth, pickAlerts, sendAlertMail } from "@/lib/health";
+import { checkHealth, pickAlerts, sendAdminMail, sendAlertMail } from "@/lib/health";
+import { buildWeeklyReport, markWeeklyReportSent, weeklyReportDue } from "@/lib/report";
 import { getDb } from "@/lib/db";
 import { runNotifications } from "@/lib/notify";
 
@@ -29,5 +30,17 @@ export async function GET(req: Request) {
   } catch (err) {
     health.error = err instanceof Error ? err.message : String(err);
   }
-  return NextResponse.json({ ...result, cleaned, health });
+  // 매주 월요일 오전 9시(한국 시간) 이후 첫 호출에서 운영 리포트 메일
+  let report = false;
+  try {
+    if (await weeklyReportDue(db)) {
+      const { subject, text } = await buildWeeklyReport(db, siteUrl);
+      await sendAdminMail(subject, text);
+      await markWeeklyReportSent(db);
+      report = true;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+  return NextResponse.json({ ...result, cleaned, health, report });
 }

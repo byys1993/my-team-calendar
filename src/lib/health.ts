@@ -93,15 +93,13 @@ export async function pickAlerts(db: Db, issues: HealthIssue[], now = new Date()
   return due;
 }
 
-// 운영자(문의 받는 주소)에게 이상 알림 메일
-export async function sendAlertMail(issues: HealthIssue[], siteUrl: string): Promise<void> {
+// 운영자(문의 받는 주소)에게 보내는 메일 (이상 알림·주간 리포트)
+export async function sendAdminMail(subject: string, text: string): Promise<void> {
   const to = process.env.CONTACT_EMAIL?.trim();
   const key = process.env.RESEND_API_KEY;
   const from = process.env.MAIL_FROM?.replace(/\blogin@/, "alert@");
-  const subject = `[마이팀 캘린더] 확인이 필요한 문제 ${issues.length}건`;
-  const text = [...issues.map((i) => `• ${i.message}`), "", `관리자 현황: ${siteUrl}/admin`].join("\n");
   if (!to || !key || !from) {
-    console.log(`[health] ${subject}\n${text}`);
+    console.log(`[admin mail] ${subject}\n${text}`);
     return;
   }
   const res = await fetch("https://api.resend.com/emails", {
@@ -110,5 +108,10 @@ export async function sendAlertMail(issues: HealthIssue[], siteUrl: string): Pro
     body: JSON.stringify({ from, to: [to], subject, text }),
     signal: AbortSignal.timeout(15_000),
   });
-  if (!res.ok) throw new Error(`이상 알림 메일 실패: ${res.status} ${await res.text()}`);
+  if (!res.ok) throw new Error(`운영자 메일 실패: ${res.status} ${await res.text()}`);
+}
+
+export async function sendAlertMail(issues: HealthIssue[], siteUrl: string): Promise<void> {
+  const text = [...issues.map((i) => `• ${i.message}`), "", `관리자 현황: ${siteUrl}/admin`].join("\n");
+  await sendAdminMail(`[마이팀 캘린더] 확인이 필요한 문제 ${issues.length}건`, text);
 }
