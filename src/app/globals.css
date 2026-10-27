@@ -1494,3 +1494,30 @@ a {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+/* 문의 양식 */
+.auth-body textarea {
+  font: inherit;
+  font-weight: 400;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.auth-body .small {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* 자동 입력 프로그램만 채우는 숨은 칸 */
+.hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}

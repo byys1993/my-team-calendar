@@ -6,6 +6,7 @@ import { MESSAGES } from "@/i18n";
 import { getLocale } from "@/i18n/server";
 import { loginEnabled } from "@/lib/auth/mailer";
 import { turnstileSiteKey } from "@/lib/auth/turnstile";
+import { contactEnabled } from "@/lib/contact";
 import { getDb } from "@/lib/db";
 import { getCatalog } from "@/lib/schedule";
 
@@ -13,11 +14,6 @@ import { getCatalog } from "@/lib/schedule";
 // (관리자에서 팀 이름을 고치면 'catalog' 태그로 바로 비운다)
 export const dynamic = "force-dynamic";
 
-// 문의·제안을 받을 주소. Vercel 환경 변수 CONTACT_EMAIL 로 바꿀 수 있고, 없으면 하단에 표시하지 않는다.
-const contactEmail = () => {
-  const v = process.env.CONTACT_EMAIL?.trim();
-  return v && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? v : null;
-};
 
 const cachedCatalog = unstable_cache((locale: Locale) => getCatalog(getDb(), locale), ["catalog"], {
   revalidate: 300,
@@ -31,7 +27,7 @@ export default async function Home() {
       <CalendarApp
         catalog={await cachedCatalog(locale)}
         loginEnabled={loginEnabled()}
-        contactEmail={contactEmail()}
+        contactEnabled={contactEnabled()}
         turnstileSiteKey={turnstileSiteKey()}
       />
     </I18nProvider>

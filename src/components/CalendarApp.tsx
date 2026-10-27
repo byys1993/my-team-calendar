@@ -22,6 +22,7 @@ import { VisitorStats } from "./VisitorStats";
 import { CalendarSubscribe } from "./CalendarSubscribe";
 import { SpoilerProvider, SpoilerToggle } from "./spoiler";
 import { RecordsView } from "./RecordsView";
+import { ContactButton } from "./ContactForm";
 import { AUTO, browserTimeZone, isValidTimeZone, TimeZoneProvider, useTimeZonePref } from "./timezone";
 import {
   dateLabel,
@@ -42,12 +43,12 @@ const UPCOMING_LIMIT = 15;
 export function CalendarApp({
   catalog,
   loginEnabled,
-  contactEmail,
+  contactEnabled,
   turnstileSiteKey,
 }: {
   catalog: Catalog;
   loginEnabled: boolean;
-  contactEmail: string | null;
+  contactEnabled: boolean;
   turnstileSiteKey: string | null;
 }) {
   const { m: t, t: fmt, intl, locale } = useI18n();
@@ -437,13 +438,11 @@ export function CalendarApp({
               </li>
             ))}
           </ul>
-          {contactEmail && (
+          {contactEnabled && (
             <div className="contact">
               <h2>{t.app.contact}</h2>
-              <p>
-                {t.app.contactHint}{" "}
-                <a href={`mailto:${contactEmail}?subject=${encodeURIComponent(t.app.title)}`}>{contactEmail}</a>
-              </p>
+              <p>{t.app.contactHint}</p>
+              <ContactButton turnstileSiteKey={turnstileSiteKey} />
             </div>
           )}
           <p className="muted">{t.app.disclaimer}</p>
