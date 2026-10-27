@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { adminOverview, toKst } from "@/lib/manual/admin";
+import { getIcsStats } from "@/lib/icsStats";
 import { SOURCE_LABEL } from "@/lib/sources";
+import { getStats } from "@/lib/visitors";
 
 const when = (d: Date | null) => {
   if (!d) return "—";
@@ -10,7 +12,15 @@ const when = (d: Date | null) => {
 };
 
 export default async function AdminHome() {
-  const { competitions, failures, reviewCount } = await adminOverview(getDb());
+  const db = getDb();
+  const [{ competitions, failures, reviewCount }, visitors, ics, notify] = await Promise.all([
+    adminOverview(db),
+    getStats(db),
+    getIcsStats(db),
+    db.query<{ users: number; on: number }>(
+      `select count(*)::int as users, count(*) filter (where notify_mode <> 'off')::int as "on" from app_user`,
+    ),
+  ]);
   return (
     <>
       <h1>현황</h1>
@@ -20,6 +30,32 @@ export default async function AdminHome() {
           한국어 이름이 필요한 팀이 {reviewCount}개 있습니다. <Link href="/admin/teams">팀 이름 고치기</Link>
         </p>
       )}
+      <section>
+        <h2>이용 현황</h2>
+        <p className="muted">사이트에는 보이지 않는 숫자입니다. 사용자가 충분히 늘면 첫 화면에 보여 줄 수 있습니다.</p>
+        <table className="admin-table">
+          <tbody>
+            <tr>
+              <td>방문자 (접속 중 · 오늘 · 전체)</td>
+              <td className="num">
+                {visitors.online.toLocaleString()} · {visitors.today.toLocaleString()} · {visitors.total.toLocaleString()}
+              </td>
+            </tr>
+            <tr>
+              <td>캘린더 구독 주소 (최근 7일 · 전체)</td>
+              <td className="num">
+                {ics.active7d.toLocaleString()} · {ics.total.toLocaleString()}
+              </td>
+            </tr>
+            <tr>
+              <td>로그인 계정 (전체 · 알림 메일 켬)</td>
+              <td className="num">
+                {notify[0].users.toLocaleString()} · {notify[0].on.toLocaleString()}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
       <section>
         <h2>대회별 상태</h2>
         <table className="admin-table">

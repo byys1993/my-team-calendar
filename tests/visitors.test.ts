@@ -34,3 +34,14 @@ describe("방문자 수", () => {
     expect(seoulDay(new Date("2026-10-22T15:30:00Z"))).toBe("2026-10-23");
   });
 });
+
+describe("캘린더 구독 수", () => {
+  it("같은 팀 조합·언어는 하나로 세고, 최근 7일 안에 불린 주소만 '구독 중'으로 센다", async () => {
+    const { recordIcsFetch, getIcsStats } = await import("@/lib/icsStats");
+    await recordIcsFetch(db, ["kbo-kia", "tottenham"], "ko", at("2026-10-01T10:00:00"));
+    await recordIcsFetch(db, ["tottenham", "kbo-kia"], "ko", at("2026-10-20T10:00:00"));
+    await recordIcsFetch(db, ["tottenham"], "en", at("2026-10-21T10:00:00"));
+    expect(await getIcsStats(db, at("2026-10-22T10:00:00"))).toEqual({ active7d: 2, total: 2 });
+    expect(await getIcsStats(db, at("2026-10-28T09:00:00"))).toEqual({ active7d: 1, total: 2 });
+  });
+});

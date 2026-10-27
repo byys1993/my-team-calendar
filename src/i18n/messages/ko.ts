@@ -6,6 +6,8 @@ export const ko: Messages = {
     description: "응원하는 팀의 리그·컵·국제대회 일정을 한 캘린더에서",
   },
   app: {
+    scale: "{c}개 리그·대회 · {t}개 팀 · 공식 데이터로 매시간 자동 업데이트",
+    updatedAgo: "일정 업데이트 {ago}",
     title: "마이팀 캘린더",
     timeZone: "시간대: {tz}",
     tzLabel: "시간대",

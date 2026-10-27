@@ -6,6 +6,8 @@ export const en = {
     description: "All your teams' league, cup and international fixtures in one calendar",
   },
   app: {
+    scale: "{c} leagues & competitions · {t} teams · auto-updated hourly from official data",
+    updatedAgo: "Schedules updated {ago}",
     title: "My Team Calendar",
     timeZone: "Time zone: {tz}",
     tzLabel: "Time zone",

@@ -18,7 +18,7 @@ import { viewOf, type Display, type MatchView } from "./matchView";
 import { teamVars } from "@/lib/palette";
 import { useSelection } from "./selection";
 import { TimeZoneSelect } from "./TimeZoneSelect";
-import { VisitorStats } from "./VisitorStats";
+import { VisitorBeacon } from "./VisitorStats";
 import { CalendarSubscribe } from "./CalendarSubscribe";
 import { SpoilerProvider, SpoilerToggle } from "./spoiler";
 import { RecordsView } from "./RecordsView";
@@ -38,6 +38,16 @@ import {
 } from "./time";
 
 const UPCOMING_LIMIT = 15;
+
+// '5분 전', '2시간 전' (그 언어 방식)
+function ago(when: Date, now: Date, intl: string): string {
+  const rtf = new Intl.RelativeTimeFormat(intl, { numeric: "auto" });
+  const min = Math.max(0, Math.round((now.getTime() - when.getTime()) / 60_000));
+  if (min < 60) return rtf.format(-min, "minute");
+  const h = Math.round(min / 60);
+  if (h < 48) return rtf.format(-h, "hour");
+  return rtf.format(-Math.round(h / 24), "day");
+}
 
 // loginEnabled: 메일 발송이 설정되지 않은 운영 환경에서는 로그인 버튼을 숨긴다 (로그인 없이도 모든 기능 사용 가능)
 export function CalendarApp({
@@ -220,6 +230,12 @@ export function CalendarApp({
   }, [selections, matches, teamsBySlug, catalog.competitions]);
 
   const todayKey = now ? toDateKey(now, tz) : "";
+  // 모든 대회 중 가장 최근에 일정을 받은 시각
+  const lastUpdate = useMemo(() => {
+    const times = catalog.competitions.map((c) => (c.lastSuccessAt ? new Date(c.lastSuccessAt).getTime() : 0));
+    const max = Math.max(0, ...times);
+    return max ? new Date(max) : null;
+  }, [catalog.competitions]);
   const dayItems = byDay.get(selectedKey) ?? [];
 
   return (
@@ -238,7 +254,17 @@ export function CalendarApp({
               }}
             />
           )}
-          <VisitorStats />
+          <VisitorBeacon />
+          {/* 서비스 규모와 최신성: 사용자 수 대신 다루는 범위와 갱신 시각으로 믿음을 준다 */}
+          <p className="scale-line">
+            <span>{fmt(t.app.scale, { c: catalog.competitions.length, t: catalog.teams.length.toLocaleString(intl) })}</span>
+            {lastUpdate && now && (
+              <span className="fresh">
+                <span className="live-dot" aria-hidden="true" />
+                {fmt(t.app.updatedAgo, { ago: ago(lastUpdate, now, intl) })}
+              </span>
+            )}
+          </p>
         </div>
         <div className="top-actions">
           <LanguageSelect onChange={(l) => account && void save({ locale: l })} />

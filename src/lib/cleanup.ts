@@ -5,11 +5,13 @@ import type { Db } from "@/lib/db";
 // - 로그인 코드: 마지막 발송 후 하루 지난 것 (그 사이에는 발송 횟수 제한에 쓰인다)
 // - 요청 제한 기록: 하루 지난 것 (가장 긴 제한 창이 1시간)
 // - 접속 중 기록: 하루 지난 것 (오늘·전체 방문자 수는 따로 남는다)
+// - 캘린더 구독 기록: 90일 넘게 불리지 않은 것
 export interface CleanupResult {
   sessions: number;
   loginCodes: number;
   rateLimits: number;
   presence: number;
+  icsFeeds: number;
 }
 
 export async function cleanupExpired(db: Db, now = new Date()): Promise<CleanupResult> {
@@ -20,5 +22,7 @@ export async function cleanupExpired(db: Db, now = new Date()): Promise<CleanupR
     loginCodes: await count("delete from login_code where last_sent_at < $1", [dayAgo]),
     rateLimits: await count("delete from rate_limit where window_start < $1", [dayAgo]),
     presence: await count("delete from visitor_presence where last_seen < $1", [dayAgo]),
+    // 90일 넘게 아무도 안 불러간 구독 주소
+    icsFeeds: await count("delete from ics_feed where last_seen < $1", [new Date(now.getTime() - 90 * 86_400_000).toISOString()]),
   };
 }

@@ -6,6 +6,8 @@ export const ja: Messages = {
     description: "応援するチームのリーグ・カップ・国際大会の日程をひとつのカレンダーで",
   },
   app: {
+    scale: "{c}のリーグ・大会 · {t}チーム · 公式データで毎時自動更新",
+    updatedAgo: "日程更新 {ago}",
     title: "マイチーム・カレンダー",
     timeZone: "タイムゾーン：{tz}",
     tzLabel: "タイムゾーン",

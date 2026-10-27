@@ -1,6 +1,7 @@
 import { isLocale, type Locale } from "@/i18n/config";
 import { getDb } from "@/lib/db";
 import { buildIcs, parseTeamList } from "@/lib/ics";
+import { recordIcsFetch } from "@/lib/icsStats";
 import { getCatalog, getMatchesForTeams } from "@/lib/schedule";
 
 // GET /ics/<팀 slug,팀 slug>.ics?lang=ko → 그 팀들의 경기 캘린더 (캘린더 앱 구독용)
@@ -14,6 +15,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ file: st
   const locale: Locale = isLocale(lang) ? lang : "ko";
   const db = getDb();
   const [matches, catalog] = await Promise.all([getMatchesForTeams(db, slugs, locale), getCatalog(db, locale)]);
+  // 구독 규모 세기 (실패해도 캘린더는 내려준다)
+  await recordIcsFetch(db, slugs, locale).catch(() => {});
   const body = buildIcs({ matches, catalog, locale, siteUrl: process.env.SITE_URL ?? url.origin });
   return new Response(body, {
     headers: {

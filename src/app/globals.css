@@ -1521,3 +1521,27 @@ a {
   height: 1px;
   opacity: 0;
 }
+
+/* 헤더 아래 서비스 규모·최신성 한 줄 */
+.scale-line {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: center;
+}
+
+.scale-line .fresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.scale-line .live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16a34a;
+}

@@ -6,6 +6,8 @@ export const fr: Messages = {
     description: "Les matchs de championnat, de coupe et internationaux de vos équipes dans un seul calendrier",
   },
   app: {
+    scale: "{c} championnats et compétitions · {t} équipes · mis à jour chaque heure avec des données officielles",
+    updatedAgo: "Calendrier mis à jour {ago}",
     title: "Calendrier de Mon Équipe",
     timeZone: "Fuseau horaire : {tz}",
     tzLabel: "Fuseau horaire",

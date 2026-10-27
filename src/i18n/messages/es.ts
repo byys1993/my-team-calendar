@@ -6,6 +6,8 @@ export const es: Messages = {
     description: "Los partidos de liga, copa y torneos internacionales de tus equipos en un solo calendario",
   },
   app: {
+    scale: "{c} ligas y torneos · {t} equipos · actualizado cada hora con datos oficiales",
+    updatedAgo: "Calendario actualizado {ago}",
     title: "Calendario de Mi Equipo",
     timeZone: "Zona horaria: {tz}",
     tzLabel: "Zona horaria",

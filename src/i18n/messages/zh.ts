@@ -6,6 +6,8 @@ export const zh: Messages = {
     description: "在一个日历里查看你支持的球队的联赛、杯赛和国际赛事赛程",
   },
   app: {
+    scale: "{c} 个联赛和赛事 · {t} 支球队 · 依据官方数据每小时自动更新",
+    updatedAgo: "赛程更新于{ago}",
     title: "我的球队日历",
     timeZone: "时区：{tz}",
     tzLabel: "时区",

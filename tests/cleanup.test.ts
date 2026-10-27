@@ -26,11 +26,11 @@ describe("오래된 기록 정리", () => {
     await recordVisit(db, "aaaaaaaa-1111-4111-8111-111111111111", t0);
 
     const out = await cleanupExpired(db, later(2));
-    expect(out).toEqual({ sessions: 1, loginCodes: 1, rateLimits: 1, presence: 1 });
+    expect(out).toEqual({ sessions: 1, loginCodes: 1, rateLimits: 1, presence: 1, icsFeeds: 0 });
     // 180일짜리 로그인 세션은 그대로
     expect((await userFromToken(db, r.token, later(2)))?.email).toBe("fan@example.com");
     expect(await getStats(db, t0)).toMatchObject({ today: 1, total: 1 });
     // 다시 돌려도 지울 것이 없다
-    expect(await cleanupExpired(db, later(2))).toEqual({ sessions: 0, loginCodes: 0, rateLimits: 0, presence: 0 });
+    expect(await cleanupExpired(db, later(2))).toEqual({ sessions: 0, loginCodes: 0, rateLimits: 0, presence: 0, icsFeeds: 0 });
   });
 });

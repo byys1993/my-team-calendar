@@ -6,6 +6,8 @@ export const pt: Messages = {
     description: "Os jogos de liga, copa e competições internacionais dos seus times em um só calendário",
   },
   app: {
+    scale: "{c} ligas e competições · {t} times · atualizado a cada hora com dados oficiais",
+    updatedAgo: "Agenda atualizada {ago}",
     title: "Calendário do Meu Time",
     timeZone: "Fuso horário: {tz}",
     tzLabel: "Fuso horário",
