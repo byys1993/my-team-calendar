@@ -30,6 +30,7 @@ export default async function AboutPage() {
       <p>{a.data}</p>
       <h2>{a.whoTitle}</h2>
       <p>{a.who}</p>
+      <p>{a.builtWith}</p>
       <p className="muted">{a.contact}</p>
       <p>
         <Link href="/">{a.back}</Link>

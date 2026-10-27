@@ -189,6 +189,7 @@ export const en = {
     data: "We collect schedules every hour from official league websites and public sports data. Schedules can change, so please also check official announcements for important matches. All sources are listed at the bottom of the home page.",
     whoTitle: "Who runs it",
     who: "An individual sports fan runs it as a non-commercial project. No ads, every feature works without signing in, and we handle only the personal data we strictly need.",
+    builtWith: "This site is built and run by a non-developer with the help of an AI tool (Claude). Bugs may not be fixed right away, and the service may occasionally stop for a while. Please also check official announcements for important matches, and let us know if anything looks wrong — we'll fix it as fast as we can.",
     contact: "Want another league or found a wrong schedule? Use “Send feedback” at the bottom of the home page.",
     back: "Go to the calendar",
   },

@@ -189,6 +189,7 @@ export const es: Messages = {
     data: "Recogemos los calendarios cada hora de las webs oficiales de las ligas y de datos deportivos públicos. Pueden cambiar, así que confirma los partidos importantes con los anuncios oficiales. Todas las fuentes figuran al pie de la página principal.",
     whoTitle: "Quién lo gestiona",
     who: "Un aficionado al deporte lo mantiene como proyecto no comercial. Sin anuncios, todo funciona sin iniciar sesión y solo tratamos los datos personales imprescindibles.",
+    builtWith: "Este sitio lo crea y gestiona una persona que no es desarrolladora, con ayuda de una herramienta de IA (Claude). Por eso es posible que algunos errores no se corrijan de inmediato o que el servicio se detenga un tiempo. Confirma los partidos importantes con los anuncios oficiales y avísanos si ves algo raro: lo arreglaremos lo antes posible.",
     contact: "¿Quieres otra liga o viste un horario incorrecto? Usa «Enviar comentarios» al pie de la página principal.",
     back: "Ir al calendario",
   },

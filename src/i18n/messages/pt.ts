@@ -189,6 +189,7 @@ export const pt: Messages = {
     data: "Coletamos as agendas a cada hora nos sites oficiais das ligas e em dados esportivos públicos. Elas podem mudar, então confira também os comunicados oficiais para jogos importantes. Todas as fontes estão no rodapé da página inicial.",
     whoTitle: "Quem mantém",
     who: "Um fã de esportes mantém o site como projeto pessoal e não comercial. Sem anúncios, tudo funciona sem login e só tratamos os dados pessoais estritamente necessários.",
+    builtWith: "Este site é criado e mantido por uma pessoa que não é desenvolvedora, com ajuda de uma ferramenta de IA (Claude). Por isso, alguns erros podem não ser corrigidos na hora e o serviço pode parar por um tempo. Confira também os comunicados oficiais para jogos importantes e avise se notar algo estranho — vamos corrigir o quanto antes.",
     contact: "Quer outra liga ou viu um horário errado? Use “Enviar sugestão” no rodapé da página inicial.",
     back: "Ir para o calendário",
   },

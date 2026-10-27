@@ -189,6 +189,7 @@ export const de: Messages = {
     data: "Wir holen die Spielpläne stündlich von den offiziellen Ligaseiten und aus öffentlichen Sportdaten. Termine können sich ändern – prüfe wichtige Spiele bitte auch in offiziellen Mitteilungen. Alle Quellen stehen unten auf der Startseite.",
     whoTitle: "Wer dahintersteht",
     who: "Ein Sportfan betreibt die Seite privat und nicht kommerziell. Keine Werbung, alle Funktionen ohne Anmeldung, und nur unbedingt nötige personenbezogene Daten.",
+    builtWith: "Diese Seite wird von einer Person ohne Entwicklerhintergrund mit Hilfe eines KI-Werkzeugs (Claude) erstellt und betrieben. Fehler werden daher eventuell nicht sofort behoben, und der Dienst kann zeitweise ausfallen. Prüfe wichtige Spiele bitte auch in offiziellen Mitteilungen und melde uns Auffälligkeiten – wir beheben sie so schnell wie möglich.",
     contact: "Eine Liga fehlt oder ein Termin stimmt nicht? Nutze „Feedback senden“ unten auf der Startseite.",
     back: "Zum Kalender",
   },

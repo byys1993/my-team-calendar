@@ -189,6 +189,7 @@ export const fr: Messages = {
     data: "Nous récupérons les calendriers chaque heure sur les sites officiels des ligues et des données sportives publiques. Ils peuvent changer : vérifiez aussi les annonces officielles pour les matchs importants. Toutes les sources figurent en bas de la page d'accueil.",
     whoTitle: "Qui le gère",
     who: "Un passionné de sport le gère à titre personnel et non commercial. Pas de publicité, toutes les fonctions sans connexion, et seulement les données personnelles strictement nécessaires.",
+    builtWith: "Ce site est créé et géré par une personne qui n'est pas développeuse, avec l'aide d'un outil d'IA (Claude). Certains bugs peuvent donc ne pas être corrigés tout de suite, et le service peut s'interrompre temporairement. Vérifiez aussi les annonces officielles pour les matchs importants et signalez-nous tout problème : nous le corrigerons au plus vite.",
     contact: "Une ligue à ajouter ou un horaire erroné ? Utilisez « Envoyer un avis » en bas de la page d'accueil.",
     back: "Aller au calendrier",
   },
