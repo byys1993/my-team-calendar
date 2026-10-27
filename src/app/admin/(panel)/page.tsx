@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { adminOverview, toKst } from "@/lib/manual/admin";
+import { funnel, type FunnelRow } from "@/lib/events";
 import { getIcsStats } from "@/lib/icsStats";
 import { SOURCE_LABEL } from "@/lib/sources";
 import { getStats } from "@/lib/visitors";
@@ -13,14 +14,29 @@ const when = (d: Date | null) => {
 
 export default async function AdminHome() {
   const db = getDb();
-  const [{ competitions, failures, reviewCount }, visitors, ics, notify] = await Promise.all([
+  const [{ competitions, failures, reviewCount }, visitors, ics, notify, week, month] = await Promise.all([
     adminOverview(db),
     getStats(db),
     getIcsStats(db),
     db.query<{ users: number; on: number }>(
       `select count(*)::int as users, count(*) filter (where notify_mode <> 'off')::int as "on" from app_user`,
     ),
+    funnel(db, 7),
+    funnel(db, 30),
   ]);
+  // 방문 → 팀 선택 → 구독 창 → 구독 버튼 → 로그인 → 알림 켬 (기간 안에 한 번이라도 한 사람 수)
+  const subscribed = (f: FunnelRow) => Math.max(f.events.sub_apple, f.events.sub_google, f.events.sub_copy);
+  const steps: [string, (f: FunnelRow) => number][] = [
+    ["방문", (f) => f.visitors],
+    ["팀 고름", (f) => f.events.team_pick],
+    ["  └ 팀 페이지에서 추가", (f) => f.events.link_add],
+    ["캘린더 구독 창 열기", (f) => f.events.sub_open],
+    ["캘린더 구독 버튼 누름", subscribed],
+    ["로그인", (f) => f.events.login],
+    ["알림 메일 켬", (f) => f.events.notify_on],
+    ["문의 보냄", (f) => f.events.contact_sent],
+  ];
+  const pct = (n: number, f: FunnelRow) => (f.visitors ? ` (${Math.round((n / f.visitors) * 100)}%)` : "");
   return (
     <>
       <h1>현황</h1>
@@ -53,6 +69,34 @@ export default async function AdminHome() {
                 {notify[0].users.toLocaleString()} · {notify[0].on.toLocaleString()}
               </td>
             </tr>
+          </tbody>
+        </table>
+      </section>
+      <section>
+        <h2>이용 흐름</h2>
+        <p className="muted">기간 안에 그 행동을 한 번이라도 한 사람 수 (괄호는 방문자 대비). 어디서 많이 빠지는지 보는 용도입니다.</p>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>단계</th>
+              <th>최근 7일</th>
+              <th>최근 30일</th>
+            </tr>
+          </thead>
+          <tbody>
+            {steps.map(([name, get]) => (
+              <tr key={name}>
+                <td style={{ whiteSpace: "pre" }}>{name}</td>
+                <td className="num">
+                  {get(week).toLocaleString()}
+                  {pct(get(week), week)}
+                </td>
+                <td className="num">
+                  {get(month).toLocaleString()}
+                  {pct(get(month), month)}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </section>

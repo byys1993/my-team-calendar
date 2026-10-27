@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { track } from "./track";
 import { useI18n } from "@/i18n/client";
 import { Turnstile } from "./Turnstile";
 import type { Account, AuthError, NotifyMode } from "./useAccount";
@@ -86,7 +87,10 @@ function LoginDialog({ requestCode, verify, turnstileSiteKey, onClose }: Props &
     const r = await verify(email, code);
     setBusy(false);
     if (typeof r === "string") setError(message(r));
-    else modal.close();
+    else {
+      track("login");
+      modal.close();
+    }
   }
 
   return (
@@ -181,6 +185,7 @@ function NotifySettings({ account, saveNotify, timeZone }: Props & { account: Ac
   const hourLabel = (h: number) =>
     new Intl.DateTimeFormat(intl, { hour: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(2026, 0, 1, h)));
   async function change(patch: { notifyMode?: NotifyMode; notifyHour?: number }) {
+    if (patch.notifyMode && patch.notifyMode !== "off") track("notify_on");
     setStatus(null);
     setStatus((await saveNotify(patch)) ? "saved" : "failed");
   }

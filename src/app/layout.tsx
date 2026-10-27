@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
 import { INTL_LOCALE, isRtl } from "@/i18n/config";
 import { MESSAGES } from "@/i18n";
@@ -44,7 +45,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const locale = await getLocale();
   return (
     <html lang={locale} dir={isRtl(locale) ? "rtl" : "ltr"}>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Vercel Web Analytics: 쿠키 없이 페이지 방문·유입 경로를 센다 (Vercel 대시보드에서 켜야 기록됨) */}
+        <Analytics />
+      </body>
     </html>
   );
 }

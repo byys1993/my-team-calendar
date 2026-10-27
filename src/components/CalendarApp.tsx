@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { track } from "./track";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LOCALE_COOKIE, isLocale } from "@/i18n/config";
 import { useI18n } from "@/i18n/client";
@@ -150,7 +151,11 @@ export function CalendarApp({
   useEffect(() => {
     const slug = addFromLink.current;
     if (!loaded || !slug) return;
-    if (teamsBySlug.has(slug)) add(slug);
+    if (teamsBySlug.has(slug)) {
+      add(slug);
+      track("link_add");
+      track("team_pick");
+    }
     addFromLink.current = null;
     window.history.replaceState(null, "", window.location.pathname);
   }, [loaded, teamsBySlug, add]);
@@ -514,7 +519,10 @@ export function CalendarApp({
         <TeamPicker
           catalog={catalog}
           selections={selections}
-          onAdd={add}
+          onAdd={(slug) => {
+            add(slug);
+            track("team_pick");
+          }}
           onRemove={remove}
           onClear={clear}
           onClose={() => setPickerOpen(false)}

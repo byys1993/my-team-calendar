@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { track } from "./track";
 import { useI18n } from "@/i18n/client";
 import { Turnstile } from "./Turnstile";
 
@@ -54,7 +55,10 @@ function ContactDialog({ turnstileSiteKey, onClose }: { turnstileSiteKey: string
         body: JSON.stringify({ message, email, website, turnstile: captcha, locale }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (res.ok) setDone(true);
+      if (res.ok) {
+        setDone(true);
+        track("contact_sent");
+      }
       else setError(errorText(data.error ?? "failed"));
     } catch {
       setError(m.auth.failed);

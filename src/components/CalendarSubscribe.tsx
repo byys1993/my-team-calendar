@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { track } from "./track";
 import { useI18n } from "@/i18n/client";
 
 // '캘린더에 추가': 켜 둔 팀들의 구독 주소(ICS)를 Apple 캘린더·구글 캘린더·기타 앱에 넣는 방법을 안내한다.
@@ -11,7 +12,14 @@ export function CalendarSubscribe({ slugs }: { slugs: string[] }) {
   if (slugs.length === 0) return null;
   return (
     <>
-      <button type="button" className="ghost cal-sub-btn" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        className="ghost cal-sub-btn"
+        onClick={() => {
+          setOpen(true);
+          track("sub_open");
+        }}
+      >
         📅 {m.ics.button}
       </button>
       {open && <SubscribeDialog slugs={slugs} onClose={() => setOpen(false)} />}
@@ -35,6 +43,7 @@ function SubscribeDialog({ slugs, onClose }: { slugs: string[]; onClose(): void 
     try {
       await navigator.clipboard.writeText(https);
       setCopied(true);
+      track("sub_copy");
     } catch {
       setCopied(false);
     }
@@ -51,12 +60,12 @@ function SubscribeDialog({ slugs, onClose }: { slugs: string[]; onClose(): void 
       <div className="auth-body ics-body">
         <p className="muted">{m.ics.intro}</p>
 
-        <a className="primary ics-link" href={webcal}>
+        <a className="primary ics-link" href={webcal} onClick={() => track("sub_apple")}>
           {m.ics.apple}
         </a>
         <p className="muted small">{m.ics.appleHint}</p>
 
-        <a className="ghost ics-link" href={google} target="_blank" rel="noopener noreferrer">
+        <a className="ghost ics-link" href={google} target="_blank" rel="noopener noreferrer" onClick={() => track("sub_google")}>
           {m.ics.google}
         </a>
         <p className="muted small">{m.ics.googleHint}</p>

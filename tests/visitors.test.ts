@@ -45,3 +45,22 @@ describe("캘린더 구독 수", () => {
     expect(await getIcsStats(db, at("2026-10-28T09:00:00"))).toEqual({ active7d: 1, total: 2 });
   });
 });
+
+describe("핵심 행동 세기", () => {
+  it("같은 사람·같은 날·같은 행동은 한 번, 기간별로 '한 번이라도 한 사람' 수", async () => {
+    const { recordEvent, funnel } = await import("@/lib/events");
+    await recordVisit(db, A, at("2026-10-20T10:00:00"));
+    await recordVisit(db, B, at("2026-10-22T10:00:00"));
+    await recordEvent(db, A, "team_pick", at("2026-10-20T10:01:00"));
+    await recordEvent(db, A, "team_pick", at("2026-10-20T10:05:00"));
+    await recordEvent(db, A, "team_pick", at("2026-10-21T10:05:00"));
+    await recordEvent(db, B, "sub_open", at("2026-10-22T10:01:00"));
+    const f = await funnel(db, 7, at("2026-10-22T12:00:00"));
+    expect(f.visitors).toBe(2);
+    expect(f.events.team_pick).toBe(1);
+    expect(f.events.sub_open).toBe(1);
+    expect(f.events.notify_on).toBe(0);
+    // 1일 기간이면 오늘(22일)만
+    expect((await funnel(db, 1, at("2026-10-22T12:00:00"))).events.team_pick).toBe(0);
+  });
+});
