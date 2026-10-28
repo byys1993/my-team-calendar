@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { f1Driver, f1Team } from "@/lib/f1names";
+import { f1Pick } from "@/lib/f1picks";
 import { teamVars } from "@/lib/palette";
 import { SOURCE_LABEL } from "@/lib/sources";
 import type { Catalog } from "@/lib/schedule";
@@ -42,6 +43,14 @@ export function RecordsView({ catalog, selections }: { catalog: Catalog; selecti
   const teamName = useMemo(() => new Map(catalog.teams.map((t) => [t.slug, t.name])), [catalog.teams]);
   const teamShort = useMemo(() => new Map(catalog.teams.map((t) => [t.slug, t.short])), [catalog.teams]);
   const mine = useMemo(() => new Map(selections.map((s) => [s.slug, s.color])), [selections]);
+  // F1 순위표에서 내가 고른 팀(컨스트럭터 이름)·드라이버(driverId) 줄의 색
+  const f1Mine = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const s of selections) for (const key of f1Pick(s.slug)?.match ?? []) if (!map.has(key)) map.set(key, s.color);
+    return map;
+  }, [selections]);
+  const colorOf = (r: Row, kind?: Table["kind"]) =>
+    r.team != null ? mine.get(r.team) : kind === "constructors" ? f1Mine.get(r.name) : r.driverId ? f1Mine.get(r.driverId) : undefined;
   // 내 팀이 속한 대회를 앞에
   const myComps = useMemo(() => {
     const set = new Set<string>();
@@ -122,7 +131,7 @@ export function RecordsView({ catalog, selections }: { catalog: Catalog; selecti
               </h4>
               <ol>
                 {g.rows.map((r, i) => {
-                  const color = r.team != null ? mine.get(r.team) : undefined;
+                  const color = colorOf(r);
                   const player = r.driverId ? f1Driver(r.driverId, r.name, locale) : r.name;
                   const team = r.driverId ? f1Team(r.sub ?? "", locale) : ((r.team && teamShort.get(r.team)) ?? r.sub ?? "");
                   return (
@@ -175,7 +184,7 @@ export function RecordsView({ catalog, selections }: { catalog: Catalog; selecti
                       </thead>
                       <tbody>
                         {g.rows.map((r, i) => {
-                          const color = r.team != null ? mine.get(r.team) : undefined;
+                          const color = colorOf(r, t.kind);
                           const display =
                             t.kind === "drivers"
                               ? f1Driver(r.driverId ?? "", r.name, locale)

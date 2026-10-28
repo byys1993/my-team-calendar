@@ -51,6 +51,9 @@ export const ko: Messages = {
     dayMatches: "{date}, 경기 {count}개",
   },
   picker: {
+    f1All: "시리즈 전체 (모든 세션)",
+    f1Teams: "팀",
+    f1Drivers: "드라이버",
     title: "팀 선택",
     close: "닫기",
     search: "팀 이름 검색",
@@ -189,6 +192,7 @@ export const ko: Messages = {
   },
   results: {
     pole: "폴 포지션",
+    place: "{pos}위",
     win: "승",
     draw: "무",
     loss: "패",
@@ -418,6 +422,10 @@ export const ko: Messages = {
     race: "결승",
     qualifying: "예선",
     sprint: "스프린트",
+    sprint_qualifying: "스프린트 예선",
+    fp1: "연습 주행 1",
+    fp2: "연습 주행 2",
+    fp3: "연습 주행 3",
   },
   auth: {
     captcha: "사람 확인을 마친 뒤 다시 시도해 주세요.",

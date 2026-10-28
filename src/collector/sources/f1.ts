@@ -1,11 +1,20 @@
 import type { Fetcher, Podium, SourceAdapter, SourceMatch, SourceTeam } from "../types";
 import { getJson, sleep } from "./http";
 
-// F1은 팀 대신 '시리즈' 하나(시드의 f1 팀)를 선택하고, 그랑프리의 결승·예선·스프린트를 이벤트로 저장한다.
+// F1 세션은 모두 '시리즈'(시드의 f1 팀)의 이벤트로 저장한다. 그랑프리의 연습·예선·스프린트 예선·스프린트·결승.
+// 사용자는 시리즈 전체나 팀·드라이버를 고른다 (src/lib/f1picks.ts). 팀·드라이버의 순위는 results(전체 순위)에서 찾는다.
 const SERIES: SourceTeam = { externalId: "f1", name: "Formula 1" };
 
 // 세션 → 제목 토큰의 세션 이름. 경기 ID에는 기존 짧은 이름(quali)을 그대로 쓴다.
-const SESSION = { race: "race", quali: "qualifying", sprint: "sprint" } as const;
+const SESSION = {
+  race: "race",
+  quali: "qualifying",
+  sprint: "sprint",
+  fp1: "fp1",
+  fp2: "fp2",
+  fp3: "fp3",
+  sq: "sprint_qualifying",
+} as const;
 type SessionKind = keyof typeof SESSION;
 
 // 제목은 '@f1:<영문 그랑프리 이름>:<세션>' 토큰으로 저장하고 화면에서 그 언어로 바꾼다 (src/i18n/format.ts)
@@ -23,6 +32,11 @@ interface JolpicaRace extends JolpicaSession {
   Circuit: { circuitName: string };
   Qualifying?: JolpicaSession;
   Sprint?: JolpicaSession;
+  FirstPractice?: JolpicaSession;
+  SecondPractice?: JolpicaSession;
+  ThirdPractice?: JolpicaSession;
+  SprintQualifying?: JolpicaSession;
+  SprintShootout?: JolpicaSession; // 2023년 스프린트 예선 이름
 }
 
 function session(race: JolpicaRace, kind: SessionKind, s: JolpicaSession): SourceMatch {
@@ -42,11 +56,17 @@ function session(race: JolpicaRace, kind: SessionKind, s: JolpicaSession): Sourc
 }
 
 export function parseJolpica(races: JolpicaRace[]): SourceMatch[] {
-  return races.flatMap((r) => [
-    session(r, "race", r),
-    ...(r.Qualifying ? [session(r, "quali", r.Qualifying)] : []),
-    ...(r.Sprint ? [session(r, "sprint", r.Sprint)] : []),
-  ]);
+  return races.flatMap((r) => {
+    const other: [SessionKind, JolpicaSession | undefined][] = [
+      ["quali", r.Qualifying],
+      ["sprint", r.Sprint],
+      ["fp1", r.FirstPractice],
+      ["fp2", r.SecondPractice],
+      ["fp3", r.ThirdPractice],
+      ["sq", r.SprintQualifying ?? r.SprintShootout],
+    ];
+    return [session(r, "race", r), ...other.flatMap(([kind, s]) => (s ? [session(r, kind, s)] : []))];
+  });
 }
 
 interface JolpicaResult {
@@ -61,34 +81,49 @@ interface JolpicaResultRace {
   SprintResults?: JolpicaResult[];
   QualifyingResults?: JolpicaResult[];
 }
+type ResultPage = { MRData: { total: string; RaceTable: { Races: JolpicaResultRace[] } } };
 
-// 결과 요청 종류: 경로, 세션, 몇 위까지
-const RESULT_QUERIES: { path: string; kind: SessionKind; positions: number[] }[] = [
-  { path: "results", kind: "race", positions: [1, 2, 3] },
-  { path: "sprint", kind: "sprint", positions: [1, 2, 3] },
-  { path: "qualifying", kind: "quali", positions: [1] },
+// 결과 요청 종류: 경로, 세션, 포디움(목록 표시)에 넣을 순위까지 (예선은 폴 포지션만)
+const RESULT_QUERIES: { path: string; kind: SessionKind; podium: number }[] = [
+  { path: "results", kind: "race", podium: 3 },
+  { path: "sprint", kind: "sprint", podium: 3 },
+  { path: "qualifying", kind: "quali", podium: 1 },
 ];
+const PAGE = 100;
+const MAX_PAGES = 12; // 시즌 24경기 × 22명 ≈ 530줄 → 6쪽
 
-// 경기 ID('2026-17-race') → 순위별 결과
-export function addPodiums(matches: SourceMatch[], results: { kind: SessionKind; races: JolpicaResultRace[] }[]) {
-  const byId = new Map<string, Podium[]>();
+// 경기 ID('2026-17-race') → 전체 순위(results)와 포디움. 한 경기 결과가 두 쪽에 나뉘어 와도 합친다.
+export function addResults(matches: SourceMatch[], results: { kind: SessionKind; races: JolpicaResultRace[] }[]) {
+  const byId = new Map<string, Map<number, Podium>>();
+  const podiumTop = new Map(RESULT_QUERIES.map((q) => [q.kind, q.podium]));
+  const kindOf = new Map<string, SessionKind>();
   for (const { kind, races } of results) {
     for (const r of races) {
       const list = r.Results ?? r.SprintResults ?? r.QualifyingResults ?? [];
       const id = `${r.season}-${r.round}-${kind}`;
+      kindOf.set(id, kind);
+      const rows = byId.get(id) ?? new Map<number, Podium>();
       for (const x of list) {
-        const p: Podium = {
-          pos: Number(x.position),
+        const pos = Number(x.position);
+        if (!Number.isInteger(pos)) continue;
+        rows.set(pos, {
+          pos,
           driverId: x.Driver.driverId,
           code: x.Driver.code ?? null,
           name: x.Driver.familyName,
           team: x.Constructor.name,
-        };
-        byId.set(id, [...(byId.get(id) ?? []).filter((q) => q.pos !== p.pos), p].sort((a, b) => a.pos - b.pos));
+        });
       }
+      byId.set(id, rows);
     }
   }
-  return matches.map((m) => (byId.has(m.externalId) ? { ...m, podium: byId.get(m.externalId)! } : m));
+  return matches.map((m) => {
+    const rows = byId.get(m.externalId);
+    if (!rows?.size) return m;
+    const all = [...rows.values()].sort((a, b) => a.pos - b.pos);
+    const top = podiumTop.get(kindOf.get(m.externalId)!) ?? 3;
+    return { ...m, podium: all.filter((p) => p.pos <= top), results: all };
+  });
 }
 
 export function jolpica(fetcher: Fetcher = fetch, opts: { delayMs?: number } = {}): SourceAdapter {
@@ -99,19 +134,17 @@ export function jolpica(fetcher: Fetcher = fetch, opts: { delayMs?: number } = {
     async fetchMatches(season) {
       const s = encodeURIComponent(season);
       const json = await getJson<{ MRData: { RaceTable: { Races: JolpicaRace[] } } }>(fetcher, `${base}/${s}/races/?limit=100`);
-      // 끝난 세션의 1~3위 (예선은 폴 포지션). 순위별로 한 번씩 받으면 시즌 전체가 한 페이지에 들어온다.
+      // 끝난 세션의 전체 순위 (결승·스프린트·예선). 한 쪽에 100줄씩이라 시즌 전체를 쪽을 넘기며 받는다.
       const results: { kind: SessionKind; races: JolpicaResultRace[] }[] = [];
       for (const q of RESULT_QUERIES) {
-        for (const pos of q.positions) {
+        for (let page = 0; page < MAX_PAGES; page++) {
           if (delayMs) await sleep(delayMs);
-          const r = await getJson<{ MRData: { RaceTable: { Races: JolpicaResultRace[] } } }>(
-            fetcher,
-            `${base}/${s}/${q.path}/${pos}/?limit=100`,
-          );
+          const r = await getJson<ResultPage>(fetcher, `${base}/${s}/${q.path}/?limit=${PAGE}&offset=${page * PAGE}`);
           results.push({ kind: q.kind, races: r.MRData.RaceTable.Races });
+          if ((page + 1) * PAGE >= Number(r.MRData.total)) break;
         }
       }
-      return addPodiums(parseJolpica(json.MRData.RaceTable.Races), results);
+      return addResults(parseJolpica(json.MRData.RaceTable.Races), results);
     },
   };
 }
@@ -131,7 +164,16 @@ interface OpenF1Meeting {
   meeting_name: string;
 }
 
-const OPENF1_KIND: Record<string, SessionKind> = { Race: "race", Qualifying: "quali", Sprint: "sprint" };
+const OPENF1_KIND: Record<string, SessionKind> = {
+  Race: "race",
+  Qualifying: "quali",
+  Sprint: "sprint",
+  "Practice 1": "fp1",
+  "Practice 2": "fp2",
+  "Practice 3": "fp3",
+  "Sprint Qualifying": "sq",
+  "Sprint Shootout": "sq",
+};
 
 export function parseOpenF1(sessions: OpenF1Session[], meetings: OpenF1Meeting[]): SourceMatch[] {
   const names = new Map(meetings.map((m) => [m.meeting_key, m.meeting_name]));

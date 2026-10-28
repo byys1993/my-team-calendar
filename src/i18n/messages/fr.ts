@@ -52,6 +52,9 @@ export const fr: Messages = {
     dayMatches: "{date}, {count} matchs",
   },
   picker: {
+    f1All: "Toute la série (toutes les séances)",
+    f1Teams: "Écuries",
+    f1Drivers: "Pilotes",
     title: "Choisir des équipes",
     close: "Fermer",
     search: "Rechercher une équipe",
@@ -190,6 +193,7 @@ export const fr: Messages = {
   },
   results: {
     pole: "Pole",
+    place: "P{pos}",
     win: "V",
     draw: "N",
     loss: "D",
@@ -419,6 +423,10 @@ export const fr: Messages = {
     race: "Course",
     qualifying: "Qualifications",
     sprint: "Sprint",
+    sprint_qualifying: "Qualifications sprint",
+    fp1: "Essais libres 1",
+    fp2: "Essais libres 2",
+    fp3: "Essais libres 3",
   },
   auth: {
     captcha: "Veuillez terminer la vérification humaine puis réessayer.",

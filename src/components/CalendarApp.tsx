@@ -16,7 +16,7 @@ import { LeagueDay } from "./LeagueDay";
 import { MatchRow } from "./MatchRow";
 import { MonthCalendar } from "./MonthCalendar";
 import { TeamPicker } from "./TeamPicker";
-import { viewOf, type Display, type MatchView } from "./matchView";
+import { involves, viewOf, type Display, type MatchView } from "./matchView";
 import { teamVars } from "@/lib/palette";
 import { useSelection } from "./selection";
 import { TimeZoneSelect } from "./TimeZoneSelect";
@@ -219,7 +219,7 @@ export function CalendarApp({
     const result = new Map<string, MatchView>();
     for (const s of selections) {
       const next = matches
-        .filter((m) => (m.home === s.slug || m.away === s.slug) && m.status !== "cancelled")
+        .filter((m) => involves(m, s.slug) && m.status !== "cancelled")
         .find((m) => matchSortTime(m) >= nowMs - 2 * 3600_000);
       const v = next && viewOf(next, [s], display, false);
       if (v) result.set(s.slug, v);

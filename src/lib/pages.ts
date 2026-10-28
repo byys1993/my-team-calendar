@@ -1,5 +1,6 @@
 import type { Locale } from "@/i18n/config";
 import type { Db } from "@/lib/db";
+import { f1Pick } from "@/lib/f1picks";
 import {
   getCatalog,
   queryMatches,
@@ -63,9 +64,13 @@ export async function getTeamPage(db: Db, slug: string, locale: Locale, now = ne
     .slice(0, 8);
   let standing: TeamPageData["standing"] = null;
   if (competition) {
-    const table = (await standingTables(db, competition.slug)).find((x) => x.kind === "teams");
+    // F1 팀·드라이버는 컨스트럭터·드라이버 순위에서 찾는다
+    const pick = f1Pick(slug);
+    const kind = pick ? (pick.kind === "team" ? "constructors" : "drivers") : "teams";
+    const isMine = (r: StandingRow) => (pick ? pick.match.includes(pick.kind === "team" ? r.name : (r.driverId ?? "")) : r.team === slug);
+    const table = (await standingTables(db, competition.slug)).find((x) => x.kind === kind);
     for (const g of table?.groups ?? []) {
-      const row = g.rows.find((r) => r.team === slug);
+      const row = g.rows.find(isMine);
       if (row) standing = { rank: row.rank, group: g.name, size: g.rows.length, stats: row.stats };
     }
   }

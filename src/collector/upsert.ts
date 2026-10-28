@@ -37,6 +37,7 @@ interface MatchRow {
   away_pen: number | null;
   extra: string | null;
   podium: unknown;
+  results: unknown;
 }
 
 // 저장할 새 값 (시각은 ISO 문자열)
@@ -155,6 +156,9 @@ function sameDate(a: string | Date | null, b: string | null): boolean {
 // 점수는 0 이상의 정수만 받는다
 const score = (v: number | null | undefined) => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null);
 
+// 이벤트 제목 토큰의 마지막 조각 = 세션 ('@f1:Mexico City Grand Prix:fp1' → 'fp1')
+const sessionOf = (title: string) => title.slice(title.lastIndexOf(":") + 1);
+
 const timeOf = (s: string | Date | null) => (s ? new Date(s).getTime() : null);
 
 async function inChunks<T>(rows: T[], run: (json: string) => Promise<unknown>): Promise<void> {
@@ -163,7 +167,7 @@ async function inChunks<T>(rows: T[], run: (json: string) => Promise<unknown>): 
 
 const MATCH_COLUMNS = `season text, round_label text, title text, home_team_id int, away_team_id int,
   home_placeholder text, away_placeholder text, start_at timestamptz, date_only date, status text, venue text,
-  is_neutral boolean, broadcast text, home_score int, away_score int, home_pen int, away_pen int, extra text, podium jsonb`;
+  is_neutral boolean, broadcast text, home_score int, away_score int, home_pen int, away_pen int, extra text, podium jsonb, results jsonb`;
 
 // 소스 경기 목록을 저장한다. 같은 경기는 기존 ID를 그대로 두고 내용만 갱신한다.
 export async function upsertMatches(
@@ -223,6 +227,7 @@ export async function upsertMatches(
         away_pen: score(m.awayPen),
         extra: m.extra ?? null,
         podium: m.podium?.length ? m.podium : null,
+        results: m.results?.length ? m.results : null,
       },
     });
   }
@@ -251,6 +256,8 @@ export async function upsertMatches(
     let best: { row: MatchRow; diff: number } | null = null;
     for (const c of candidates) {
       if (claimed.has(c.id) || c.home_team_id !== next.home_team_id || c.away_team_id !== next.away_team_id) continue;
+      // 이벤트(F1)는 같은 세션끼리만 (연습 주행과 예선이 몇 시간 차이로 붙어 있다)
+      if (isEvent && c.title && next.title && sessionOf(c.title) !== sessionOf(next.title)) continue;
       const ct = timeOf(c.start_at);
       const diff = t == null || ct == null ? 0 : Math.abs(ct - t);
       if (diff >= limit) continue;
@@ -358,6 +365,7 @@ export async function upsertMatches(
     const awayPen = next.away_pen ?? row.away_pen;
     const extra = next.extra ?? row.extra;
     const podium = next.podium ?? row.podium;
+    const results = next.results ?? row.results;
     const roundLabel = next.round_label ?? row.round_label;
     const title = next.title ?? row.title;
     const scheduleChanged =
@@ -380,7 +388,8 @@ export async function upsertMatches(
       row.home_pen !== homePen ||
       row.away_pen !== awayPen ||
       row.extra !== extra ||
-      JSON.stringify(row.podium) !== JSON.stringify(podium);
+      JSON.stringify(row.podium) !== JSON.stringify(podium) ||
+      JSON.stringify(row.results) !== JSON.stringify(results);
     if (!scheduleChanged && !otherChanged) continue;
     updates.push({
       id: row.id,
@@ -393,6 +402,7 @@ export async function upsertMatches(
       away_pen: awayPen,
       extra,
       podium,
+      results,
       round_label: roundLabel,
       title,
       bump: scheduleChanged ? 1 : 0,
@@ -431,9 +441,9 @@ export async function upsertMatches(
   await inChunks(inserts, (json) =>
     db.query(
       `insert into match (id, competition_id, season, round_label, title, home_team_id, away_team_id,
-         home_placeholder, away_placeholder, start_at, date_only, status, venue, is_neutral, broadcast, home_score, away_score, home_pen, away_pen, extra, podium)
+         home_placeholder, away_placeholder, start_at, date_only, status, venue, is_neutral, broadcast, home_score, away_score, home_pen, away_pen, extra, podium, results)
        select x.id, $1, x.season, x.round_label, x.title, x.home_team_id, x.away_team_id, x.home_placeholder,
-         x.away_placeholder, x.start_at, x.date_only, x.status, x.venue, x.is_neutral, x.broadcast, x.home_score, x.away_score, x.home_pen, x.away_pen, x.extra, x.podium
+         x.away_placeholder, x.start_at, x.date_only, x.status, x.venue, x.is_neutral, x.broadcast, x.home_score, x.away_score, x.home_pen, x.away_pen, x.extra, x.podium, x.results
        from jsonb_to_recordset($2::text::jsonb) as x(id uuid, ${MATCH_COLUMNS})`,
       [competitionId, json],
     ),
@@ -460,7 +470,7 @@ export async function upsertMatches(
       `update match m set season = x.season, round_label = x.round_label, title = x.title,
          home_team_id = x.home_team_id, away_team_id = x.away_team_id, home_placeholder = x.home_placeholder,
          away_placeholder = x.away_placeholder, start_at = x.start_at, date_only = x.date_only, status = x.status,
-         venue = x.venue, is_neutral = x.is_neutral, broadcast = x.broadcast, home_score = x.home_score, away_score = x.away_score, home_pen = x.home_pen, away_pen = x.away_pen, extra = x.extra, podium = x.podium, sequence = m.sequence + x.bump, updated_at = now()
+         venue = x.venue, is_neutral = x.is_neutral, broadcast = x.broadcast, home_score = x.home_score, away_score = x.away_score, home_pen = x.home_pen, away_pen = x.away_pen, extra = x.extra, podium = x.podium, results = x.results, sequence = m.sequence + x.bump, updated_at = now()
        from jsonb_to_recordset($1::text::jsonb) as x(id uuid, bump int, ${MATCH_COLUMNS})
        where m.id = x.id`,
       [json],

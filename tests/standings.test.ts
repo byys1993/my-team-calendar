@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { addPodiums, parseJolpica } from "@/collector/sources/f1";
+import { addResults, parseJolpica } from "@/collector/sources/f1";
 import {
   parseEspnStandings,
   parseF1Standings,
@@ -13,7 +13,7 @@ import type { Db } from "@/lib/db";
 import { setupDb } from "./helpers";
 
 describe("F1 결과", () => {
-  it("결승 1~3위와 예선 폴 포지션을 세션 경기에 붙인다", () => {
+  it("전체 순위를 세션 경기에 붙이고, 포디움은 결승 1~3위·예선 폴 포지션 (두 쪽에 나뉘어 와도 합친다)", () => {
     const races = parseJolpica([
       {
         season: "2026",
@@ -30,11 +30,10 @@ describe("F1 결과", () => {
       Driver: { driverId: id, code: id.slice(0, 3).toUpperCase(), familyName: fam },
       Constructor: { name: "Team" },
     });
-    const out = addPodiums(races, [
-      { kind: "race", races: [{ season: "2026", round: "17", Results: [res(1, "max_verstappen", "Verstappen")] }] },
-      { kind: "race", races: [{ season: "2026", round: "17", Results: [res(2, "norris", "Norris")] }] },
-      { kind: "race", races: [{ season: "2026", round: "17", Results: [res(3, "leclerc", "Leclerc")] }] },
-      { kind: "quali", races: [{ season: "2026", round: "17", QualifyingResults: [res(1, "norris", "Norris")] }] },
+    const out = addResults(races, [
+      { kind: "race", races: [{ season: "2026", round: "17", Results: [res(1, "max_verstappen", "Verstappen"), res(2, "norris", "Norris")] }] },
+      { kind: "race", races: [{ season: "2026", round: "17", Results: [res(3, "leclerc", "Leclerc"), res(4, "hamilton", "Hamilton")] }] },
+      { kind: "quali", races: [{ season: "2026", round: "17", QualifyingResults: [res(1, "norris", "Norris"), res(2, "hamilton", "Hamilton")] }] },
     ]);
     const race = out.find((m) => m.externalId === "2026-17-race")!;
     const quali = out.find((m) => m.externalId === "2026-17-quali")!;
@@ -43,7 +42,9 @@ describe("F1 결과", () => {
       [2, "norris"],
       [3, "leclerc"],
     ]);
+    expect(race.results?.map((p) => p.driverId)).toEqual(["max_verstappen", "norris", "leclerc", "hamilton"]);
     expect(quali.podium?.map((p) => p.driverId)).toEqual(["norris"]);
+    expect(quali.results).toHaveLength(2);
   });
 });
 

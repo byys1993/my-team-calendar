@@ -2,6 +2,7 @@ import { fmt, type Messages } from "@/i18n";
 import type { Locale } from "@/i18n/config";
 import { formatLabel, formatTitle } from "@/i18n/format";
 import { f1Driver } from "@/lib/f1names";
+import { f1Pick, pickResults } from "@/lib/f1picks";
 import type { ScheduleMatch } from "@/lib/schedule";
 import { extraLabel, resultFor } from "./result";
 import { PodiumResult, ScoreResult } from "./spoiler";
@@ -74,7 +75,17 @@ export function PageMatchList({
               {interactive && showResult && !mine && !isEvent && <ScoreResult match={x} />}
               {!interactive && plainScore && <span className="result result-draw">{plainScore}</span>}
               {interactive && showResult && isEvent && <PodiumResult match={x} />}
-              {!interactive && showResult && isEvent && x.podium?.length ? (
+              {!interactive && showResult && isEvent && team && pickResults(x.mine, team).length ? (
+                // F1 팀·드라이버 페이지: 그 순위 ('르클레르 3위 · 해밀턴 7위')
+                <span className="podium">
+                  {pickResults(x.mine, team)
+                    .map(
+                      (p) =>
+                        `${f1Pick(team)?.kind === "team" ? `${f1Driver(p.driverId, p.name, locale)} ` : ""}${fmt(m.results.place, { pos: p.pos })}`,
+                    )
+                    .join(" · ")}
+                </span>
+              ) : !interactive && showResult && isEvent && x.podium?.length ? (
                 <span className="podium">
                   {x.title?.endsWith(":qualifying")
                     ? `${m.results.pole} ${f1Driver(x.podium[0].driverId, x.podium[0].name, locale)}`

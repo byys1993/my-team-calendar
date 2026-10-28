@@ -51,6 +51,9 @@ export const ja: Messages = {
     dayMatches: "{date}、{count} 試合",
   },
   picker: {
+    f1All: "シリーズ全体（全セッション）",
+    f1Teams: "チーム",
+    f1Drivers: "ドライバー",
     title: "チームを選ぶ",
     close: "閉じる",
     search: "チーム名で検索",
@@ -189,6 +192,7 @@ export const ja: Messages = {
   },
   results: {
     pole: "ポールポジション",
+    place: "{pos}位",
     win: "勝",
     draw: "分",
     loss: "敗",
@@ -418,6 +422,10 @@ export const ja: Messages = {
     race: "決勝",
     qualifying: "予選",
     sprint: "スプリント",
+    sprint_qualifying: "スプリント予選",
+    fp1: "フリー走行1",
+    fp2: "フリー走行2",
+    fp3: "フリー走行3",
   },
   auth: {
     captcha: "ロボットでないことの確認を完了してから、もう一度お試しください。",

@@ -52,6 +52,9 @@ export const de: Messages = {
     dayMatches: "{date}, {count} Spiele",
   },
   picker: {
+    f1All: "Ganze Serie (alle Sessions)",
+    f1Teams: "Teams",
+    f1Drivers: "Fahrer",
     title: "Teams wählen",
     close: "Schließen",
     search: "Teams suchen",
@@ -190,6 +193,7 @@ export const de: Messages = {
   },
   results: {
     pole: "Pole",
+    place: "P{pos}",
     win: "S",
     draw: "U",
     loss: "N",
@@ -419,6 +423,10 @@ export const de: Messages = {
     race: "Rennen",
     qualifying: "Qualifying",
     sprint: "Sprint",
+    sprint_qualifying: "Sprint-Qualifying",
+    fp1: "1. Training",
+    fp2: "2. Training",
+    fp3: "3. Training",
   },
   auth: {
     captcha: "Bitte schließe die Sicherheitsprüfung ab und versuche es erneut.",

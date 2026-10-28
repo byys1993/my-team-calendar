@@ -51,6 +51,9 @@ export const zh: Messages = {
     dayMatches: "{date}，{count} 场比赛",
   },
   picker: {
+    f1All: "整个赛事（所有环节）",
+    f1Teams: "车队",
+    f1Drivers: "车手",
     title: "选择球队",
     close: "关闭",
     search: "搜索球队",
@@ -189,6 +192,7 @@ export const zh: Messages = {
   },
   results: {
     pole: "杆位",
+    place: "第{pos}名",
     win: "胜",
     draw: "平",
     loss: "负",
@@ -418,6 +422,10 @@ export const zh: Messages = {
     race: "正赛",
     qualifying: "排位赛",
     sprint: "冲刺赛",
+    sprint_qualifying: "冲刺排位赛",
+    fp1: "第一次练习赛",
+    fp2: "第二次练习赛",
+    fp3: "第三次练习赛",
   },
   auth: {
     captcha: "请完成人机验证后重试。",

@@ -724,6 +724,14 @@ a {
   color: var(--muted);
 }
 
+/* F1: 시리즈 전체 / 팀 / 드라이버 */
+.picker-sub {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 10px 0 6px;
+  color: var(--muted);
+}
+
 .team-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -1272,6 +1280,11 @@ a {
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+/* F1 팀·드라이버를 고른 경우 3위 안이면 강조 */
+.podium-top {
+  color: var(--accent);
 }
 
 /* 캘린더 / 기록 탭 */

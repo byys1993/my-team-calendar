@@ -3,7 +3,9 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { useI18n } from "@/i18n/client";
 import type { ScheduleMatch } from "@/lib/schedule";
+import type { Podium } from "@/collector/types";
 import { f1Driver } from "@/lib/f1names";
+import { f1Pick, pickResults } from "@/lib/f1picks";
 import { extraLabel, resultFor } from "./result";
 import { BoxScoreButton } from "./BoxScore";
 
@@ -55,14 +57,17 @@ export function SpoilerToggle() {
   );
 }
 
-// F1 결과: 결승·스프린트는 '🥇 베르스타펜 🥈 노리스 🥉 르클레르', 예선은 '폴 포지션 베르스타펜'
+// F1 결과: 결승·스프린트는 '🥇 베르스타펜 🥈 노리스 🥉 르클레르', 예선은 '폴 포지션 베르스타펜'.
+// 팀·드라이버를 고른 경우(pick)는 그 순위: 드라이버 '🥉 3위', 팀 '르클레르 3위 · 해밀턴 7위'
 const MEDAL = ["🥇", "🥈", "🥉"];
-export function PodiumResult({ match }: { match: ScheduleMatch }) {
-  const { m, locale } = useI18n();
+export function PodiumResult({ match, pick }: { match: ScheduleMatch; pick?: string }) {
+  const { m, locale, t: fmt } = useI18n();
   const { hide } = useSpoiler();
   const [revealed, setRevealed] = useState(false);
   const podium = match.podium;
-  if (!podium?.length) return null;
+  const mine = pick ? pickResults(match.mine, pick) : [];
+  const kind = pick ? f1Pick(pick)?.kind : undefined;
+  if (!podium?.length && !mine.length) return null;
   if (hide && !revealed) {
     return (
       <button type="button" className="reveal-btn" onClick={() => setRevealed(true)}>
@@ -70,13 +75,25 @@ export function PodiumResult({ match }: { match: ScheduleMatch }) {
       </button>
     );
   }
-  const name = (p: (typeof podium)[number]) => f1Driver(p.driverId, p.name, locale);
+  const name = (p: Pick<Podium, "driverId" | "name">) => f1Driver(p.driverId, p.name, locale);
   const isQuali = match.title?.endsWith(":qualifying");
+  const place = (p: Podium) => `${MEDAL[p.pos - 1] ? `${MEDAL[p.pos - 1]} ` : ""}${fmt(m.results.place, { pos: p.pos })}`;
   return (
     <>
-      <span className="podium">
-        {isQuali ? `${m.results.pole} ${name(podium[0])}` : podium.map((p) => `${MEDAL[p.pos - 1] ?? `${p.pos}.`} ${name(p)}`).join("  ")}
-      </span>
+      {kind ? (
+        <span className={`podium${mine.some((p) => p.pos <= 3) ? " podium-top" : ""}`}>
+          {mine.length
+            ? mine.map((p) => (kind === "team" ? `${name(p)} ${place(p)}` : place(p))).join(" · ")
+            : // 결과에 없으면(출전하지 않음) 포디움을 그대로
+              podium!.map((p) => `${MEDAL[p.pos - 1] ?? `${p.pos}.`} ${name(p)}`).join("  ")}
+        </span>
+      ) : (
+        <span className="podium">
+          {isQuali
+            ? `${m.results.pole} ${name(podium![0])}`
+            : podium!.map((p) => `${MEDAL[p.pos - 1] ?? `${p.pos}.`} ${name(p)}`).join("  ")}
+        </span>
+      )}
       <BoxScoreButton match={match} team="f1" />
     </>
   );

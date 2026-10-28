@@ -37,6 +37,8 @@ export interface SourceMatch {
   extra?: string | null;
   // 순위 경기(F1)의 결과: 결승·스프린트는 1~3위, 예선은 폴 포지션
   podium?: Podium[] | null;
+  // 순위 경기(F1)의 전체 순위 (팀·드라이버를 고른 사용자에게 그 순위를 보여 준다)
+  results?: Podium[] | null;
 }
 
 export interface Podium {

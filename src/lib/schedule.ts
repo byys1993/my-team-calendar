@@ -1,5 +1,6 @@
 import { INTL_LOCALE, type Locale } from "@/i18n/config";
 import type { Podium } from "@/collector/types";
+import { f1Pick, pickResults } from "./f1picks";
 import type { Db } from "./db";
 
 // 사이트(서버)와 화면(클라이언트)이 함께 쓰는 응답 타입.
@@ -48,6 +49,7 @@ export interface ScheduleMatch {
   venueCity?: string | null; // 경기장 도시 (홈팀 경기장으로 채운 경우만)
   isNeutral: boolean;
   podium: Podium[] | null; // F1 결과 (결승·스프린트 1~3위, 예선 폴 포지션)
+  mine?: Podium[]; // F1: 고른 팀·드라이버의 순위 줄 (내 팀 경기 조회에서만)
   homeScore: number | null; // 끝난 경기 결과 (e스포츠는 세트 승수)
   awayScore: number | null;
   homePen?: number | null; // 승부차기 점수 (승부차기로 끝난 경기만)
@@ -149,10 +151,18 @@ interface MatchRowDb {
   away_pen: number | null;
   extra: string | null;
   podium: Podium[] | null;
+  results: Podium[] | null;
 }
 
 // 경기 목록 공통 조회 (리그 페이지도 쓴다). $1 = 언어, where 는 $2 부터 쓰는 조건
-export async function queryMatches(db: Db, locale: Locale, where: string, params: unknown[]): Promise<ScheduleMatch[]> {
+// picks: F1 팀·드라이버 slug 를 주면 그 순위 줄만 mine 으로 붙인다 (전체 순위는 보내지 않는다)
+export async function queryMatches(
+  db: Db,
+  locale: Locale,
+  where: string,
+  params: unknown[],
+  picks: string[] = [],
+): Promise<ScheduleMatch[]> {
   const rows = await db.query<MatchRowDb>(
     `select m.id, c.slug as competition, s.slug as sport, m.round_label, m.title, h.slug as home, a.slug as away,
        case when $1 = 'ko' then coalesce(h.short_ko, h.name_ko, m.home_placeholder)
@@ -164,7 +174,8 @@ export async function queryMatches(db: Db, locale: Locale, where: string, params
        coalesce(m.venue, case when not m.is_neutral and m.round_label is distinct from '@stage:final' then h.venue end) as venue,
        case when m.venue is null and not m.is_neutral and m.round_label is distinct from '@stage:final' then h.venue_city end as venue_city,
        m.is_neutral, m.sequence, m.updated_at,
-       m.broadcast, c.broadcast as comp_broadcast, m.home_score, m.away_score, m.home_pen, m.away_pen, m.extra, m.podium
+       m.broadcast, c.broadcast as comp_broadcast, m.home_score, m.away_score, m.home_pen, m.away_pen, m.extra, m.podium,
+       m.results
      from match m
      join competition c on c.id = m.competition_id
      join sport s on s.id = c.sport_id
@@ -192,6 +203,9 @@ export async function queryMatches(db: Db, locale: Locale, where: string, params
     venueCity: r.venue_city,
     isNeutral: r.is_neutral,
     podium: r.podium,
+    ...(picks.length && r.results
+      ? { mine: [...new Map(picks.flatMap((p) => pickResults(r.results, p)).map((x) => [x.pos, x])).values()].sort((a, b) => a.pos - b.pos) }
+      : {}),
     homeScore: r.home_score,
     awayScore: r.away_score,
     homePen: r.home_pen,
@@ -204,14 +218,17 @@ export async function queryMatches(db: Db, locale: Locale, where: string, params
 }
 
 // 선택한 팀들의 경기. 지난 경기는 두 달 전까지만 (달력에서 지난 달을 볼 수 있도록)
+// F1 팀·드라이버를 고르면 F1 의 모든 세션 (어느 팀·드라이버든 모든 세션에 나온다)
 export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Locale): Promise<ScheduleMatch[]> {
   if (teamSlugs.length === 0) return [];
+  const picks = teamSlugs.filter((s) => f1Pick(s));
   return queryMatches(
     db,
     locale,
-    `(h.slug = any(string_to_array($2, ',')) or a.slug = any(string_to_array($2, ',')))
+    `(h.slug = any(string_to_array($2, ',')) or a.slug = any(string_to_array($2, ',')) or (c.slug = 'f1' and $3::boolean))
        and coalesce(m.start_at, m.date_only::timestamptz) >= now() - interval '62 days'`,
-    [teamSlugs.join(",")],
+    [teamSlugs.join(","), picks.length > 0],
+    picks,
   );
 }
 

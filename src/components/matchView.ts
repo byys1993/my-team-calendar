@@ -1,4 +1,5 @@
 import type { ScheduleMatch } from "@/lib/schedule";
+import { f1Pick } from "@/lib/f1picks";
 import { teamVars } from "@/lib/palette";
 import type { Selection } from "./selection";
 
@@ -7,6 +8,10 @@ export const isTentative = (m: ScheduleMatch) => m.status !== "scheduled";
 
 // 상대가 없는 이벤트형 경기 (F1 세션 등)
 export const isEvent = (m: ScheduleMatch) => !!m.title && !m.away;
+
+// 이 팀(또는 F1 팀·드라이버)이 나오는 경기인가. F1 팀·드라이버는 F1 의 모든 세션에 나온다
+export const involves = (m: ScheduleMatch, slug: string) =>
+  m.home === slug || m.away === slug || (m.competition === "f1" && isEvent(m) && !!f1Pick(slug));
 
 export type Side = "home" | "away" | "neutral" | "vs";
 
@@ -29,7 +34,7 @@ export interface Display {
 export function viewOf(m: ScheduleMatch, selections: Selection[], display: Display, onlyEnabled = true): MatchView | null {
   for (const s of selections) {
     if (onlyEnabled && !s.enabled) continue;
-    if (m.home !== s.slug && m.away !== s.slug) continue;
+    if (!involves(m, s.slug)) continue;
     if (isEvent(m)) {
       return { match: m, team: s.slug, colors: teamVars(s.color), side: null, opponent: display.title(m.title!) };
     }

@@ -43,7 +43,7 @@ export function MatchRow({ view, teamName, competitionName, showDate = true }: P
           <span>{view.opponent}</span>
           {view.side && view.side !== "vs" && <span className={`side side-${view.side}`}>{t.match[view.side]}</span>}
           {status && <span className="status">{status}</span>}
-          {view.side ? <MatchResult match={m} team={view.team} /> : <PodiumResult match={m} />}
+          {view.side ? <MatchResult match={m} team={view.team} /> : <PodiumResult match={m} pick={view.team} />}
         </div>
         <div className="meta">
           {competitionName(m.competition)}

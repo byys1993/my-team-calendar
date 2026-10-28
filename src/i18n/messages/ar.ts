@@ -51,6 +51,9 @@ export const ar: Messages = {
     dayMatches: "{date}، {count} مباريات",
   },
   picker: {
+    f1All: "السلسلة كاملة (كل الجلسات)",
+    f1Teams: "الفرق",
+    f1Drivers: "السائقون",
     title: "اختيار الفرق",
     close: "إغلاق",
     search: "ابحث عن فريق",
@@ -189,6 +192,7 @@ export const ar: Messages = {
   },
   results: {
     pole: "مركز الانطلاق الأول",
+    place: "المركز {pos}",
     win: "فوز",
     draw: "تعادل",
     loss: "خسارة",
@@ -418,6 +422,10 @@ export const ar: Messages = {
     race: "السباق",
     qualifying: "التأهيلي",
     sprint: "السباق السريع",
+    sprint_qualifying: "تصفيات السباق القصير",
+    fp1: "التجارب الحرة 1",
+    fp2: "التجارب الحرة 2",
+    fp3: "التجارب الحرة 3",
   },
   auth: {
     captcha: "يرجى إكمال التحقق البشري ثم المحاولة مرة أخرى.",

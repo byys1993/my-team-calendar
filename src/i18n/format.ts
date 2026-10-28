@@ -7,7 +7,7 @@ import { fmt, type Messages } from "./index";
 //   @md:N  @round:N  @week:N  @game:N  @stage:<key>  @series:<key>  @playoffs[:N]  @postseason
 //   @bo:N  @lol:<key>  @intl:<key>  @tbd  @t:<원문>
 // '@' 로 시작하지 않으면 원문 그대로 보여준다 (ESPN 영문 비고, 관리자가 입력한 KBL 문구 등).
-// F1 제목: '@f1:<영문 그랑프리 이름>:<race|qualifying|sprint>'
+// F1 제목: '@f1:<영문 그랑프리 이름>:<race|qualifying|sprint|sprint_qualifying|fp1|fp2|fp3>'
 
 const GP_KO: Record<string, string> = {
   "Australian Grand Prix": "호주 GP",
@@ -93,7 +93,7 @@ export function formatLabel(label: string | null | undefined, m: Messages): stri
 
 export function formatTitle(title: string | null | undefined, m: Messages, locale: Locale): string | null {
   if (!title) return null;
-  const f1 = title.match(/^@f1:(.+):(race|qualifying|sprint)$/);
-  if (f1) return `${gpName(f1[1], locale)} ${m.f1[f1[2] as "race" | "qualifying" | "sprint"]}`;
+  const f1 = title.match(/^@f1:(.+):(race|qualifying|sprint|sprint_qualifying|fp1|fp2|fp3)$/);
+  if (f1) return `${gpName(f1[1], locale)} ${m.f1[f1[2] as keyof Messages["f1"]]}`;
   return formatLabel(title, m);
 }

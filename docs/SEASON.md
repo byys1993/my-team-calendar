@@ -16,7 +16,7 @@
 | 시기 | 확인할 것 |
 |---|---|
 | 2월 말 K리그 개막 | 승격팀이 K리그1 순위표·팀 선택에 들어왔는지. 신생 구단이 생기면 `data/seed/korea-football.json` 에 추가 |
-| 3월 KBO·F1 개막 | KBO 일정·순위가 새 시즌으로 바뀌었는지. F1 새 드라이버의 한국어 이름을 `src/lib/f1names.ts` 에 추가 |
+| 3월 KBO·F1 개막 | KBO 일정·순위가 새 시즌으로 바뀌었는지. F1 새 드라이버의 한국어 이름을 `src/lib/f1names.ts` 에 추가. 고를 수 있는 F1 팀·드라이버 목록은 `data/seed/f1.json` 과 `src/lib/f1picks.ts` 를 함께 고친다 (팀 이름이 바뀌면 `match` 에 새 이름 추가) |
 | 8월 유럽 축구 개막 | 승격팀 한국어 이름 (메일로 알림). 이적한 국내 중계권이 있으면 시드의 `broadcast` 수정 |
 | 10월 KBL·NBA·NHL 개막 | KBL 남은 경기 중계 채널이 채워지는지, NBA·NHL 순위표가 새 시즌인지 |
 | 매년 | 국내 중계권 변경 확인(시드 `broadcast`), Cloudflare Worker 의 GitHub 토큰 만료일(1년), 도메인 자동 연장(가비아) |

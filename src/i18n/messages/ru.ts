@@ -52,6 +52,9 @@ export const ru: Messages = {
     dayMatches: "{date}, матчей: {count}",
   },
   picker: {
+    f1All: "Вся серия (все сессии)",
+    f1Teams: "Команды",
+    f1Drivers: "Пилоты",
     title: "Выбрать команды",
     close: "Закрыть",
     search: "Поиск команды",
@@ -190,6 +193,7 @@ export const ru: Messages = {
   },
   results: {
     pole: "Поул",
+    place: "P{pos}",
     win: "П",
     draw: "Н",
     loss: "Пр",
@@ -419,6 +423,10 @@ export const ru: Messages = {
     race: "Гонка",
     qualifying: "Квалификация",
     sprint: "Спринт",
+    sprint_qualifying: "Квалификация спринта",
+    fp1: "Практика 1",
+    fp2: "Практика 2",
+    fp3: "Практика 3",
   },
   auth: {
     captcha: "Пройдите проверку, что вы человек, и повторите попытку.",

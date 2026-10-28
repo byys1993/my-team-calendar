@@ -22,6 +22,8 @@ describe("F1", () => {
       time: "20:00:00Z",
       Circuit: { circuitName: "Circuit of the Americas" },
       Qualifying: { date: "2026-10-24", time: "21:00:00Z" },
+      FirstPractice: { date: "2026-10-23", time: "17:30:00Z" },
+      SprintQualifying: { date: "2026-10-23", time: "19:00:00Z" },
     },
     {
       season: "2026",
@@ -32,8 +34,8 @@ describe("F1", () => {
     },
   ];
 
-  it("Jolpica: 결승·예선을 제목 토큰이 있는 이벤트로 만든다", () => {
-    const [race, quali, mexico] = parseJolpica(races);
+  it("Jolpica: 결승·예선·연습 주행·스프린트 예선을 제목 토큰이 있는 이벤트로 만든다", () => {
+    const [race, quali, fp1, sq, mexico] = parseJolpica(races);
     expect(race).toMatchObject({
       externalId: "2026-18-race",
       title: "@f1:United States Grand Prix:race",
@@ -44,6 +46,8 @@ describe("F1", () => {
       status: "scheduled",
     });
     expect(quali).toMatchObject({ externalId: "2026-18-quali", title: "@f1:United States Grand Prix:qualifying" });
+    expect(fp1).toMatchObject({ externalId: "2026-18-fp1", title: "@f1:United States Grand Prix:fp1", startAt: "2026-10-23T17:30:00.000Z" });
+    expect(sq).toMatchObject({ externalId: "2026-18-sq", title: "@f1:United States Grand Prix:sprint_qualifying" });
     // 시각이 없으면 날짜만, 시간 미정
     expect(mexico).toMatchObject({ startAt: null, dateOnly: "2026-11-01", status: "time_tbd" });
   });
@@ -72,17 +76,20 @@ describe("F1", () => {
     });
     afterEach(() => db.close());
 
-    it("OpenF1 세션은 2시간 안의 같은 시리즈 이벤트에 연결되고, 다른 세션과는 섞이지 않는다", async () => {
+    it("OpenF1 세션은 2시간 안의 같은 시리즈·같은 세션 이벤트에 연결되고, 다른 세션과는 섞이지 않는다", async () => {
       await upsertMatches(db, f1Id, "jolpica", parseJolpica(races.slice(0, 1)));
       const openf1 = parseOpenF1(
         [
           { session_key: 1, session_name: "Race", date_start: "2026-10-25T20:00:00+00:00", meeting_key: 9, circuit_short_name: "Austin", year: 2026 },
           { session_key: 2, session_name: "Qualifying", date_start: "2026-10-24T21:00:00+00:00", meeting_key: 9, circuit_short_name: "Austin", year: 2026 },
+          // 스프린트 예선이 (출처마다 시각이 달라) 연습 주행에 더 가까워도 연습 주행과 섞이지 않는다
+          { session_key: 4, session_name: "Sprint Qualifying", date_start: "2026-10-23T18:00:00+00:00", meeting_key: 9, circuit_short_name: "Austin", year: 2026 },
           { session_key: 3, session_name: "Practice 1", date_start: "2026-10-23T17:30:00+00:00", meeting_key: 9, circuit_short_name: "Austin", year: 2026 },
+          { session_key: 5, session_name: "Team Photo", date_start: "2026-10-23T16:00:00+00:00", meeting_key: 9, circuit_short_name: "Austin", year: 2026 },
         ],
         [{ meeting_key: 9, meeting_name: "United States Grand Prix" }],
       );
-      expect(openf1).toHaveLength(2); // 연습 주행은 제외
+      expect(openf1).toHaveLength(4); // 세션이 아닌 일정은 제외
       const r = await upsertMatches(db, f1Id, "openf1", openf1);
       expect(r.inserted).toBe(0);
       const rows = await db.query<{ title: string; n: number }>(
@@ -90,9 +97,16 @@ describe("F1", () => {
          group by m.id, m.title order by m.title`,
       );
       expect(rows).toEqual([
+        { title: "@f1:United States Grand Prix:fp1", n: 2 },
         { title: "@f1:United States Grand Prix:qualifying", n: 2 },
         { title: "@f1:United States Grand Prix:race", n: 2 },
+        { title: "@f1:United States Grand Prix:sprint_qualifying", n: 2 },
       ]);
+      // 같은 세션끼리 연결됐는지 (소스 경기 ID 기준)
+      const pairs = await db.query<{ ids: string }>(
+        `select string_agg(external_id, ',' order by source) as ids from match_source_ref group by match_id order by 1`,
+      );
+      expect(pairs.map((p) => p.ids)).toEqual(["2026-18-fp1,3", "2026-18-quali,2", "2026-18-race,1", "2026-18-sq,4"]);
     });
   });
 });

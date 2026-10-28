@@ -52,6 +52,9 @@ export const en = {
     dayMatches: "{date}, {count} matches",
   },
   picker: {
+    f1All: "Whole series (all sessions)",
+    f1Teams: "Teams",
+    f1Drivers: "Drivers",
     title: "Pick teams",
     close: "Close",
     search: "Search teams",
@@ -190,6 +193,7 @@ export const en = {
   },
   results: {
     pole: "Pole",
+    place: "P{pos}",
     win: "W",
     draw: "D",
     loss: "L",
@@ -419,6 +423,10 @@ export const en = {
     race: "Race",
     qualifying: "Qualifying",
     sprint: "Sprint",
+    sprint_qualifying: "Sprint Qualifying",
+    fp1: "Practice 1",
+    fp2: "Practice 2",
+    fp3: "Practice 3",
   },
   auth: {
     captcha: "Please complete the human check and try again.",
