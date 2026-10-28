@@ -28,6 +28,7 @@ export interface Catalog {
   sports: { slug: string; name: string }[];
   competitions: CatalogCompetition[];
   teams: CatalogTeam[];
+  lastSyncAt?: string | null; // 마지막으로 수집이 돈 시각 (갱신할 대회가 없어도 확인한 시각)
 }
 
 export interface ScheduleMatch {
@@ -96,8 +97,10 @@ export async function getCatalog(db: Db, locale: Locale): Promise<Catalog> {
        where not t.needs_review`,
     ),
   ];
+  const [beat] = await db.query<{ ran_at: Date }>("select ran_at from sync_heartbeat where id = 1");
   const collator = new Intl.Collator(INTL_LOCALE[locale]);
   return {
+    lastSyncAt: beat?.ran_at.toISOString() ?? null,
     sports: sports.map((s) => ({ slug: s.slug, name: s.name })),
     competitions: competitions.map((c) => ({
       slug: c.slug,

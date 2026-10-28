@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { visitorId } from "./track";
+import { trackingOff, visitorId } from "./track";
 
 const BEAT_MS = 60_000;
 
@@ -9,6 +9,7 @@ const BEAT_MS = 60_000;
 // 숫자는 사용자가 충분히 많아질 때까지 화면에 보여 주지 않고 관리자 현황에서만 본다.
 export function VisitorBeacon() {
   useEffect(() => {
+    if (trackingOff()) return;
     const id = visitorId();
     const beat = () => {
       if (document.visibilityState !== "visible") return;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { hitRateLimit } from "@/lib/auth/core";
 import { bad, readJson } from "@/lib/auth/http";
+import { isBot } from "@/lib/bots";
 import { getDb } from "@/lib/db";
 import { getStats, isVisitorId, recordVisit } from "@/lib/visitors";
 
@@ -15,7 +16,8 @@ export async function POST(req: Request) {
   if (!body || !isVisitorId(body.id)) return bad("bad_request");
   const db = getDb();
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  const allowed = await hitRateLimit(db, `visit-ip:${ip}`, IP_LIMIT, IP_WINDOW_SEC);
+  // 검색엔진 로봇·자동화 브라우저는 세지 않는다
+  const allowed = !isBot(req.headers.get("user-agent")) && (await hitRateLimit(db, `visit-ip:${ip}`, IP_LIMIT, IP_WINDOW_SEC));
   const stats = allowed ? await recordVisit(db, body.id) : await getStats(db);
   return NextResponse.json(stats, { headers: { "Cache-Control": "private, no-store" } });
 }

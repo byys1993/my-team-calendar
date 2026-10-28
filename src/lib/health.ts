@@ -78,6 +78,12 @@ export async function checkHealth(db: Db, now = new Date()): Promise<HealthIssue
   return issues;
 }
 
+// 마지막으로 수집 스크립트가 돈 시각 (관리자 현황·사이트의 '일정 업데이트' 표시)
+export async function lastSyncRun(db: Db): Promise<Date | null> {
+  const [beat] = await db.query<{ ran_at: Date }>("select ran_at from sync_heartbeat where id = 1");
+  return beat?.ran_at ?? null;
+}
+
 // 수집 스크립트가 돌 때마다 호출한다
 export async function recordSyncHeartbeat(db: Db, now = new Date()): Promise<void> {
   await db.query(

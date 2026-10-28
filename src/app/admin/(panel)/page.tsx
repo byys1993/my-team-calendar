@@ -5,6 +5,8 @@ import { funnel, type FunnelRow } from "@/lib/events";
 import { getIcsStats } from "@/lib/icsStats";
 import { SOURCE_LABEL } from "@/lib/sources";
 import { getStats } from "@/lib/visitors";
+import { lastSyncRun } from "@/lib/health";
+import { TrackingToggle } from "./TrackingToggle";
 
 const when = (d: Date | null) => {
   if (!d) return "—";
@@ -14,27 +16,16 @@ const when = (d: Date | null) => {
 
 export default async function AdminHome() {
   const db = getDb();
-  // 풀러(Supabase)에 한 연결로 여러 조회를 동시에 보내면 응답이 멈추는 일이 있어 하나씩 차례로 조회한다.
-  // 단계별 걸린 시간을 로그(Vercel → Logs)에 남긴다.
-  const started = Date.now();
-  console.log("[admin] start");
-  const step = async <T,>(name: string, run: () => Promise<T>): Promise<T> => {
-    const s = Date.now();
-    const r = await run();
-    console.log(`[admin] ${name} ${Date.now() - s}ms`);
-    return r;
-  };
-  const { competitions, failures, reviewCount } = await step("overview", () => adminOverview(db));
-  const visitors = await step("visitors", () => getStats(db));
-  const ics = await step("ics", () => getIcsStats(db));
-  const notify = await step("users", () =>
-    db.query<{ users: number; on: number }>(
-      `select count(*)::int as users, count(*) filter (where notify_mode <> 'off')::int as "on" from app_user`,
-    ),
+  // 조회는 하나씩 차례로 (한 연결에 동시에 보내면 Supabase 풀러에서 멈춘다)
+  const { competitions, failures, reviewCount } = await adminOverview(db);
+  const visitors = await getStats(db);
+  const ics = await getIcsStats(db);
+  const notify = await db.query<{ users: number; on: number }>(
+    `select count(*)::int as users, count(*) filter (where notify_mode <> 'off')::int as "on" from app_user`,
   );
-  const week = await step("funnel7", () => funnel(db, 7));
-  const month = await step("funnel30", () => funnel(db, 30));
-  console.log(`[admin] total ${Date.now() - started}ms`);
+  const week = await funnel(db, 7);
+  const month = await funnel(db, 30);
+  const lastSync = await lastSyncRun(db);
   // 방문 → 팀 선택 → 구독 창 → 구독 버튼 → 로그인 → 알림 켬 (기간 안에 한 번이라도 한 사람 수)
   const subscribed = (f: FunnelRow) => Math.max(f.events.sub_apple, f.events.sub_google, f.events.sub_copy);
   const steps: [string, (f: FunnelRow) => number][] = [
@@ -59,9 +50,16 @@ export default async function AdminHome() {
       )}
       <section>
         <h2>이용 현황</h2>
-        <p className="muted">사이트에는 보이지 않는 숫자입니다. 사용자가 충분히 늘면 첫 화면에 보여 줄 수 있습니다.</p>
+        <p className="muted">
+          사이트에는 보이지 않는 숫자입니다. 검색엔진 로봇과 집계에서 뺀 브라우저는 세지 않습니다 (2026-10-28 부터 새로 셈).
+        </p>
+        <TrackingToggle />
         <table className="admin-table">
           <tbody>
+            <tr>
+              <td>마지막 수집 실행 (매시 7분 · Cloudflare → GitHub Actions)</td>
+              <td className="num">{when(lastSync)}</td>
+            </tr>
             <tr>
               <td>방문자 (접속 중 · 오늘 · 전체)</td>
               <td className="num">

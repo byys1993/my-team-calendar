@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { hitRateLimit } from "@/lib/auth/core";
 import { bad, readJson } from "@/lib/auth/http";
+import { isBot } from "@/lib/bots";
 import { getDb } from "@/lib/db";
 import { isEventName, recordEvent } from "@/lib/events";
 import { isVisitorId } from "@/lib/visitors";
@@ -11,6 +12,8 @@ export async function POST(req: Request) {
   if (!body || !isVisitorId(body.id) || !isEventName(body.name)) return bad("bad_request");
   const db = getDb();
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (await hitRateLimit(db, `event-ip:${ip}`, 300, 600)) await recordEvent(db, body.id, body.name);
+  if (!isBot(req.headers.get("user-agent")) && (await hitRateLimit(db, `event-ip:${ip}`, 300, 600))) {
+    await recordEvent(db, body.id, body.name);
+  }
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "private, no-store" } });
 }

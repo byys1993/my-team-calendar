@@ -249,9 +249,11 @@ export function CalendarApp({
   // 모든 대회 중 가장 최근에 일정을 받은 시각
   const lastUpdate = useMemo(() => {
     const times = catalog.competitions.map((c) => (c.lastSuccessAt ? new Date(c.lastSuccessAt).getTime() : 0));
+    // 수집이 돌았지만 바뀐 일정이 없던 경우도 '확인한 시각'으로 본다
+    if (catalog.lastSyncAt) times.push(new Date(catalog.lastSyncAt).getTime());
     const max = Math.max(0, ...times);
     return max ? new Date(max) : null;
-  }, [catalog.competitions]);
+  }, [catalog.competitions, catalog.lastSyncAt]);
   const dayItems = byDay.get(selectedKey) ?? [];
 
   return (

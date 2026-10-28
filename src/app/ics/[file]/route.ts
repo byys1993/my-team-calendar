@@ -1,4 +1,5 @@
 import { isLocale, type Locale } from "@/i18n/config";
+import { isBot } from "@/lib/bots";
 import { getDb } from "@/lib/db";
 import { buildIcs, parseTeamList } from "@/lib/ics";
 import { recordIcsFetch } from "@/lib/icsStats";
@@ -17,8 +18,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ file: st
   // 차례로 조회 (한 연결에 동시에 보내면 Supabase 풀러에서 멈춘다)
   const matches = await getMatchesForTeams(db, slugs, locale);
   const catalog = await getCatalog(db, locale);
-  // 구독 규모 세기 (실패해도 캘린더는 내려준다)
-  await recordIcsFetch(db, slugs, locale).catch(() => {});
+  // 구독 규모 세기: 캘린더 앱만 (명령줄 도구·로봇 제외). 실패해도 캘린더는 내려준다
+  if (!isBot(req.headers.get("user-agent"))) await recordIcsFetch(db, slugs, locale).catch(() => {});
   const body = buildIcs({ matches, catalog, locale, siteUrl: process.env.SITE_URL ?? url.origin });
   return new Response(body, {
     headers: {
