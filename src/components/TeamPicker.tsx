@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/i18n/client";
-import { f1Pick } from "@/lib/f1picks";
+import { F1_SERIES, f1Pick } from "@/lib/f1picks";
 import { MAX_TEAMS, type Catalog, type CatalogTeam } from "@/lib/schedule";
 import { PALETTE, teamInk } from "@/lib/palette";
 import type { Selection } from "./selection";
@@ -29,8 +29,10 @@ export function TeamPicker({ catalog, selections, onAdd, onRemove, onClear, onCl
   }, []);
 
   const q = query.trim().toLowerCase();
-  const teams = catalog.teams.filter((team) =>
-    q ? team.name.toLowerCase().includes(q) || team.short.toLowerCase().includes(q) : team.sport === sport,
+  const teams = catalog.teams.filter(
+    (team) =>
+      (team.slug !== F1_SERIES || selected.has(team.slug)) &&
+      (q ? team.name.toLowerCase().includes(q) || team.short.toLowerCase().includes(q) : team.sport === sport),
   );
   const groups = catalog.competitions
     .map((c) => ({ comp: c, teams: teams.filter((team) => team.competition === c.slug) }))
@@ -86,7 +88,7 @@ export function TeamPicker({ catalog, selections, onAdd, onRemove, onClear, onCl
       <div className="picker-body">
         {groups.length === 0 && <p className="muted">{t.picker.noResults}</p>}
         {groups.map(({ comp, teams }) => {
-          // F1 은 시리즈 전체 / 팀 / 드라이버로 나눠 보여 준다
+          // F1 은 팀 / 드라이버로 나눠 보여 준다 (시리즈 전체는 이미 고른 경우에만, 뺄 수 있게)
           const parts =
             comp.slug === "f1"
               ? [

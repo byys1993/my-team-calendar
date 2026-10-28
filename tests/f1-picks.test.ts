@@ -8,7 +8,7 @@ import { createMemoryDb } from "@/lib/db/pglite";
 import { migrate } from "@/lib/db/migrate";
 import { seed } from "@/lib/db/seed";
 import { F1_PICKS, pickResults } from "@/lib/f1picks";
-import { getTeamPage } from "@/lib/pages";
+import { getLeaguePage, getTeamPage, sitemapEntries } from "@/lib/pages";
 import { getMatchesForTeams } from "@/lib/schedule";
 
 const row = (pos: number, driverId: string, team: string): Podium => ({ pos, driverId, code: null, name: driverId, team });
@@ -84,6 +84,14 @@ describe("F1 팀·드라이버 고르기", () => {
       expect(await getMatchesForTeams(db, ["f1"], "ko")).toHaveLength(3);
       expect((await getMatchesForTeams(db, ["f1"], "ko"))[2].mine).toBeUndefined();
       expect(await getMatchesForTeams(db, ["arsenal"], "ko")).toEqual([]);
+    });
+
+    it("시리즈 전체(f1)는 리그 페이지 팀 목록·사이트맵에서 빼고, 페이지 자체는 그대로", async () => {
+      expect((await sitemapEntries(db)).teams).not.toContain("f1");
+      expect((await sitemapEntries(db)).teams).toContain("f1-hamilton");
+      expect((await getLeaguePage(db, "f1", "ko"))?.teams.map((t) => t.slug)).not.toContain("f1");
+      expect((await getTeamPage(db, "f1-hamilton", "ko"))?.leagueTeams.map((t) => t.slug)).not.toContain("f1");
+      expect((await getTeamPage(db, "f1", "ko"))?.team.slug).toBe("f1");
     });
 
     it("드라이버 페이지: 드라이버 순위표에서 순위를 찾는다", async () => {

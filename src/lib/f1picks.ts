@@ -2,6 +2,9 @@
 // team: Jolpica 결과의 컨스트럭터 이름(팀명이 바뀌면 옛 이름도), driver: Jolpica driverId
 import type { Podium } from "@/collector/types";
 
+// 모든 F1 세션이 묶여 저장되는 시리즈 팀. 새로 고를 수는 없다 (이미 고른 사람은 그대로 받고, 팀 고르기 창에서 뺄 수만 있다)
+export const F1_SERIES = "f1";
+
 export interface F1Pick {
   kind: "team" | "driver";
   match: string[];

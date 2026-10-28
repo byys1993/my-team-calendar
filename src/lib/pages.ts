@@ -1,6 +1,6 @@
 import type { Locale } from "@/i18n/config";
 import type { Db } from "@/lib/db";
-import { f1Pick } from "@/lib/f1picks";
+import { F1_SERIES, f1Pick } from "@/lib/f1picks";
 import {
   getCatalog,
   queryMatches,
@@ -74,7 +74,7 @@ export async function getTeamPage(db: Db, slug: string, locale: Locale, now = ne
       if (row) standing = { rank: row.rank, group: g.name, size: g.rows.length, stats: row.stats };
     }
   }
-  const leagueTeams = catalog.teams.filter((x) => x.competition === team.competition && x.slug !== slug);
+  const leagueTeams = catalog.teams.filter((x) => x.competition === team.competition && x.slug !== slug && x.slug !== F1_SERIES);
   return { team, competition, upcoming, recent, standing, leagueTeams };
 }
 
@@ -230,13 +230,13 @@ export async function getLeaguePage(
     week: matches,
     nav,
     tables: await standingTables(db, slug),
-    teams: catalog.teams.filter((t) => t.competition === slug),
+    teams: catalog.teams.filter((t) => t.competition === slug && t.slug !== F1_SERIES),
     teamName: Object.fromEntries(catalog.teams.map((t) => [t.slug, t.name])),
   };
 }
 
-// 사이트맵용: 팀 선택 목록에 나오는 모든 팀과 모든 대회
+// 사이트맵용: 팀 선택 목록에 나오는 모든 팀(F1 시리즈 제외)과 모든 대회
 export async function sitemapEntries(db: Db): Promise<{ teams: string[]; leagues: string[] }> {
   const catalog = await getCatalog(db, "ko");
-  return { teams: catalog.teams.map((t) => t.slug), leagues: catalog.competitions.map((c) => c.slug) };
+  return { teams: catalog.teams.filter((t) => t.slug !== F1_SERIES).map((t) => t.slug), leagues: catalog.competitions.map((c) => c.slug) };
 }
