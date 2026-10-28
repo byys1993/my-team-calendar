@@ -12,13 +12,15 @@ export const REPORT_HOUR_KST = 9;
 const steps: [string, (f: FunnelRow) => number][] = [
   ["방문", (f) => f.visitors],
   ["팀 고름", (f) => f.events.team_pick],
+  ["내 팀 공유", (f) => f.events.share],
   ["캘린더 구독 창 열기", (f) => f.events.sub_open],
-  ["캘린더 구독 버튼", (f) => Math.max(f.events.sub_apple, f.events.sub_google, f.events.sub_copy)],
+  ["캘린더 구독 버튼", (f) => subscribed(f)],
   ["로그인", (f) => f.events.login],
   ["알림 메일 켬", (f) => f.events.notify_on],
   ["문의 보냄", (f) => f.events.contact_sent],
 ];
 
+const subscribed = (f: FunnelRow) => Math.max(f.events.sub_apple, f.events.sub_google, f.events.sub_copy);
 const pct = (n: number, base: number) => (base ? `${Math.round((n / base) * 100)}%` : "-");
 const delta = (now: number, before: number) => (now === before ? "±0" : now > before ? `+${now - before}` : `${now - before}`);
 
@@ -66,7 +68,7 @@ export async function buildWeeklyReport(db: Db, siteUrl: string, now = new Date(
   }
   lines.push("", "■ 지난 30일");
   lines.push(
-    `  방문 ${month.visitors}명 → 팀 고름 ${month.events.team_pick}명 → 캘린더 구독 ${steps[3][1](month)}명 → 알림 켬 ${month.events.notify_on}명`,
+    `  방문 ${month.visitors}명 → 팀 고름 ${month.events.team_pick}명 → 캘린더 구독 ${subscribed(month)}명 → 알림 켬 ${month.events.notify_on}명`,
   );
   lines.push("", "■ 지금 규모");
   lines.push(`  캘린더 구독 주소: 최근 7일 ${ics.active7d}개 (전체 ${ics.total}개)`);
@@ -83,7 +85,7 @@ export async function buildWeeklyReport(db: Db, siteUrl: string, now = new Date(
     "",
     "이 메일 내용을 그대로 Claude 에게 보여 주면, 숫자를 보고 다음 개선점을 같이 정할 수 있어요.",
   );
-  const subject = `[마이팀 캘린더] 주간 리포트 · 방문 ${week.visitors}명 · 팀 선택 ${week.events.team_pick}명 · 구독 ${steps[3][1](week)}명`;
+  const subject = `[마이팀 캘린더] 주간 리포트 · 방문 ${week.visitors}명 · 팀 선택 ${week.events.team_pick}명 · 구독 ${subscribed(week)}명`;
   return { subject, text: lines.join("\n") };
 }
 

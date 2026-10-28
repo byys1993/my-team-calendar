@@ -93,6 +93,18 @@ export const de: Messages = {
     widgetIphone: "iPhone: Home-Bildschirm lange drücken, oben links „+“ → das Widget „Kalender“ hinzufügen.",
     note: "Die URL ändert sich, wenn du Teams änderst – bitte erneut hinzufügen. Kalender-Apps aktualisieren evtl. erst nach einigen Stunden.",
   },
+  share: {
+    button: "Teilen",
+    copied: "Link kopiert",
+    text: "Verfolge mit mir die Spiele von {teams} im My Team Calendar",
+    copyPrompt: "Diesen Link kopieren und senden",
+  },
+  offseason: {
+    title: "Saison beendet",
+    next: "Die nächste Saison beginnt meist im {month}. Die Spiele erscheinen hier automatisch.",
+    nextGeneric: "Neue Spiele erscheinen hier automatisch, sobald sie feststehen.",
+    last: "Letztes Spiel",
+  },
   results: {
     pole: "Pole",
     win: "S",

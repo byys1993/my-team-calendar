@@ -92,6 +92,18 @@ export const ko: Messages = {
     widgetIphone: "iPhone: 홈 화면을 길게 눌러 왼쪽 위 '+' → '캘린더' 위젯을 추가하세요.",
     note: "팀을 바꾸면 주소도 바뀌니 다시 추가해 주세요. 캘린더 앱이 새로 받아오는 데 몇 시간 걸릴 수 있습니다.",
   },
+  share: {
+    button: "공유",
+    copied: "링크를 복사했어요",
+    text: "{teams} 경기 일정, 마이팀 캘린더에서 같이 봐요",
+    copyPrompt: "이 링크를 복사해 보내 주세요",
+  },
+  offseason: {
+    title: "시즌 종료",
+    next: "다음 시즌은 보통 {month}에 시작해요. 일정이 나오면 자동으로 추가됩니다.",
+    nextGeneric: "다음 일정이 발표되면 자동으로 추가됩니다.",
+    last: "마지막 경기",
+  },
   results: {
     pole: "폴 포지션",
     win: "승",

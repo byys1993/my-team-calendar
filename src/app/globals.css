@@ -1694,3 +1694,20 @@ a {
     margin-inline-start: auto;
   }
 }
+
+/* 비시즌 카드 */
+.offseason {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.offseason-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.offseason-next {
+  font-size: 12px;
+  line-height: 1.4;
+}

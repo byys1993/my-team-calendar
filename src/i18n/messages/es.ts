@@ -93,6 +93,18 @@ export const es: Messages = {
     widgetIphone: "iPhone: mantén pulsada la pantalla de inicio, toca '+' arriba a la izquierda → añade el widget 'Calendario'.",
     note: "La URL cambia si cambias de equipos; vuelve a añadirla. Las apps de calendario pueden tardar unas horas en actualizarse.",
   },
+  share: {
+    button: "Compartir",
+    copied: "Enlace copiado",
+    text: "Sigue conmigo los partidos de {teams} en My Team Calendar",
+    copyPrompt: "Copia este enlace y envíalo",
+  },
+  offseason: {
+    title: "Temporada terminada",
+    next: "La próxima temporada suele empezar en {month}. Los partidos aparecerán aquí automáticamente.",
+    nextGeneric: "Los nuevos partidos aparecerán aquí automáticamente cuando se anuncien.",
+    last: "Último partido",
+  },
   results: {
     pole: "Pole",
     win: "V",

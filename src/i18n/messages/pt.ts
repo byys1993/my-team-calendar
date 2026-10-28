@@ -93,6 +93,18 @@ export const pt: Messages = {
     widgetIphone: "iPhone: mantenha pressionada a tela inicial, toque em '+' no canto superior esquerdo → adicione o widget 'Calendário'.",
     note: "A URL muda quando você troca de times; adicione de novo. Os apps de calendário podem levar algumas horas para atualizar.",
   },
+  share: {
+    button: "Compartilhar",
+    copied: "Link copiado",
+    text: "Acompanhe comigo os jogos de {teams} no My Team Calendar",
+    copyPrompt: "Copie este link e envie",
+  },
+  offseason: {
+    title: "Temporada encerrada",
+    next: "A próxima temporada costuma começar em {month}. Os jogos aparecerão aqui automaticamente.",
+    nextGeneric: "Os novos jogos aparecerão aqui automaticamente quando forem anunciados.",
+    last: "Último jogo",
+  },
   results: {
     pole: "Pole",
     win: "V",

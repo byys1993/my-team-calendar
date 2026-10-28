@@ -93,6 +93,18 @@ export const en = {
     widgetIphone: "iPhone: long-press the Home Screen, tap '+' at the top left → add the 'Calendar' widget.",
     note: "The URL changes when you change teams, so add it again. Calendar apps may take a few hours to refresh.",
   },
+  share: {
+    button: "Share",
+    copied: "Link copied",
+    text: "Follow {teams} fixtures with me on My Team Calendar",
+    copyPrompt: "Copy this link and send it",
+  },
+  offseason: {
+    title: "Season over",
+    next: "The next season usually starts in {month}. Fixtures will appear here automatically.",
+    nextGeneric: "New fixtures will appear here automatically once announced.",
+    last: "Last match",
+  },
   results: {
     pole: "Pole",
     win: "W",

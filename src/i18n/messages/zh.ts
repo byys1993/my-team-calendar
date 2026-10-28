@@ -92,6 +92,18 @@ export const zh: Messages = {
     widgetIphone: "iPhone：长按主屏幕，点左上角“+”→ 添加“日历”小组件。",
     note: "更换球队后地址会改变，请重新添加。日历应用刷新可能需要几个小时。",
   },
+  share: {
+    button: "分享",
+    copied: "链接已复制",
+    text: "一起在我的球队日历关注{teams}的赛程",
+    copyPrompt: "请复制此链接发送",
+  },
+  offseason: {
+    title: "赛季结束",
+    next: "下赛季通常在{month}开始，赛程公布后会自动添加。",
+    nextGeneric: "新赛程公布后会自动添加。",
+    last: "上一场",
+  },
   results: {
     pole: "杆位",
     win: "胜",

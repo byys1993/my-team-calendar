@@ -21,6 +21,8 @@ import { useSelection } from "./selection";
 import { TimeZoneSelect } from "./TimeZoneSelect";
 import { VisitorBeacon } from "./VisitorStats";
 import { CalendarSubscribe } from "./CalendarSubscribe";
+import { OffSeason } from "./OffSeason";
+import { ShareButton } from "./ShareButton";
 import { SpoilerProvider, SpoilerToggle } from "./spoiler";
 import { RecordsView } from "./RecordsView";
 import { ContactButton } from "./ContactForm";
@@ -146,13 +148,14 @@ export function CalendarApp({
     setSelectedKey(toDateKey(d, browserTimeZone()));
   }, []);
 
-  // 팀 페이지의 '이 팀을 추가' 버튼: /?add=팀 으로 오면 그 팀을 내 팀에 넣고 주소에서 지운다
+  // 팀 페이지의 '이 팀을 추가' 버튼(/?add=팀)이나 공유 링크(/?add=팀,팀)로 오면 그 팀들을 내 팀에 넣고 주소에서 지운다
   const addFromLink = useRef(typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("add") : null);
   useEffect(() => {
-    const slug = addFromLink.current;
-    if (!loaded || !slug) return;
-    if (teamsBySlug.has(slug)) {
-      add(slug);
+    const list = addFromLink.current;
+    if (!loaded || !list) return;
+    const slugs = list.split(",").filter((s) => teamsBySlug.has(s));
+    for (const slug of slugs) add(slug);
+    if (slugs.length) {
       track("link_add");
       track("team_pick");
     }
@@ -222,6 +225,16 @@ export function CalendarApp({
     }
     return result;
   }, [matches, selections, nowMs, display]);
+
+  // 예정 경기가 없는 팀(비시즌·탈락)의 마지막으로 끝난 경기
+  const lastByTeam = useMemo(() => {
+    const result = new Map<string, ScheduleMatch>();
+    for (const m of matches) {
+      if (m.homeScore == null) continue;
+      for (const slug of [m.home, m.away]) if (slug) result.set(slug, m); // 시간순이라 마지막 것이 남는다
+    }
+    return result;
+  }, [matches]);
 
   // 다음 경기 카드: 켜 둔 팀의 임박한 경기부터, 꺼 둔 팀은 그 뒤, 예정 경기가 없는 팀은 맨 뒤 (같으면 고른 순서)
   const cardOrder = useMemo(() => {
@@ -334,6 +347,7 @@ export function CalendarApp({
           </span>
         ))}
         <CalendarSubscribe slugs={selections.filter((s) => s.enabled).map((s) => s.slug)} />
+        <ShareButton slugs={selections.map((s) => s.slug)} names={selections.map((s) => teamShort(s.slug))} />
         {selections.length > 0 && <SpoilerToggle />}
       </section>
 
@@ -385,8 +399,15 @@ export function CalendarApp({
                       </div>
                     )}
                   </>
+                ) : loading ? (
+                  <div className="muted">{t.app.loading}</div>
                 ) : (
-                  <div className="muted">{loading ? t.app.loading : t.app.noNext}</div>
+                  <OffSeason
+                    team={s.slug}
+                    last={lastByTeam.get(s.slug)}
+                    competition={teamsBySlug.get(s.slug)?.competition ?? null}
+                    opponentName={teamShort}
+                  />
                 )}
               </article>
             );

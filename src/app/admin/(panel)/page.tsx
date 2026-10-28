@@ -31,7 +31,8 @@ export default async function AdminHome() {
   const steps: [string, (f: FunnelRow) => number][] = [
     ["방문", (f) => f.visitors],
     ["팀 고름", (f) => f.events.team_pick],
-    ["  └ 팀 페이지에서 추가", (f) => f.events.link_add],
+    ["  └ 팀 페이지·공유 링크로 추가", (f) => f.events.link_add],
+    ["내 팀 공유 버튼", (f) => f.events.share],
     ["캘린더 구독 창 열기", (f) => f.events.sub_open],
     ["캘린더 구독 버튼 누름", subscribed],
     ["로그인", (f) => f.events.login],
