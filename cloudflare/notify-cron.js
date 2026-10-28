@@ -37,7 +37,10 @@ async function sync(env) {
 
 export default {
   async scheduled(event, env) {
-    if (event.cron === "7 * * * *") await sync(env);
+    // 트리거 문자열은 대시보드 표기와 다를 수 있어 예약 시각의 '분'으로 고른다 (10분마다 실행은 7분에 오지 않는다)
+    const minute = new Date(event.scheduledTime).getUTCMinutes();
+    console.log("cron", JSON.stringify(event.cron), "minute", minute);
+    if (minute === 7) await sync(env);
     else await notify(env);
   },
   // 주소를 브라우저로 열었을 때 오류 대신 안내만 보여 준다
