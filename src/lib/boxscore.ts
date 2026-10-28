@@ -1,3 +1,4 @@
+import type { F1Result } from "@/lib/boxscoreF1";
 // 경기 기록지(박스스코어): 출처마다 다른 응답을 화면이 그대로 그릴 수 있는 한 가지 모양으로 바꾼다.
 // 화면에서도 쓰므로 DB·서버 코드를 가져오지 않는다 (저장·조회는 lib/boxscoreStore.ts).
 
@@ -23,6 +24,7 @@ export const SOCCER_BOX_COMPETITIONS = new Set([
 export const KLEAGUE_BOX_COMPETITIONS = new Set(["k-league-1", "k-league-2"]);
 export const LOL_BOX_COMPETITIONS = new Set(["lck", "lol-first-stand", "msi", "worlds"]);
 export const BOX_COMPETITIONS = new Set([
+  "f1",
   "nba",
   "nfl",
   "mlb",
@@ -71,7 +73,7 @@ export interface BoxSet {
   away: BoxRow[];
 }
 export interface BoxScore {
-  source: "espn" | "mlb" | "nhl" | "kbo" | "kbl" | "kleague" | "lolesports";
+  source: "espn" | "mlb" | "nhl" | "kbo" | "kbl" | "kleague" | "lolesports" | "jolpica";
   line: BoxLine | null;
   stats: { key: string; away: string; home: string }[]; // key 가 번역 목록에 없으면 그대로(약어) 보인다
   away: BoxGroup[];
@@ -81,6 +83,7 @@ export interface BoxScore {
   info?: { crowd?: string; duration?: string };
   ref?: string; // 축구: 찾아 둔 ESPN 경기 ID (다시 받을 때 또 찾지 않게)
   sets?: BoxSet[]; // LoL 세트별 기록
+  f1?: F1Result; // F1 순위표
 }
 
 type Side = "home" | "away";

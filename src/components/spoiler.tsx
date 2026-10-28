@@ -73,9 +73,12 @@ export function PodiumResult({ match }: { match: ScheduleMatch }) {
   const name = (p: (typeof podium)[number]) => f1Driver(p.driverId, p.name, locale);
   const isQuali = match.title?.endsWith(":qualifying");
   return (
-    <span className="podium">
-      {isQuali ? `${m.results.pole} ${name(podium[0])}` : podium.map((p) => `${MEDAL[p.pos - 1] ?? `${p.pos}.`} ${name(p)}`).join("  ")}
-    </span>
+    <>
+      <span className="podium">
+        {isQuali ? `${m.results.pole} ${name(podium[0])}` : podium.map((p) => `${MEDAL[p.pos - 1] ?? `${p.pos}.`} ${name(p)}`).join("  ")}
+      </span>
+      <BoxScoreButton match={match} team="f1" />
+    </>
   );
 }
 

@@ -120,6 +120,15 @@ export const ko: Messages = {
     pen: "PK",
     set: "{n}세트",
     won: "{team} 승",
+    f1: {
+      pos: "순위",
+      driver: "드라이버",
+      grid: "출발",
+      laps: "랩",
+      time: "기록",
+      pts: "포인트",
+      fastestLap: "패스티스트 랩 {name} {t}",
+    },
     groups: {
       players: "선수 기록",
       passing: "패싱",

@@ -120,6 +120,15 @@ export const ja: Messages = {
     pen: "PK",
     set: "第{n}ゲーム",
     won: "{team} 勝利",
+    f1: {
+      pos: "順位",
+      driver: "ドライバー",
+      grid: "グリッド",
+      laps: "周回",
+      time: "タイム",
+      pts: "ポイント",
+      fastestLap: "ファステストラップ {name} {t}",
+    },
     groups: {
       players: "選手記録",
       passing: "パス",

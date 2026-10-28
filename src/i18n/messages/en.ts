@@ -121,6 +121,15 @@ export const en = {
     pen: "pen",
     set: "Game {n}",
     won: "{team} win",
+    f1: {
+      pos: "Pos",
+      driver: "Driver",
+      grid: "Grid",
+      laps: "Laps",
+      time: "Time",
+      pts: "Pts",
+      fastestLap: "Fastest lap {name} {t}",
+    },
     groups: {
       players: "Players",
       passing: "Passing",

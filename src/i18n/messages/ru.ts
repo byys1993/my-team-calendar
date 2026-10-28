@@ -121,6 +121,15 @@ export const ru: Messages = {
     pen: "пен.",
     set: "Карта {n}",
     won: "Победа {team}",
+    f1: {
+      pos: "Поз.",
+      driver: "Пилот",
+      grid: "Старт",
+      laps: "Круги",
+      time: "Время",
+      pts: "Очки",
+      fastestLap: "Лучший круг {name} {t}",
+    },
     groups: {
       players: "Игроки",
       passing: "Пасы",

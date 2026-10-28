@@ -121,6 +121,15 @@ export const fr: Messages = {
     pen: "pen.",
     set: "Partie {n}",
     won: "Victoire {team}",
+    f1: {
+      pos: "Pos.",
+      driver: "Pilote",
+      grid: "Grille",
+      laps: "Tours",
+      time: "Temps",
+      pts: "Pts",
+      fastestLap: "Meilleur tour {name} {t}",
+    },
     groups: {
       players: "Joueurs",
       passing: "Passes",

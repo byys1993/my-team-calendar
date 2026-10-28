@@ -32,6 +32,7 @@ import {
   type LolEventDetails,
   type LolWindow,
 } from "@/lib/boxscoreKr";
+import { parseF1, parseF1Ref, type F1Kind, type JolpicaRaceResult } from "@/lib/boxscoreF1";
 
 // 기록지는 누가 처음 열어 볼 때 출처에서 받아 저장한다 (전부 미리 받으면 출처에 부담).
 // 경기 직후에는 기록이 고쳐질 수 있어, 경기 시작 12시간 안에 받은 것은 30분 지나면 다시 받는다.
@@ -51,16 +52,17 @@ export async function getBoxScore(db: Db, matchId: string, opts: { fetcher?: Fet
     home_team_id: number | null;
     away_team_id: number | null;
     home_score: number | null;
+    podium: unknown;
     data: BoxScore | null;
     fetched_at: Date | string | null;
   }>(
-    `select c.slug as competition, m.start_at, m.home_team_id, m.away_team_id, m.home_score, b.data, b.fetched_at
+    `select c.slug as competition, m.start_at, m.home_team_id, m.away_team_id, m.home_score, m.podium, b.data, b.fetched_at
      from match m join competition c on c.id = m.competition_id
      left join boxscore b on b.match_id = m.id
      where m.id = $1`,
     [matchId],
   );
-  if (!row || row.home_score == null || !BOX_COMPETITIONS.has(row.competition)) return null;
+  if (!row || (row.home_score == null && !row.podium) || !BOX_COMPETITIONS.has(row.competition)) return null;
 
   if (row.data && row.fetched_at) {
     const fetched = new Date(row.fetched_at).getTime();
@@ -142,6 +144,8 @@ async function fetchBox(fetcher: Fetcher, g: Game): Promise<BoxScore | null> {
   if (g.competition === "kbl" && kbl) return fetchKbl(fetcher, kbl);
   const kleague = g.ref("kleague");
   if (KLEAGUE_BOX_COMPETITIONS.has(g.competition) && kleague) return fetchKleague(fetcher, kleague, g.competition);
+  const f1 = parseF1Ref(g.ref("jolpica") ?? "");
+  if (g.competition === "f1") return f1 ? fetchF1(fetcher, f1) : null;
   const lol = g.ref("lolesports");
   if (LOL_BOX_COMPETITIONS.has(g.competition) && lol) return fetchLol(fetcher, lol, g.startAt, g.now);
 
@@ -313,4 +317,14 @@ async function fetchLol(fetcher: Fetcher, matchId: string, startAt: string | nul
   }
   if (!windows.size) return null;
   return parseLol(event, windows);
+}
+
+const F1_PATH: Record<F1Kind, string> = { race: "results", sprint: "sprint", quali: "qualifying" };
+async function fetchF1(fetcher: Fetcher, r: { season: string; round: string; kind: F1Kind }) {
+  const json = await getJson<{ MRData: { RaceTable: { Races: JolpicaRaceResult[] } } }>(
+    fetcher,
+    `https://api.jolpi.ca/ergast/f1/${r.season}/${r.round}/${F1_PATH[r.kind]}/?limit=100`,
+  );
+  const race = json.MRData.RaceTable.Races[0];
+  return race ? parseF1(r.kind, race) : null;
 }

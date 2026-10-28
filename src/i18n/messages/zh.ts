@@ -120,6 +120,15 @@ export const zh: Messages = {
     pen: "点球",
     set: "第{n}局",
     won: "{team} 胜",
+    f1: {
+      pos: "名次",
+      driver: "车手",
+      grid: "发车",
+      laps: "圈数",
+      time: "成绩",
+      pts: "积分",
+      fastestLap: "最快圈 {name} {t}",
+    },
     groups: {
       players: "球员数据",
       passing: "传球",

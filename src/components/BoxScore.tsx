@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/i18n/client";
-import { formatLabel } from "@/i18n/format";
+import { formatLabel, formatTitle } from "@/i18n/format";
 import { AWAY_FIRST_COMPETITIONS, BOX_COMPETITIONS, type BoxEvent, type BoxGroup, type BoxScore } from "@/lib/boxscore";
 import { LOL_PLAYER_LABELS } from "@/lib/boxscoreKr";
+import type { F1Result } from "@/lib/boxscoreF1";
+import { f1Driver, f1Team } from "@/lib/f1names";
 import type { ScheduleMatch } from "@/lib/schedule";
 import { track } from "./track";
 
@@ -18,15 +20,16 @@ const SOURCE_NAME: Record<BoxScore["source"], string> = {
   kbl: "KBL",
   kleague: "K League",
   lolesports: "LoL Esports",
+  jolpica: "Jolpica F1",
 };
 type Side = "home" | "away";
 type TeamStat = BoxScore["stats"][number];
 
-// 끝난 경기 결과 옆 '기록' 버튼 (미국 4대 리그·KBO·KBL·축구·K리그·LoL) → 기록지 창 (처음 열 때 받아 온다)
+// 끝난 경기 결과 옆 '기록' 버튼 (미국 4대 리그·KBO·KBL·축구·K리그·LoL·F1) → 기록지 창 (처음 열 때 받아 온다)
 export function BoxScoreButton({ match, team }: { match: ScheduleMatch; team: string }) {
   const { m } = useI18n();
   const [open, setOpen] = useState(false);
-  if (!BOX_COMPETITIONS.has(match.competition) || match.homeScore == null) return null;
+  if (!BOX_COMPETITIONS.has(match.competition) || (match.homeScore == null && !match.podium?.length)) return null;
   return (
     <>
       <button
@@ -45,7 +48,7 @@ export function BoxScoreButton({ match, team }: { match: ScheduleMatch; team: st
 }
 
 function BoxScoreDialog({ match, team, onClose }: { match: ScheduleMatch; team: string; onClose(): void }) {
-  const { m } = useI18n();
+  const { m, locale } = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
   const [box, setBox] = useState<BoxScore | null>(null);
   const [failed, setFailed] = useState(false);
@@ -76,7 +79,9 @@ function BoxScoreDialog({ match, team, onClose }: { match: ScheduleMatch; team: 
     <dialog ref={ref} className="picker auth-dialog box-dialog" onClose={onClose} aria-labelledby="box-title">
       <div className="picker-head">
         <h2 id="box-title">
-          {name[order[0]]} {score[order[0]]} : {score[order[1]]} {name[order[1]]}
+          {match.competition === "f1"
+            ? (formatTitle(match.title, m, locale) ?? match.title)
+            : `${name[order[0]]} ${score[order[0]]} : ${score[order[1]]} ${name[order[1]]}`}
         </h2>
         <button type="button" className="icon-btn" onClick={() => ref.current?.close()} aria-label={m.picker.close}>
           ✕
@@ -85,7 +90,13 @@ function BoxScoreDialog({ match, team, onClose }: { match: ScheduleMatch; team: 
       <div className="picker-body box-body">
         {!box && !failed && <p className="muted">{m.box.loading}</p>}
         {failed && <p className="muted">{m.box.error}</p>}
-        {box && (
+        {box?.f1 && (
+          <>
+            <F1Table result={box.f1} locale={locale} />
+            <p className="muted small">{m.box.source.replace("{name}", SOURCE_NAME[box.source])}</p>
+          </>
+        )}
+        {box && !box.f1 && (
           <>
             {box.line && (
               <div className="box-scroll">
@@ -268,6 +279,52 @@ function PlayerTable({ group, title, total }: { group: BoxGroup; title?: string;
                 ))}
               </tr>
             )}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+// F1: 결승·스프린트 전체 순위, 예선 Q1~Q3. 드라이버·팀 이름은 화면 언어로
+function F1Table({ result, locale }: { result: F1Result; locale: string }) {
+  const { m } = useI18n();
+  const f = m.box.f1;
+  const quali = result.kind === "quali";
+  const labels = quali ? ["Q1", "Q2", "Q3"] : [f.grid, f.laps, f.time, f.pts];
+  const fl = result.fastestLap;
+  return (
+    <>
+      {fl && (
+        <p className="muted small box-info">
+          ⏱ {f.fastestLap.replace("{name}", f1Driver(fl.driverId, fl.name, locale)).replace("{t}", fl.time)}
+        </p>
+      )}
+      <div className="box-scroll">
+        <table className="box-table box-players box-f1">
+          <thead>
+            <tr>
+              <th>{f.pos}</th>
+              <th>{f.driver}</th>
+              {labels.map((l) => (
+                <th key={l}>{l}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {result.rows.map((r) => (
+              <tr key={r.driverId}>
+                <td>{r.pos}</td>
+                <th>
+                  {f1Driver(r.driverId, r.name, locale)}
+                  {r.fastest && " ⏱"}
+                  <small className="box-note"> {f1Team(r.team, locale)}</small>
+                </th>
+                {(quali ? (r.q ?? []) : [r.grid ?? "", r.laps ?? "", r.time ?? "", r.pts && r.pts !== "0" ? r.pts : ""]).map((v, j) => (
+                  <td key={j}>{v}</td>
+                ))}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

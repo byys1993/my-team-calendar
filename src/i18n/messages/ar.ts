@@ -120,6 +120,15 @@ export const ar: Messages = {
     pen: "جزاء",
     set: "المباراة {n}",
     won: "فوز {team}",
+    f1: {
+      pos: "المركز",
+      driver: "السائق",
+      grid: "الانطلاق",
+      laps: "اللفات",
+      time: "الزمن",
+      pts: "النقاط",
+      fastestLap: "أسرع لفة {name} {t}",
+    },
     groups: {
       players: "اللاعبون",
       passing: "التمرير",
