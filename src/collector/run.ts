@@ -24,6 +24,7 @@ export interface SyncOutcome {
   inserted?: number;
   updated?: number;
   skipped?: number;
+  removed?: number;
   unmapped?: string[];
   errors: string[];
 }
@@ -82,7 +83,13 @@ export async function syncCompetition(
       if (mode === "full" && c.type !== "cup" && matches.length === 0) {
         throw new Error("경기 0건 (응답 이상으로 간주)");
       }
-      const r = await db.tx((t) => upsertMatches(t, c.id, ref.source, matches, { autoCreateTeams: !isFallback }));
+      const r = await db.tx((t) =>
+        upsertMatches(t, c.id, ref.source, matches, {
+          autoCreateTeams: !isFallback,
+          coverage: matches.coverage,
+          datedIds: adapter.datedIds,
+        }),
+      );
       await db.query(
         `update sync_run set finished_at = now(), ok = true, fetched = $2, inserted = $3, updated = $4, skipped = $5,
            error = $6 where id = $1`,
@@ -126,7 +133,7 @@ export async function syncAll(
     results.push(r);
     const label = `${c.slug} [${mode === "full" ? "전체" : "최근"}]`;
     if (r.ok) {
-      log(`${label}: ${r.source}${r.fallback ? " (대체 소스)" : ""} 신규 ${r.inserted} · 갱신 ${r.updated} · 건너뜀 ${r.skipped}`);
+      log(`${label}: ${r.source}${r.fallback ? " (대체 소스)" : ""} 신규 ${r.inserted} · 갱신 ${r.updated} · 건너뜀 ${r.skipped}${r.removed ? ` · 옛 일정 삭제 ${r.removed}` : ""}`);
       if (r.unmapped?.length) log(`  매핑 안 된 팀: ${r.unmapped.join(", ")}`);
     } else {
       log(`${label}: 모든 소스 실패`);

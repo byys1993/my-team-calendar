@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Db } from "@/lib/db";
 import { normalizeName } from "./normalize";
-import type { SourceMatch, SourceTeam } from "./types";
+import type { Coverage, SourceMatch, SourceTeam } from "./types";
 
 // 수집 서버(GitHub Actions, 미국)와 DB(서울) 사이는 질의 한 번에 0.2초 안팎이 걸린다.
 // 경기마다 질의하면 시즌 전체(수천 경기)에 수십 분이 걸리므로, 기존 데이터를 한 번에 읽고
@@ -11,6 +11,8 @@ export interface UpsertResult {
   inserted: number;
   updated: number;
   skipped: number;
+  // 출처가 지운 옛 일정 중 지운 행 (다른 날짜로 옮겨 간 경기의 중복, 열리지 않게 된 '진출 시' 경기)
+  removed: number;
   unmapped: string[];
 }
 
@@ -169,9 +171,9 @@ export async function upsertMatches(
   competitionId: number,
   source: string,
   matches: SourceMatch[],
-  opts: { autoCreateTeams?: boolean } = {},
+  opts: { autoCreateTeams?: boolean; coverage?: Coverage[]; datedIds?: boolean } = {},
 ): Promise<UpsertResult> {
-  const result: UpsertResult = { inserted: 0, updated: 0, skipped: 0, unmapped: [] };
+  const result: UpsertResult = { inserted: 0, updated: 0, skipped: 0, removed: 0, unmapped: [] };
   const teams = new TeamResolver(db, competitionId, source, opts.autoCreateTeams ?? false);
   const [{ sport }] = await db.query<{ sport: string }>(
     "select s.slug as sport from competition c join sport s on s.id = c.sport_id where c.id = $1",
@@ -258,16 +260,86 @@ export async function upsertMatches(
     return best?.row ?? null;
   }
 
+  // 3-1. 날짜가 경기 ID에 들어가는 출처(KBO)는 순연되면 같은 경기가 새 ID로 온다. 시리즈가 통째로 하루 밀리면
+  // 1차전의 새 ID가 옛 2차전의 ID가 되기도 한다. 시리즈의 N차전('@game:N')은 시즌·라운드·대진이 같으면 같은
+  // 경기이므로, 이번 응답에 없는 경기와 ID가 다른 N차전에 넘어간 경기를 후보로 두고 같은 N차전에 이어 붙인다
+  // (경기 ID 유지, sequence+1). 필요할 때만 한 번 읽는다.
+  const isSlot = (label: string | null) => !!opts.datedIds && !!label?.includes("@game:");
+  const slotKey = (r: Pick<MatchRow, "season" | "round_label" | "home_team_id" | "away_team_id">) =>
+    `${r.season}|${r.round_label}|${r.home_team_id}|${r.away_team_id}`;
+  type SourceRow = MatchRow & { external_id: string };
+  // 이 소스의 ID가 다른 N차전을 가리키게 된 끝나지 않은 경기
+  const reused = new Set<string>();
+  for (const { m, next } of prepared) {
+    const row = byExternal.get(m.externalId);
+    if (row && row.home_score == null && isSlot(row.round_label) && isSlot(next.round_label) && slotKey(row) !== slotKey(next)) {
+      reused.add(row.id);
+    }
+  }
+  let pool: SourceRow[] | null = null;
+  const loadPool = async () =>
+    (pool ??= [
+      // 이 소스로 저장됐지만 이번 응답에 없는 끝나지 않은 경기 (출처가 지웠거나 ID를 바꾼 경기)
+      ...(await db.query<SourceRow>(
+        `select m.*, r.external_id from match_source_ref r join match m on m.id = r.match_id
+         where r.source = $1 and m.competition_id = $2 and m.home_score is null and m.podium is null
+           and r.external_id not in (select jsonb_array_elements_text($3::text::jsonb))`,
+        [source, competitionId, JSON.stringify(unique.map((m) => m.externalId))],
+      )),
+      ...linkedRows.filter((r) => reused.has(r.id)),
+    ]);
+  async function findMoved(next: NextRow, except?: string): Promise<SourceRow | null> {
+    const key = slotKey(next);
+    const t = timeOf(next.start_at ?? next.date_only);
+    let best: { row: SourceRow; diff: number } | null = null;
+    for (const c of await loadPool()) {
+      if (c.id === except || claimed.has(c.id) || slotKey(c) !== key) continue;
+      const ct = timeOf(c.start_at ?? c.date_only);
+      const diff = t == null || ct == null ? 0 : Math.abs(ct - t);
+      if (!best || diff < best.diff) best = { row: c, diff };
+    }
+    if (best) claimed.add(best.row.id);
+    return best?.row ?? null;
+  }
+
   // 4. 신규·연결·변경 분류
   const inserts: Record<string, unknown>[] = [];
   const links: { match_id: string; external_id: string }[] = [];
+  const relinks: { match_id: string; external_id: string }[] = [];
   const updates: Record<string, unknown>[] = [];
+  // 이번 응답에 있는 (연기·취소가 아닌) 시리즈 N차전
+  const liveSlots = new Set<string>();
   for (const { m, next } of prepared) {
     const isEvent = next.home_team_id != null && !m.away && !!next.title;
     let row: MatchRow | null = byExternal.get(m.externalId) ?? null;
+    if (row && (reused.has(row.id) || claimed.has(row.id))) {
+      // 같은 N차전의 원래 행이 있으면 그 행으로, 없으면 (아무도 가져가지 않았을 때만) 이 ID의 행 그대로
+      const own: MatchRow = row;
+      const moved = await findMoved(next, own.id);
+      if (moved) relinks.push({ match_id: moved.id, external_id: m.externalId });
+      row = moved ?? (claimed.has(own.id) ? null : own);
+      if (row === own) claimed.add(own.id);
+      else if (!row) {
+        // 이 ID의 행은 다른 N차전이 가져갔다
+        const id = randomUUID();
+        inserts.push({ id, ...next });
+        relinks.push({ match_id: id, external_id: m.externalId });
+        result.inserted++;
+        continue;
+      }
+    } else if (row) {
+      claimed.add(row.id);
+    } else if (isSlot(next.round_label)) {
+      row = await findMoved(next);
+      if (row) relinks.push({ match_id: row.id, external_id: m.externalId });
+    }
     if (!row) {
       row = await findCandidate(next, isEvent);
       if (row) links.push({ match_id: row.id, external_id: m.externalId });
+    }
+    const label = next.round_label ?? row?.round_label ?? null;
+    if (isSlot(label) && next.status !== "postponed" && next.status !== "cancelled") {
+      liveSlots.add(slotKey({ ...next, round_label: label }));
     }
     if (!row) {
       const id = randomUUID();
@@ -328,7 +400,34 @@ export async function upsertMatches(
     result.updated++;
   }
 
+  // 4-1. 출처가 빠짐없이 준 기간에 있던 경기가 응답에서 빠졌으면 출처가 지운 것이다 (ID가 다른 N차전에 넘어간
+  // 경기는 기간과 상관없이). 다른 날짜로 옮겨 간 같은 N차전의 옛 행과 열리지 않게 된 '진출 시' 경기는 지우고,
+  // 나머지는 취소로 바꾼다.
+  const removes: string[] = [];
+  if (opts.coverage?.length || reused.size) {
+    const ranges = (opts.coverage ?? []).map((c) => [new Date(c.from).getTime(), new Date(c.to).getTime()]);
+    for (const row of await loadPool()) {
+      if (claimed.has(row.id) || row.status === "cancelled") continue;
+      const date = row.date_only instanceof Date ? row.date_only.toISOString().slice(0, 10) : row.date_only;
+      const t = row.start_at ? row.start_at.getTime() : date ? new Date(`${date}T12:00:00Z`).getTime() : null;
+      const gone = reused.has(row.id) || (t != null && ranges.some(([from, to]) => t >= from && t < to));
+      if (!gone) continue;
+      if (row.status === "conditional" || (isSlot(row.round_label) && liveSlots.has(slotKey(row)))) {
+        removes.push(row.id);
+        result.removed++;
+        continue;
+      }
+      updates.push({ ...row, start_at: row.start_at?.toISOString() ?? null, date_only: date ?? null, status: "cancelled", bump: 1 });
+      result.updated++;
+    }
+  }
+
   // 5. 묶어서 저장
+  if (removes.length) {
+    await db.query("delete from match where id in (select jsonb_array_elements_text($1::text::jsonb)::uuid)", [
+      JSON.stringify(removes),
+    ]);
+  }
   await inChunks(inserts, (json) =>
     db.query(
       `insert into match (id, competition_id, season, round_label, title, home_team_id, away_team_id,
@@ -339,6 +438,15 @@ export async function upsertMatches(
       [competitionId, json],
     ),
   );
+  // 이어 붙인 경기: 옛 ID 연결과 새 ID의 이전 연결을 지우고 아래에서 새로 연결한다
+  await inChunks(relinks, (json) =>
+    db.query(
+      `delete from match_source_ref r using jsonb_to_recordset($2::text::jsonb) as x(match_id uuid, external_id text)
+       where r.source = $1 and (r.match_id = x.match_id or r.external_id = x.external_id)`,
+      [source, json],
+    ),
+  );
+  links.push(...relinks);
   await inChunks(links, (json) =>
     db.query(
       `insert into match_source_ref (match_id, source, external_id)

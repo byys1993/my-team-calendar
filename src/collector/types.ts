@@ -47,13 +47,24 @@ export interface Podium {
   team: string;
 }
 
+// 출처가 빠짐없이 돌려준 기간 (from 포함, to 미포함, ISO 시각). 이 기간에 있던 이 출처의 끝나지 않은 경기가
+// 응답에서 빠지면 출처가 지운 것으로 보고 정리한다. KBO 포스트시즌은 순연되면 옛 날짜 줄을 지우고
+// 날짜가 든 새 경기 ID 로 다시 올린다.
+export interface Coverage {
+  from: string;
+  to: string;
+}
+export type FetchResult = SourceMatch[] & { coverage?: Coverage[] };
+
 export interface SourceAdapter {
   source: string;
   // externalId: competition_source_ref.external_id (예: football-data 'PL', espn 'soccer/eng.1')
   // 리그·시즌 전체 일정 (12시간마다)
-  fetchMatches(externalId: string): Promise<SourceMatch[]>;
+  fetchMatches(externalId: string): Promise<FetchResult>;
   // 경기 당일 매시간 수집용: 최근 며칠 일정만. 없으면 fetchMatches 를 쓴다.
-  fetchRecent?(externalId: string): Promise<SourceMatch[]>;
+  fetchRecent?(externalId: string): Promise<FetchResult>;
+  // 경기 ID에 날짜가 들어가 순연되면 ID가 바뀌는 출처 (KBO). 시리즈 N차전을 같은 경기로 이어 붙인다.
+  datedIds?: boolean;
 }
 
 export type Fetcher = (url: string, init?: RequestInit) => Promise<Response>;

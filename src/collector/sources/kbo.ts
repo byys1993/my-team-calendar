@@ -1,4 +1,4 @@
-import type { Fetcher, MatchStatus, SourceAdapter, SourceMatch } from "../types";
+import type { Coverage, FetchResult, Fetcher, MatchStatus, SourceAdapter, SourceMatch } from "../types";
 import { kboBroadcast } from "./broadcast";
 import { sleep, SourceError } from "./http";
 
@@ -93,6 +93,28 @@ export function markConditional(games: KboGame[]): KboGame[] {
     const certainUpTo = played + (needed - leader);
     for (const { no, g } of list) {
       if (!g.winner && no > certainUpTo && g.status !== "cancelled") g.status = "conditional";
+    }
+  }
+  return games;
+}
+
+// 포스트시즌 N차전은 시리즈마다 하나뿐이다. 순연된 옛 날짜 줄이 비고 그대로 함께 오면
+// (점수가 있는 줄, 없으면 가장 늦은 날짜 줄만 남기고) 나머지는 연기로 바꾼다.
+export function markMovedGames(games: KboGame[]): KboGame[] {
+  const slots = new Map<string, KboGame[]>();
+  for (const g of games) {
+    if (!g.roundLabel?.includes("@game:") || g.status === "postponed") continue;
+    const key = `${g.season}:${g.roundLabel}`;
+    slots.set(key, [...(slots.get(key) ?? []), g]);
+  }
+  const at = (g: KboGame) => g.startAt ?? `${g.dateOnly}T12:00:00Z`;
+  for (const list of slots.values()) {
+    if (list.length < 2) continue;
+    const keep = list.find((g) => g.homeScore != null) ?? list.reduce((a, b) => (at(b) > at(a) ? b : a));
+    for (const g of list) {
+      if (g === keep || g.homeScore != null) continue;
+      g.status = "postponed";
+      g.roundLabel = "@postseason";
     }
   }
   return games;
@@ -204,22 +226,32 @@ export function kbo(fetcher: Fetcher = fetch, opts: { delayMs?: number; now?: ()
     regularMonths: number[],
     postseasonMonths: number[],
     extraDays: number,
-  ): Promise<SourceMatch[]> {
+  ): Promise<FetchResult> {
     const year = kstNow().getUTCFullYear();
     const byId = new Map<string, KboGame>();
+    const nonEmpty = new Set<number>();
     for (const [series, months] of [[REGULAR, regularMonths], [POSTSEASON, postseasonMonths]] as const) {
       for (const m of months) {
-        for (const g of await month(leagueId, year, m, series)) byId.set(g.externalId, g);
+        const games = await month(leagueId, year, m, series);
+        if (games.length) nonEmpty.add(m);
+        for (const g of games) byId.set(g.externalId, g);
         if (delayMs) await sleep(delayMs);
       }
     }
     await addExtraInnings(leagueId, [...byId.values()], extraDays);
     // 시리즈 전체를 봐야 하므로 여러 달을 합친 뒤 판단하고, 내부용 winner 는 떼어 낸다
-    return markConditional([...byId.values()]).map((g) => {
+    const out: FetchResult = markConditional(markMovedGames([...byId.values()])).map((g) => {
       const m: SourceMatch & { winner?: string | null } = { ...g };
       delete m.winner;
       return m;
     });
+    // 빠짐없이 받은 달: 정규시즌과 (가을이면) 포스트시즌을 모두 받았고 응답이 비지 않은 달.
+    // 응답이 빈 달은 일시적인 이상일 수 있어 정리하지 않는다.
+    const kst = (y: number, m: number) => new Date(`${y + Math.floor((m - 1) / 12)}-${String(((m - 1) % 12) + 1).padStart(2, "0")}-01T00:00:00+09:00`).toISOString();
+    out.coverage = regularMonths
+      .filter((m) => nonEmpty.has(m) && (!POSTSEASON_MONTHS.includes(m) || postseasonMonths.includes(m)))
+      .map((m): Coverage => ({ from: kst(year, m), to: kst(year, m + 1) }));
+    return out;
   }
 
   // 연장전: 일정 표에는 이닝 정보가 없어서, 최근 며칠 끝난 경기만 날짜별 경기센터 목록(GAME_INN_NO)으로 확인한다.
@@ -257,6 +289,7 @@ export function kbo(fetcher: Fetcher = fetch, opts: { delayMs?: number; now?: ()
 
   return {
     source: "kbo",
+    datedIds: true,
     // 연장 확인: 하루 두 번 전체 수집 때는 최근 14일, 경기 당일 매시간 수집 때는 최근 2일
     fetchMatches: (leagueId) => collect(leagueId, SEASON_MONTHS, POSTSEASON_MONTHS, 14),
     // 경기 당일: 정규시즌은 이번 달만(월말이면 다음 달도), 포스트시즌은 시리즈가 달을 넘기므로 가을 전체
