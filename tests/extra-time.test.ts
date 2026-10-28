@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { extraOf } from "@/collector/sources/espn";
+import { kboExtra } from "@/collector/sources/kbo";
+import { kblExtra } from "@/collector/sources/kbl";
 import { parseMlb } from "@/collector/sources/mlb";
 import { parseNhlGame } from "@/collector/sources/nhl";
 import { extraLabel } from "@/components/result";
@@ -44,6 +46,16 @@ describe("연장·슛아웃", () => {
     const [extra, regular] = parseMlb({ dates: [{ games: [game(12), { ...game(9), gamePk: 2 }] }] });
     expect(extra.extra).toBe("inn:12");
     expect(regular.extra).toBeUndefined();
+  });
+
+  it("KBO: 경기센터 이닝 수 / KBL: 연장 쿼터 점수", () => {
+    expect(kboExtra({ G_ID: "20261010LGLT0", GAME_STATE_SC: "3", GAME_INN_NO: 10 })).toBe("inn:10");
+    expect(kboExtra({ G_ID: "20261012LTOB0", GAME_STATE_SC: "3", GAME_INN_NO: 9 })).toBeNull();
+    expect(kboExtra({ G_ID: "20261028HTSS0", GAME_STATE_SC: "2", GAME_INN_NO: 11 })).toBeNull(); // 진행 중
+    expect(kblExtra({ teamrecords: { home: { scoreeq: [] } } })).toBeNull();
+    expect(kblExtra({ teamrecords: { home: { scoreeq: [{ q: 1 }] } } })).toBe("ot");
+    expect(kblExtra({ teamrecords: { home: { scoreeq: [{}, {}] } } })).toBe("ot:2");
+    expect(kblExtra({})).toBeNull();
   });
 
   it("화면 표시 (한국어·영어)", () => {

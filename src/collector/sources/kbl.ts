@@ -112,6 +112,16 @@ function markKblConditional(matches: KblMatch[], series: Map<string, KblGame[]>)
   return matches;
 }
 
+// 경기 상세: 연장 쿼터 점수(scoreeq)가 있으면 연장전 (2개면 2차 연장)
+const DETAIL_URL = "https://api.kbl.or.kr/match";
+export interface KblDetail {
+  teamrecords?: { home?: { scoreeq?: unknown[] } };
+}
+export function kblExtra(d: KblDetail): string | null {
+  const n = d.teamrecords?.home?.scoreeq?.length ?? 0;
+  return n > 1 ? `ot:${n}` : n === 1 ? "ot" : null;
+}
+
 const ymd = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, "");
 
 export function kbl(fetcher: Fetcher = fetch, now = () => new Date()): SourceAdapter {
@@ -124,7 +134,21 @@ export function kbl(fetcher: Fetcher = fetch, now = () => new Date()): SourceAda
       const to = ymd(new Date(t + 300 * 86_400_000));
       const games = await getJson<KblGame[]>(fetcher, `${URL}?fromDate=${from}&toDate=${to}`, HEADERS);
       if (!Array.isArray(games)) throw new Error("KBL 응답 형식이 바뀌었습니다");
-      return parseKbl(games).map((m) => {
+      const matches = parseKbl(games);
+      // 연장전: 목록에는 쿼터 정보가 없어서, 최근 3일 안에 끝난 경기만 경기별 상세(연장 쿼터 점수 scoreeq)로 확인한다.
+      // 한 번 저장된 연장 표시는 지워지지 않는다. 실패해도 일정 수집은 그대로 둔다.
+      const since = new Date(t - 3 * 86_400_000).toISOString();
+      for (const m of matches) {
+        if (m.homeScore == null || (m.startAt ?? m.dateOnly ?? "") < since) continue;
+        try {
+          const d = await getJson<KblDetail>(fetcher, `${DETAIL_URL}/${encodeURIComponent(m.externalId)}`, HEADERS);
+          const extra = kblExtra(d);
+          if (extra) m.extra = extra;
+        } catch {
+          // 다음 수집 때 다시 시도한다
+        }
+      }
+      return matches.map((m) => {
         const out: SourceMatch & { winner?: string | null } = { ...m };
         delete out.winner;
         return out;

@@ -7,6 +7,19 @@ import { sleep, SourceError } from "./http";
 const URL = "https://www.koreabaseball.com/ws/Schedule.asmx/GetScheduleList";
 const REGULAR = "0,9,6";
 const POSTSEASON = "3,4,5,7"; // 준PO, 와일드카드, PO, 한국시리즈
+// 경기센터의 날짜별 경기 목록 (몇 회까지 했는지 GAME_INN_NO 가 있다)
+const GAME_LIST_URL = "https://www.koreabaseball.com/ws/Main.asmx/GetKboGameList";
+interface KboGameList {
+  game?: { G_ID: string; GAME_STATE_SC: string; GAME_INN_NO: number | null; CANCEL_SC_ID?: string }[];
+}
+
+// 끝난 경기(GAME_STATE_SC 3)가 9회를 넘겼으면 연장 n회
+export function kboExtra(x: NonNullable<KboGameList["game"]>[number]): string | null {
+  return x.GAME_STATE_SC === "3" && (x.GAME_INN_NO ?? 0) > 9 ? `inn:${x.GAME_INN_NO}` : null;
+}
+
+const kstDate = (iso: string) => new Date(new Date(iso).getTime() + 9 * 3600_000).toISOString().slice(0, 10);
+
 const SEASON_MONTHS = [3, 4, 5, 6, 7, 8, 9, 10, 11];
 const POSTSEASON_MONTHS = [9, 10, 11];
 
@@ -190,6 +203,7 @@ export function kbo(fetcher: Fetcher = fetch, opts: { delayMs?: number; now?: ()
     leagueId: string,
     regularMonths: number[],
     postseasonMonths: number[],
+    extraDays: number,
   ): Promise<SourceMatch[]> {
     const year = kstNow().getUTCFullYear();
     const byId = new Map<string, KboGame>();
@@ -199,6 +213,7 @@ export function kbo(fetcher: Fetcher = fetch, opts: { delayMs?: number; now?: ()
         if (delayMs) await sleep(delayMs);
       }
     }
+    await addExtraInnings(leagueId, [...byId.values()], extraDays);
     // 시리즈 전체를 봐야 하므로 여러 달을 합친 뒤 판단하고, 내부용 winner 는 떼어 낸다
     return markConditional([...byId.values()]).map((g) => {
       const m: SourceMatch & { winner?: string | null } = { ...g };
@@ -207,15 +222,49 @@ export function kbo(fetcher: Fetcher = fetch, opts: { delayMs?: number; now?: ()
     });
   }
 
+  // 연장전: 일정 표에는 이닝 정보가 없어서, 최근 며칠 끝난 경기만 날짜별 경기센터 목록(GAME_INN_NO)으로 확인한다.
+  // 한 번 저장된 연장 표시는 지워지지 않으므로 지난 경기를 매번 다시 볼 필요는 없다. 실패해도 일정 수집은 그대로 둔다.
+  async function addExtraInnings(leagueId: string, games: KboGame[], days: number) {
+    const since = new Date(now().getTime() - days * 86_400_000).toISOString();
+    const dates = new Set(
+      games.filter((g) => g.homeScore != null && (g.startAt ?? g.dateOnly ?? "") >= since).map((g) => (g.startAt ? kstDate(g.startAt) : g.dateOnly!)),
+    );
+    const byId = new Map(games.map((g) => [g.externalId, g]));
+    for (const date of dates) {
+      try {
+        const r = await fetcher(GAME_LIST_URL, {
+          method: "POST",
+          headers: {
+            "User-Agent": "my-team-calendar (non-commercial fan project)",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            Referer: "https://www.koreabaseball.com/Schedule/GameCenter/Main.aspx",
+          },
+          body: new URLSearchParams({ leId: leagueId, srId: "0,1,3,4,5,6,7,8,9", date: date.replace(/-/g, "") }).toString(),
+          signal: AbortSignal.timeout(30_000),
+        });
+        if (!r.ok) continue;
+        for (const x of ((await r.json()) as KboGameList).game ?? []) {
+          const extra = kboExtra(x);
+          const g = byId.get(x.G_ID);
+          if (g && extra) g.extra = extra;
+        }
+      } catch {
+        // 연장 표시는 부가 정보라 다음 수집 때 다시 시도한다
+      }
+      if (delayMs) await sleep(delayMs);
+    }
+  }
+
   return {
     source: "kbo",
-    fetchMatches: (leagueId) => collect(leagueId, SEASON_MONTHS, POSTSEASON_MONTHS),
+    // 연장 확인: 하루 두 번 전체 수집 때는 최근 14일, 경기 당일 매시간 수집 때는 최근 2일
+    fetchMatches: (leagueId) => collect(leagueId, SEASON_MONTHS, POSTSEASON_MONTHS, 14),
     // 경기 당일: 정규시즌은 이번 달만(월말이면 다음 달도), 포스트시즌은 시리즈가 달을 넘기므로 가을 전체
     fetchRecent: (leagueId) => {
       const d = kstNow();
       const m = d.getUTCMonth() + 1;
       const regular = d.getUTCDate() >= 25 && m < 12 ? [m, m + 1] : [m];
-      return collect(leagueId, regular, POSTSEASON_MONTHS.includes(m) ? POSTSEASON_MONTHS : []);
+      return collect(leagueId, regular, POSTSEASON_MONTHS.includes(m) ? POSTSEASON_MONTHS : [], 2);
     },
   };
 }
