@@ -436,6 +436,7 @@ export function CalendarApp({
                     team={s.slug}
                     last={lastByTeam.get(s.slug)}
                     competition={teamsBySlug.get(s.slug)?.competition ?? null}
+                    competitionType={compsBySlug.get(teamsBySlug.get(s.slug)?.competition ?? "")?.type ?? null}
                     ongoingName={(c) => (ongoing.has(c) ? competitionName(c) : null)}
                   />
                 )}
