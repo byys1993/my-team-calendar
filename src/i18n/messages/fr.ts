@@ -119,6 +119,8 @@ export const fr: Messages = {
     duration: "Durée {t}",
     own: "c.s.c.",
     pen: "pen.",
+    set: "Partie {n}",
+    won: "Victoire {team}",
     groups: {
       players: "Joueurs",
       passing: "Passes",
@@ -163,6 +165,14 @@ export const fr: Messages = {
       red: "Cartons rouges",
       saves: "Arrêts",
       passes: "Passes réussies",
+      fastBreak: "Points en contre-attaque",
+      bench: "Points du banc",
+      kills: "Éliminations",
+      gold: "Or",
+      towers: "Tours",
+      inhibitors: "Inhibiteurs",
+      dragons: "Dragons",
+      barons: "Barons",
     },
   },
   results: {

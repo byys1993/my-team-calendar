@@ -118,6 +118,8 @@ export const ja: Messages = {
     duration: "試合時間 {t}",
     own: "オウンゴール",
     pen: "PK",
+    set: "第{n}ゲーム",
+    won: "{team} 勝利",
     groups: {
       players: "選手記録",
       passing: "パス",
@@ -162,6 +164,14 @@ export const ja: Messages = {
       red: "退場",
       saves: "セーブ",
       passes: "パス成功",
+      fastBreak: "速攻得点",
+      bench: "ベンチ得点",
+      kills: "キル",
+      gold: "ゴールド",
+      towers: "タワー",
+      inhibitors: "インヒビター",
+      dragons: "ドラゴン",
+      barons: "バロン",
     },
   },
   results: {

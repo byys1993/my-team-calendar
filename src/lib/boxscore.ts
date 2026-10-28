@@ -19,7 +19,22 @@ export const SOCCER_BOX_COMPETITIONS = new Set([
   "coupe-de-france",
   "korea-national",
 ]);
-export const BOX_COMPETITIONS = new Set(["nba", "nfl", "mlb", "nhl", "kbo", ...SOCCER_BOX_COMPETITIONS]);
+// 3단계: KBL·K리그·LoL (공식 홈페이지·LoL Esports 데이터)
+export const KLEAGUE_BOX_COMPETITIONS = new Set(["k-league-1", "k-league-2"]);
+export const LOL_BOX_COMPETITIONS = new Set(["lck", "lol-first-stand", "msi", "worlds"]);
+export const BOX_COMPETITIONS = new Set([
+  "nba",
+  "nfl",
+  "mlb",
+  "nhl",
+  "kbo",
+  "kbl",
+  ...SOCCER_BOX_COMPETITIONS,
+  ...KLEAGUE_BOX_COMPETITIONS,
+  ...LOL_BOX_COMPETITIONS,
+]);
+// 원정팀을 먼저 쓰는 대회 (야구·미국 리그). 나머지는 홈팀(e스포츠는 첫 번째 팀) 먼저.
+export const AWAY_FIRST_COMPETITIONS = new Set(["nba", "nfl", "mlb", "nhl", "kbo"]);
 
 export interface BoxLine {
   labels: string[]; // '1' '2' … 'OT' 'SO', 끝에 합계 'T' 또는 야구 'R' 'H' 'E'
@@ -47,8 +62,16 @@ export interface BoxEvent {
   player: string;
   assist?: string;
 }
+// LoL 세트 하나: 팀 기록과 선수(챔피언·KDA 등)
+export interface BoxSet {
+  n: number;
+  winner: "home" | "away" | null;
+  stats: { key: string; away: string; home: string }[];
+  home: BoxRow[];
+  away: BoxRow[];
+}
 export interface BoxScore {
-  source: "espn" | "mlb" | "nhl" | "kbo";
+  source: "espn" | "mlb" | "nhl" | "kbo" | "kbl" | "kleague" | "lolesports";
   line: BoxLine | null;
   stats: { key: string; away: string; home: string }[]; // key 가 번역 목록에 없으면 그대로(약어) 보인다
   away: BoxGroup[];
@@ -57,6 +80,7 @@ export interface BoxScore {
   notes?: { label: string; text: string }[]; // KBO 결승타·홈런·실책 등 (출처 문구 그대로)
   info?: { crowd?: string; duration?: string };
   ref?: string; // 축구: 찾아 둔 ESPN 경기 ID (다시 받을 때 또 찾지 않게)
+  sets?: BoxSet[]; // LoL 세트별 기록
 }
 
 type Side = "home" | "away";

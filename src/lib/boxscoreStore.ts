@@ -16,7 +16,22 @@ import {
   type MlbLinescore,
   type NhlBox,
   type NhlRail,
+  KLEAGUE_BOX_COMPETITIONS,
+  LOL_BOX_COMPETITIONS,
 } from "@/lib/boxscore";
+import {
+  parseKbl,
+  parseKleague,
+  parseKleagueLineup,
+  parseLol,
+  type KblMatch,
+  type KblPlayerStat,
+  type KblTeamRecord,
+  type KleagueInfo,
+  type KleagueRecord,
+  type LolEventDetails,
+  type LolWindow,
+} from "@/lib/boxscoreKr";
 
 // 기록지는 누가 처음 열어 볼 때 출처에서 받아 저장한다 (전부 미리 받으면 출처에 부담).
 // 경기 직후에는 기록이 고쳐질 수 있어, 경기 시작 12시간 안에 받은 것은 30분 지나면 다시 받는다.
@@ -69,6 +84,7 @@ export async function getBoxScore(db: Db, matchId: string, opts: { fetcher?: Fet
     ref: (source) => refs.find((r) => r.source === source)?.external_id,
     espnPath: paths[0]?.external_id,
     espnEvent: row.data?.ref, // 전에 찾아 둔 ESPN 축구 경기 ID
+    now,
     teams: async () => {
       const t = await db.query<TeamInfo & { id: number }>(
         `select t.id, r.external_id as espn, t.name_en, t.aliases from team t
@@ -103,6 +119,7 @@ interface Game {
   ref(source: string): string | undefined;
   espnPath: string | undefined;
   espnEvent: string | undefined;
+  now: Date;
   teams(): Promise<{ home: TeamInfo[]; away: TeamInfo[] }>;
 }
 
@@ -121,6 +138,12 @@ async function fetchBox(fetcher: Fetcher, g: Game): Promise<BoxScore | null> {
   }
   const kbo = g.ref("kbo");
   if (g.competition === "kbo" && kbo) return fetchKbo(fetcher, kbo);
+  const kbl = g.ref("kbl");
+  if (g.competition === "kbl" && kbl) return fetchKbl(fetcher, kbl);
+  const kleague = g.ref("kleague");
+  if (KLEAGUE_BOX_COMPETITIONS.has(g.competition) && kleague) return fetchKleague(fetcher, kleague, g.competition);
+  const lol = g.ref("lolesports");
+  if (LOL_BOX_COMPETITIONS.has(g.competition) && lol) return fetchLol(fetcher, lol, g.startAt, g.now);
 
   if (SOCCER_BOX_COMPETITIONS.has(g.competition)) {
     const event = g.espnEvent ?? g.ref("espn") ?? (await findEspnSoccer(fetcher, g));
@@ -215,4 +238,79 @@ async function fetchKbo(fetcher: Fetcher, gameId: string): Promise<BoxScore | nu
     body,
   ).catch(() => null);
   return parseKbo(box, board?.code === "100" ? board : null);
+}
+
+// KBL 공식 홈페이지 데이터: 홈페이지가 보내는 헤더가 있어야 응답한다
+const KBL_API = "https://api.kbl.or.kr/match";
+const KBL_HEADERS = { Channel: "WEB", TeamCode: "XX", "X-Requested-With": "XMLHttpRequest", lang: "ko", Referer: "https://www.kbl.or.kr/" };
+
+async function fetchKbl(fetcher: Fetcher, gmkey: string): Promise<BoxScore | null> {
+  const id = encodeURIComponent(gmkey);
+  const match = await getJson<KblMatch>(fetcher, `${KBL_API}/${id}`, KBL_HEADERS);
+  if (!match.game) return null;
+  const players = await getJson<KblPlayerStat[]>(fetcher, `${KBL_API}/${id}/player-stat`, KBL_HEADERS);
+  const teams = await getJson<KblTeamRecord[]>(fetcher, `${KBL_API}/${id}/team-record`, KBL_HEADERS).catch(() => []);
+  return parseKbl(match, Array.isArray(players) ? players : [], Array.isArray(teams) ? teams : []);
+}
+
+// K리그 경기센터: 골·카드(matchInfo)와 팀 기록(matchRecord)은 JSON, 출전 명단은 경기 화면 HTML 에만 있다.
+// 경기 ID는 '연도-대회차수-경기번호' (예: 2026-1-198)
+async function fetchKleague(fetcher: Fetcher, ref: string, competition: string): Promise<BoxScore | null> {
+  const [year, meetSeq, gameId] = ref.split("-");
+  if (!year || !meetSeq || !gameId) return null;
+  const headers = {
+    "User-Agent": "my-team-calendar (non-commercial fan project)",
+    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    "X-Requested-With": "XMLHttpRequest",
+    "Accept-Language": "ko-KR,ko;q=0.9",
+    Referer: "https://www.kleague.com/match.do",
+  };
+  const post = async <T>(path: string): Promise<T | null> => {
+    const r = await fetcher(`https://www.kleague.com/api/ddf/match/${path}.do`, {
+      method: "POST",
+      headers,
+      body: new URLSearchParams({ year, meetSeq, gameId }).toString(),
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!r.ok) throw new Error(`${r.status} — kleague ${path}`);
+    const json = (await r.json()) as { resultCode?: string | number; data?: T };
+    return String(json.resultCode) === "200" ? (json.data ?? null) : null;
+  };
+  const info = await post<KleagueInfo>("matchInfo");
+  if (!info) return null;
+  const record = await post<KleagueRecord>("matchRecord").catch(() => null);
+  const leagueId = competition === "k-league-2" ? "2" : "1";
+  const page = await fetcher(`https://www.kleague.com/match.do?year=${year}&leagueId=${leagueId}&gameId=${gameId}&meetSeq=${meetSeq}`, {
+    headers: { "User-Agent": headers["User-Agent"], "Accept-Language": headers["Accept-Language"] },
+    signal: AbortSignal.timeout(30_000),
+  })
+    .then((r) => (r.ok ? r.text() : null))
+    .catch(() => null);
+  return parseKleague(info, record, page ? parseKleagueLineup(page) : null);
+}
+
+// LoL Esports: 경기 상세에서 세트 ID를 받고, 세트마다 실시간 기록(livestats)의 마지막 화면을 받는다.
+// 마지막 화면은 세트가 끝난 뒤 시각을 startingTime 으로 주면 온다 (10초 단위).
+const LOL_KEY = "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z"; // lolesports.com 사이트가 쓰는 공개 키 (collector 와 같음)
+async function fetchLol(fetcher: Fetcher, matchId: string, startAt: string | null, now: Date): Promise<BoxScore | null> {
+  const details = await getJson<{ data?: { event?: LolEventDetails } }>(
+    fetcher,
+    `https://esports-api.lolesports.com/persisted/gw/getEventDetails?hl=en-US&id=${encodeURIComponent(matchId)}`,
+    { "x-api-key": LOL_KEY },
+  );
+  const event = details.data?.event;
+  if (!event?.match?.games?.length) return null;
+  const start = startAt ? new Date(startAt).getTime() : now.getTime();
+  const at = Math.min(now.getTime() - 60_000, start + 10 * 3600_000);
+  const startingTime = new Date(Math.floor(at / 10_000) * 10_000).toISOString();
+  const windows = new Map<number, LolWindow>();
+  for (const g of event.match.games.filter((x) => x.state === "completed")) {
+    const w = await getJson<LolWindow>(
+      fetcher,
+      `https://feed.lolesports.com/livestats/v1/window/${encodeURIComponent(g.id)}?startingTime=${startingTime}`,
+    ).catch(() => null);
+    if (w?.frames?.length) windows.set(g.number, w);
+  }
+  if (!windows.size) return null;
+  return parseLol(event, windows);
 }

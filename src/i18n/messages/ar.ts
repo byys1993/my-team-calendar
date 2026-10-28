@@ -118,6 +118,8 @@ export const ar: Messages = {
     duration: "مدة المباراة {t}",
     own: "عكسي",
     pen: "جزاء",
+    set: "المباراة {n}",
+    won: "فوز {team}",
     groups: {
       players: "اللاعبون",
       passing: "التمرير",
@@ -162,6 +164,14 @@ export const ar: Messages = {
       red: "البطاقات الحمراء",
       saves: "التصديات",
       passes: "التمريرات الدقيقة",
+      fastBreak: "نقاط الهجمات السريعة",
+      bench: "نقاط البدلاء",
+      kills: "القتلات",
+      gold: "الذهب",
+      towers: "الأبراج",
+      inhibitors: "المثبطات",
+      dragons: "التنانين",
+      barons: "البارونات",
     },
   },
   results: {

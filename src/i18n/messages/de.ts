@@ -119,6 +119,8 @@ export const de: Messages = {
     duration: "Spieldauer {t}",
     own: "ET",
     pen: "Elfm.",
+    set: "Spiel {n}",
+    won: "Sieg {team}",
     groups: {
       players: "Spieler",
       passing: "Passing",
@@ -163,6 +165,14 @@ export const de: Messages = {
       red: "Rote Karten",
       saves: "Paraden",
       passes: "Angekommene Pässe",
+      fastBreak: "Fastbreak-Punkte",
+      bench: "Bankpunkte",
+      kills: "Kills",
+      gold: "Gold",
+      towers: "Türme",
+      inhibitors: "Inhibitoren",
+      dragons: "Drachen",
+      barons: "Barone",
     },
   },
   results: {

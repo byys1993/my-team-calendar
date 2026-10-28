@@ -119,6 +119,8 @@ export const en = {
     duration: "Duration {t}",
     own: "OG",
     pen: "pen",
+    set: "Game {n}",
+    won: "{team} win",
     groups: {
       players: "Players",
       passing: "Passing",
@@ -163,6 +165,14 @@ export const en = {
       red: "Red cards",
       saves: "Saves",
       passes: "Accurate passes",
+      fastBreak: "Fast-break points",
+      bench: "Bench points",
+      kills: "Kills",
+      gold: "Gold",
+      towers: "Towers",
+      inhibitors: "Inhibitors",
+      dragons: "Dragons",
+      barons: "Barons",
     },
   },
   results: {

@@ -118,6 +118,8 @@ export const zh: Messages = {
     duration: "比赛用时 {t}",
     own: "乌龙球",
     pen: "点球",
+    set: "第{n}局",
+    won: "{team} 胜",
     groups: {
       players: "球员数据",
       passing: "传球",
@@ -162,6 +164,14 @@ export const zh: Messages = {
       red: "红牌",
       saves: "扑救",
       passes: "成功传球",
+      fastBreak: "快攻得分",
+      bench: "替补得分",
+      kills: "击杀",
+      gold: "经济",
+      towers: "防御塔",
+      inhibitors: "水晶",
+      dragons: "小龙",
+      barons: "大龙",
     },
   },
   results: {

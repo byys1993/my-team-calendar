@@ -119,6 +119,8 @@ export const es: Messages = {
     duration: "Duración {t}",
     own: "p.p.",
     pen: "pen.",
+    set: "Partida {n}",
+    won: "Gana {team}",
     groups: {
       players: "Jugadores",
       passing: "Pases",
@@ -163,6 +165,14 @@ export const es: Messages = {
       red: "Rojas",
       saves: "Paradas",
       passes: "Pases precisos",
+      fastBreak: "Puntos de contraataque",
+      bench: "Puntos del banquillo",
+      kills: "Asesinatos",
+      gold: "Oro",
+      towers: "Torres",
+      inhibitors: "Inhibidores",
+      dragons: "Dragones",
+      barons: "Barones",
     },
   },
   results: {

@@ -3,15 +3,26 @@
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { formatLabel } from "@/i18n/format";
-import { BOX_COMPETITIONS, SOCCER_BOX_COMPETITIONS, type BoxEvent, type BoxGroup, type BoxScore } from "@/lib/boxscore";
+import { AWAY_FIRST_COMPETITIONS, BOX_COMPETITIONS, type BoxEvent, type BoxGroup, type BoxScore } from "@/lib/boxscore";
+import { LOL_PLAYER_LABELS } from "@/lib/boxscoreKr";
 import type { ScheduleMatch } from "@/lib/schedule";
 import { track } from "./track";
 
 const SUM_LABELS = new Set(["T", "R", "H", "E"]); // 합계 칸 (굵게)
 const EVENT_ICON: Record<BoxEvent["type"], string> = { goal: "⚽", pen: "⚽", own: "⚽", yellow: "🟨", red: "🟥" };
-const SOURCE_NAME: Record<BoxScore["source"], string> = { espn: "ESPN", mlb: "MLB Stats API", nhl: "NHL", kbo: "KBO" };
+const SOURCE_NAME: Record<BoxScore["source"], string> = {
+  espn: "ESPN",
+  mlb: "MLB Stats API",
+  nhl: "NHL",
+  kbo: "KBO",
+  kbl: "KBL",
+  kleague: "K League",
+  lolesports: "LoL Esports",
+};
+type Side = "home" | "away";
+type TeamStat = BoxScore["stats"][number];
 
-// 끝난 경기 결과 옆 '기록' 버튼 (미국 4대 리그·KBO·유럽 축구·대표팀) → 기록지 창 (처음 열 때 받아 온다)
+// 끝난 경기 결과 옆 '기록' 버튼 (미국 4대 리그·KBO·KBL·축구·K리그·LoL) → 기록지 창 (처음 열 때 받아 온다)
 export function BoxScoreButton({ match, team }: { match: ScheduleMatch; team: string }) {
   const { m } = useI18n();
   const [open, setOpen] = useState(false);
@@ -56,8 +67,8 @@ function BoxScoreDialog({ match, team, onClose }: { match: ScheduleMatch; team: 
   const away = formatLabel(match.awayLabel, m) ?? match.awayLabel;
   const home = formatLabel(match.homeLabel, m) ?? match.homeLabel;
   const name = { away, home };
-  // 축구는 홈팀을 먼저, 야구·미국 리그는 원정팀을 먼저 쓴다
-  const order = SOCCER_BOX_COMPETITIONS.has(match.competition) ? (["home", "away"] as const) : (["away", "home"] as const);
+  // 야구·미국 리그는 원정팀을 먼저, 나머지(축구·KBL·e스포츠)는 홈팀(첫 번째 팀)을 먼저 쓴다
+  const order: readonly [Side, Side] = AWAY_FIRST_COMPETITIONS.has(match.competition) ? ["away", "home"] : ["home", "away"];
   const score = { away: match.awayScore, home: match.homeScore };
   const label = (key: string, list: Record<string, string>) => list[key] ?? key;
 
@@ -88,7 +99,7 @@ function BoxScoreDialog({ match, team, onClose }: { match: ScheduleMatch; team: 
                     </tr>
                   </thead>
                   <tbody>
-                    {(["away", "home"] as const).map((s) => (
+                    {order.map((s) => (
                       <tr key={s}>
                         <th>{name[s]}</th>
                         {box.line![s].map((v, i) => (
@@ -147,24 +158,7 @@ function BoxScoreDialog({ match, team, onClose }: { match: ScheduleMatch; team: 
             {box.stats.length > 0 && (
               <>
                 <h3>{m.box.teamStats}</h3>
-                <table className="box-table box-team">
-                  <thead>
-                    <tr>
-                      <th />
-                      <th>{name[order[0]]}</th>
-                      <th>{name[order[1]]}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {box.stats.map((s) => (
-                      <tr key={s.key}>
-                        <th>{label(s.key, m.box.stats)}</th>
-                        <td>{s[order[0]]}</td>
-                        <td>{s[order[1]]}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <TeamStats stats={box.stats} order={order} name={name} label={(k) => label(k, m.box.stats)} />
               </>
             )}
 
@@ -186,6 +180,18 @@ function BoxScoreDialog({ match, team, onClose }: { match: ScheduleMatch; team: 
               <PlayerTable key={`${side}-${i}`} group={g} title={label(g.key, m.box.groups)} total={m.box.total} />
             ))}
 
+            {/* LoL: 세트마다 팀 기록과 고른 팀 선수(챔피언·KDA) */}
+            {box.sets?.map((set) => (
+              <section key={set.n} className="box-set">
+                <h3>
+                  {m.box.set.replace("{n}", String(set.n))}
+                  {set.winner && <small className="box-note"> · {m.box.won.replace("{team}", name[set.winner])}</small>}
+                </h3>
+                <TeamStats stats={set.stats} order={order} name={name} label={(k) => label(k, m.box.stats)} />
+                <PlayerTable group={{ key: "", labels: LOL_PLAYER_LABELS, rows: set[side] }} total={m.box.total} />
+              </section>
+            ))}
+
             <p className="muted small">{m.box.source.replace("{name}", SOURCE_NAME[box.source])}</p>
           </>
         )}
@@ -194,10 +200,43 @@ function BoxScoreDialog({ match, team, onClose }: { match: ScheduleMatch; team: 
   );
 }
 
-function PlayerTable({ group, title, total }: { group: BoxGroup; title: string; total: string }) {
+function TeamStats({
+  stats,
+  order,
+  name,
+  label,
+}: {
+  stats: TeamStat[];
+  order: readonly [Side, Side];
+  name: Record<Side, string>;
+  label(key: string): string;
+}) {
+  return (
+    <table className="box-table box-team">
+      <thead>
+        <tr>
+          <th />
+          <th>{name[order[0]]}</th>
+          <th>{name[order[1]]}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {stats.map((s) => (
+          <tr key={s.key}>
+            <th>{label(s.key)}</th>
+            <td>{s[order[0]]}</td>
+            <td>{s[order[1]]}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function PlayerTable({ group, title, total }: { group: BoxGroup; title?: string; total: string }) {
   return (
     <>
-      <h3>{title}</h3>
+      {title && <h3>{title}</h3>}
       <div className="box-scroll">
         <table className="box-table box-players">
           <thead>

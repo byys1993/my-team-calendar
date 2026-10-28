@@ -119,6 +119,8 @@ export const ru: Messages = {
     duration: "Длительность {t}",
     own: "автогол",
     pen: "пен.",
+    set: "Карта {n}",
+    won: "Победа {team}",
     groups: {
       players: "Игроки",
       passing: "Пасы",
@@ -163,6 +165,14 @@ export const ru: Messages = {
       red: "Красные",
       saves: "Сейвы",
       passes: "Точные передачи",
+      fastBreak: "Очки с быстрого прорыва",
+      bench: "Очки скамейки",
+      kills: "Убийства",
+      gold: "Золото",
+      towers: "Башни",
+      inhibitors: "Ингибиторы",
+      dragons: "Драконы",
+      barons: "Бароны",
     },
   },
   results: {

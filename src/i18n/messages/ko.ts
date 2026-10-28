@@ -118,6 +118,8 @@ export const ko: Messages = {
     duration: "경기 시간 {t}",
     own: "자책골",
     pen: "PK",
+    set: "{n}세트",
+    won: "{team} 승",
     groups: {
       players: "선수 기록",
       passing: "패싱",
@@ -162,6 +164,14 @@ export const ko: Messages = {
       red: "퇴장",
       saves: "선방",
       passes: "패스 성공",
+      fastBreak: "속공 득점",
+      bench: "벤치 득점",
+      kills: "킬",
+      gold: "골드",
+      towers: "타워",
+      inhibitors: "억제기",
+      dragons: "드래곤",
+      barons: "바론",
     },
   },
   results: {
