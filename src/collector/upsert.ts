@@ -31,6 +31,8 @@ interface MatchRow {
   broadcast: string | null;
   home_score: number | null;
   away_score: number | null;
+  home_pen: number | null;
+  away_pen: number | null;
   podium: unknown;
 }
 
@@ -158,7 +160,7 @@ async function inChunks<T>(rows: T[], run: (json: string) => Promise<unknown>): 
 
 const MATCH_COLUMNS = `season text, round_label text, title text, home_team_id int, away_team_id int,
   home_placeholder text, away_placeholder text, start_at timestamptz, date_only date, status text, venue text,
-  is_neutral boolean, broadcast text, home_score int, away_score int, podium jsonb`;
+  is_neutral boolean, broadcast text, home_score int, away_score int, home_pen int, away_pen int, podium jsonb`;
 
 // 소스 경기 목록을 저장한다. 같은 경기는 기존 ID를 그대로 두고 내용만 갱신한다.
 export async function upsertMatches(
@@ -214,6 +216,8 @@ export async function upsertMatches(
         broadcast: m.broadcast ?? null,
         home_score: score(m.homeScore),
         away_score: score(m.awayScore),
+        home_pen: score(m.homePen),
+        away_pen: score(m.awayPen),
         podium: m.podium?.length ? m.podium : null,
       },
     });
@@ -276,6 +280,8 @@ export async function upsertMatches(
     // 결과는 한 번 들어오면 소스가 비워 보내도 지우지 않는다 (대체 소스가 결과를 안 주는 경우)
     const homeScore = next.home_score ?? row.home_score;
     const awayScore = next.away_score ?? row.away_score;
+    const homePen = next.home_pen ?? row.home_pen;
+    const awayPen = next.away_pen ?? row.away_pen;
     const podium = next.podium ?? row.podium;
     const roundLabel = next.round_label ?? row.round_label;
     const title = next.title ?? row.title;
@@ -296,6 +302,8 @@ export async function upsertMatches(
       row.broadcast !== broadcast ||
       row.home_score !== homeScore ||
       row.away_score !== awayScore ||
+      row.home_pen !== homePen ||
+      row.away_pen !== awayPen ||
       JSON.stringify(row.podium) !== JSON.stringify(podium);
     if (!scheduleChanged && !otherChanged) continue;
     updates.push({
@@ -305,6 +313,8 @@ export async function upsertMatches(
       broadcast,
       home_score: homeScore,
       away_score: awayScore,
+      home_pen: homePen,
+      away_pen: awayPen,
       podium,
       round_label: roundLabel,
       title,
@@ -317,9 +327,9 @@ export async function upsertMatches(
   await inChunks(inserts, (json) =>
     db.query(
       `insert into match (id, competition_id, season, round_label, title, home_team_id, away_team_id,
-         home_placeholder, away_placeholder, start_at, date_only, status, venue, is_neutral, broadcast, home_score, away_score, podium)
+         home_placeholder, away_placeholder, start_at, date_only, status, venue, is_neutral, broadcast, home_score, away_score, home_pen, away_pen, podium)
        select x.id, $1, x.season, x.round_label, x.title, x.home_team_id, x.away_team_id, x.home_placeholder,
-         x.away_placeholder, x.start_at, x.date_only, x.status, x.venue, x.is_neutral, x.broadcast, x.home_score, x.away_score, x.podium
+         x.away_placeholder, x.start_at, x.date_only, x.status, x.venue, x.is_neutral, x.broadcast, x.home_score, x.away_score, x.home_pen, x.away_pen, x.podium
        from jsonb_to_recordset($2::text::jsonb) as x(id uuid, ${MATCH_COLUMNS})`,
       [competitionId, json],
     ),
@@ -337,7 +347,7 @@ export async function upsertMatches(
       `update match m set season = x.season, round_label = x.round_label, title = x.title,
          home_team_id = x.home_team_id, away_team_id = x.away_team_id, home_placeholder = x.home_placeholder,
          away_placeholder = x.away_placeholder, start_at = x.start_at, date_only = x.date_only, status = x.status,
-         venue = x.venue, is_neutral = x.is_neutral, broadcast = x.broadcast, home_score = x.home_score, away_score = x.away_score, podium = x.podium, sequence = m.sequence + x.bump, updated_at = now()
+         venue = x.venue, is_neutral = x.is_neutral, broadcast = x.broadcast, home_score = x.home_score, away_score = x.away_score, home_pen = x.home_pen, away_pen = x.away_pen, podium = x.podium, sequence = m.sequence + x.bump, updated_at = now()
        from jsonb_to_recordset($1::text::jsonb) as x(id uuid, bump int, ${MATCH_COLUMNS})
        where m.id = x.id`,
       [json],

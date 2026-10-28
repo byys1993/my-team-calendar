@@ -101,6 +101,7 @@ export const en = {
     reveal: "Show result",
     spoiler: "Hide scores",
     spoilerHint: "Hide final scores and results (for watching replays later)",
+    pens: "pens {a}-{b}",
   },
   records: {
     teamsTab: "Team standings",

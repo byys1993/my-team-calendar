@@ -100,6 +100,7 @@ export const zh: Messages = {
     reveal: "查看结果",
     spoiler: "防剧透",
     spoilerHint: "开启后隐藏已结束比赛的比分和胜负（适合看回放）",
+    pens: "点球 {a}-{b}",
   },
   records: {
     teamsTab: "球队排名",

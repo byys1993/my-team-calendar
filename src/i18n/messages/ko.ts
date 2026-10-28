@@ -100,6 +100,7 @@ export const ko: Messages = {
     reveal: "결과 보기",
     spoiler: "스포일러 방지",
     spoilerHint: "켜면 끝난 경기의 점수와 승패를 가립니다 (다시보기로 볼 때)",
+    pens: "승부차기 {a}-{b}",
   },
   records: {
     teamsTab: "팀 순위",

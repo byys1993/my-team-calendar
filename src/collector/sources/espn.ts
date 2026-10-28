@@ -11,7 +11,8 @@ interface EspnCompetitor {
   homeAway: "home" | "away";
   team: { id: string; displayName: string; shortDisplayName?: string };
   // scoreboard 응답은 '2', 팀 일정 응답은 { value: 2, displayValue: '2' }
-  score?: string | { value?: number; displayValue?: string };
+  score?: string | { value?: number; displayValue?: string; shootoutScore?: number };
+  shootoutScore?: number;
 }
 export interface EspnEvent {
   id: string;
@@ -100,9 +101,18 @@ export function parseEspnEvent(e: EspnEvent, path = "soccer/eng.1"): SourceMatch
       ? {
           homeScore: scoreOf(c.competitors.find((x) => x.homeAway === "home")),
           awayScore: scoreOf(c.competitors.find((x) => x.homeAway === "away")),
+          ...penOf(c.competitors),
         }
       : {}),
   };
+}
+
+// 승부차기 점수: scoreboard 응답은 competitor 에, 팀 일정 응답은 score 안에 있다
+function penOf(cs: EspnCompetitor[]): { homePen?: number; awayPen?: number } {
+  const pen = (x?: EspnCompetitor) => x?.shootoutScore ?? (typeof x?.score === "object" ? x.score.shootoutScore : undefined);
+  const h = pen(cs.find((x) => x.homeAway === "home"));
+  const a = pen(cs.find((x) => x.homeAway === "away"));
+  return typeof h === "number" && typeof a === "number" && h + a > 0 ? { homePen: h, awayPen: a } : {};
 }
 
 function scoreOf(c?: EspnCompetitor): number | null {

@@ -100,6 +100,7 @@ export const ja: Messages = {
     reveal: "結果を見る",
     spoiler: "ネタバレ防止",
     spoilerHint: "オンにすると終了した試合のスコアと勝敗を隠します（見逃し配信で見るとき）",
+    pens: "PK {a}-{b}",
   },
   records: {
     teamsTab: "チーム順位",

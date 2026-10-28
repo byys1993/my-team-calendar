@@ -101,6 +101,7 @@ export const de: Messages = {
     reveal: "Ergebnis zeigen",
     spoiler: "Ergebnisse ausblenden",
     spoilerHint: "Blendet Endstände und Ergebnisse aus (für späteres Ansehen)",
+    pens: "i. E. {a}-{b}",
   },
   records: {
     teamsTab: "Tabelle",

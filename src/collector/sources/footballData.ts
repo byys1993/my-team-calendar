@@ -18,7 +18,25 @@ interface FdMatch {
   season: { startDate: string };
   homeTeam: FdTeam;
   awayTeam: FdTeam;
-  score?: { fullTime?: { home: number | null; away: number | null } };
+  score?: { fullTime?: FdScore; regularTime?: FdScore; extraTime?: FdScore; penalties?: FdScore };
+}
+
+type FdScore = { home: number | null; away: number | null };
+
+// 끝난 경기 결과. 승부차기 경기는 fullTime 에 승부차기 골까지 더해져 오므로 정규+연장 점수와 승부차기 점수로 나눈다
+export function fdResult(score: FdMatch["score"]): Pick<SourceMatch, "homeScore" | "awayScore" | "homePen" | "awayPen"> {
+  const ft = score?.fullTime;
+  const pen = score?.penalties;
+  if (pen?.home == null || pen?.away == null || ft?.home == null || ft?.away == null) {
+    return { homeScore: ft?.home ?? null, awayScore: ft?.away ?? null };
+  }
+  const rt = score?.regularTime;
+  const et = score?.extraTime;
+  const [home, away] =
+    rt?.home != null && rt?.away != null
+      ? [rt.home + (et?.home ?? 0), rt.away + (et?.away ?? 0)]
+      : [ft.home - pen.home, ft.away - pen.away];
+  return { homeScore: home, awayScore: away, homePen: pen.home, awayPen: pen.away };
 }
 
 // SCHEDULED = 날짜만 확정, TIMED = 시각까지 확정
@@ -76,7 +94,7 @@ export function parseFootballData(json: { matches: FdMatch[] }): SourceMatch[] {
       venue: m.venue ?? null,
       // 끝난 경기만 결과를 넣는다 (진행 중 점수는 넣지 않음)
       ...(m.status === "FINISHED" || m.status === "AWARDED"
-        ? { homeScore: m.score?.fullTime?.home ?? null, awayScore: m.score?.fullTime?.away ?? null }
+        ? fdResult(m.score)
         : {}),
     };
   });

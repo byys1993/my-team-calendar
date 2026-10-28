@@ -30,6 +30,9 @@ export interface SourceMatch {
   // 끝난 경기의 점수 (e스포츠는 세트 승수). 끝나지 않았으면 비워 둔다.
   homeScore?: number | null;
   awayScore?: number | null;
+  // 승부차기 점수 (승부차기로 끝난 경기만)
+  homePen?: number | null;
+  awayPen?: number | null;
   // 순위 경기(F1)의 결과: 결승·스프린트는 1~3위, 예선은 폴 포지션
   podium?: Podium[] | null;
 }

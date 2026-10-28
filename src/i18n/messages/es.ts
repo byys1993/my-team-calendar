@@ -101,6 +101,7 @@ export const es: Messages = {
     reveal: "Ver resultado",
     spoiler: "Ocultar resultados",
     spoilerHint: "Oculta marcadores y resultados (para ver repeticiones después)",
+    pens: "penaltis {a}-{b}",
   },
   records: {
     teamsTab: "Clasificación",

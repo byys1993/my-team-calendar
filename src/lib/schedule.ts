@@ -48,6 +48,8 @@ export interface ScheduleMatch {
   podium: Podium[] | null; // F1 결과 (결승·스프린트 1~3위, 예선 폴 포지션)
   homeScore: number | null; // 끝난 경기 결과 (e스포츠는 세트 승수)
   awayScore: number | null;
+  homePen?: number | null; // 승부차기 점수 (승부차기로 끝난 경기만)
+  awayPen?: number | null;
   broadcast: string | null; // 국내 중계 ('SPOTV, TVING'): 경기별 채널 + 대회 기본 플랫폼
   sequence: number; // 일정이 바뀔 때마다 +1 (ICS)
   updatedAt: string;
@@ -136,6 +138,8 @@ interface MatchRowDb {
   comp_broadcast: string | null;
   home_score: number | null;
   away_score: number | null;
+  home_pen: number | null;
+  away_pen: number | null;
   podium: Podium[] | null;
 }
 
@@ -148,7 +152,7 @@ async function queryMatches(db: Db, locale: Locale, where: string, params: unkno
        case when $1 = 'ko' then coalesce(a.short_ko, a.name_ko, m.away_placeholder)
             else coalesce(a.name_en, m.away_placeholder) end as away_label,
        m.start_at, to_char(m.date_only, 'YYYY-MM-DD') as date_only, m.status, m.venue, m.is_neutral, m.sequence, m.updated_at,
-       m.broadcast, c.broadcast as comp_broadcast, m.home_score, m.away_score, m.podium
+       m.broadcast, c.broadcast as comp_broadcast, m.home_score, m.away_score, m.home_pen, m.away_pen, m.podium
      from match m
      join competition c on c.id = m.competition_id
      join sport s on s.id = c.sport_id
@@ -162,7 +166,8 @@ async function queryMatches(db: Db, locale: Locale, where: string, params: unkno
     id: r.id,
     competition: r.competition,
     sport: r.sport,
-    roundLabel: r.round_label,
+    // ESPN 은 승부차기 경기의 라운드 자리에 "X win 5-3 on penalties" 를 준다 → 결과로 따로 보여 주므로 감춘다
+    roundLabel: r.home_pen != null && /penalt/i.test(r.round_label ?? "") ? null : r.round_label,
     title: r.title,
     home: r.home,
     away: r.away,
@@ -176,6 +181,8 @@ async function queryMatches(db: Db, locale: Locale, where: string, params: unkno
     podium: r.podium,
     homeScore: r.home_score,
     awayScore: r.away_score,
+    homePen: r.home_pen,
+    awayPen: r.away_pen,
     broadcast: mergeBroadcast(r.broadcast, r.comp_broadcast),
     sequence: r.sequence,
     updatedAt: r.updated_at.toISOString(),

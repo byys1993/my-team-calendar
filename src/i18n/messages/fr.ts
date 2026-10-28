@@ -101,6 +101,7 @@ export const fr: Messages = {
     reveal: "Voir le résultat",
     spoiler: "Masquer les scores",
     spoilerHint: "Masque les scores et résultats (pour regarder en différé)",
+    pens: "t.a.b. {a}-{b}",
   },
   records: {
     teamsTab: "Classement",

@@ -79,7 +79,7 @@ export function PodiumResult({ match }: { match: ScheduleMatch }) {
 
 // 목록의 결과 표시: '승 3:1'. 스포일러 방지 중이면 '결과 보기' 버튼을 눌러야 보인다.
 export function MatchResult({ match, team }: { match: ScheduleMatch; team: string }) {
-  const { m } = useI18n();
+  const { m, t: fmt } = useI18n();
   const { hide } = useSpoiler();
   const [revealed, setRevealed] = useState(false);
   const r = resultFor(match, team);
@@ -94,6 +94,7 @@ export function MatchResult({ match, team }: { match: ScheduleMatch; team: strin
   return (
     <span className={`result result-${r.outcome}`}>
       {m.results[r.outcome]} {r.mine}:{r.theirs}
+      {r.pen && <small className="result-pen">{fmt(m.results.pens, { a: r.pen.mine, b: r.pen.theirs })}</small>}
     </span>
   );
 }

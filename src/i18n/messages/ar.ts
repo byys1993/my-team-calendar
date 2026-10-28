@@ -100,6 +100,7 @@ export const ar: Messages = {
     reveal: "عرض النتيجة",
     spoiler: "إخفاء النتائج",
     spoilerHint: "يخفي نتائج المباريات المنتهية (لمشاهدة الإعادة لاحقًا)",
+    pens: "ركلات الترجيح {a}-{b}",
   },
   records: {
     teamsTab: "ترتيب الفرق",

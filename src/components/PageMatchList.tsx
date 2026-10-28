@@ -1,4 +1,4 @@
-import type { Messages } from "@/i18n";
+import { fmt, type Messages } from "@/i18n";
 import type { Locale } from "@/i18n/config";
 import { formatLabel, formatTitle } from "@/i18n/format";
 import { f1Driver } from "@/lib/f1names";
@@ -36,7 +36,11 @@ export function PageMatchList({
         const [a, b] = isHome ? [x.homeLabel, x.awayLabel] : [x.awayLabel, x.homeLabel];
         const side = !mine || x.sport === "esports" ? null : x.isNeutral ? m.match.neutral : isHome ? m.match.home : m.match.away;
         const r = showResult && mine ? resultFor(x, mine) : null;
-        const plainScore = showResult && !mine && x.homeScore != null && x.awayScore != null ? `${x.homeScore}:${x.awayScore}` : null;
+        const plainScore =
+          showResult && !mine && x.homeScore != null && x.awayScore != null
+            ? `${x.homeScore}:${x.awayScore}` +
+              (x.homePen != null && x.awayPen != null ? ` (${fmt(m.results.pens, { a: x.homePen, b: x.awayPen })})` : "")
+            : null;
         const status = x.status !== "scheduled" && x.status !== "time_tbd" ? m.status[x.status] : null;
         const round = formatLabel(x.roundLabel, m);
         return (
@@ -55,6 +59,7 @@ export function PageMatchList({
               {r && (
                 <span className={`result result-${r.outcome}`}>
                   {m.results[r.outcome]} {r.mine}:{r.theirs}
+                  {r.pen && <small className="result-pen">{fmt(m.results.pens, { a: r.pen.mine, b: r.pen.theirs })}</small>}
                 </span>
               )}
               {plainScore && <span className="result result-draw">{plainScore}</span>}

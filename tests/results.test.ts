@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { parseEspnEvent, type EspnEvent } from "@/collector/sources/espn";
-import { parseFootballData } from "@/collector/sources/footballData";
+import { fdResult, parseFootballData } from "@/collector/sources/footballData";
 import { parseKleague, type KleagueGame } from "@/collector/sources/kleague";
 import { parseKboMonth } from "@/collector/sources/kbo";
 import { parseLolEvent, type LolEvent } from "@/collector/sources/lolesports";
@@ -130,5 +130,53 @@ describe("결과 저장과 내 팀 기준 승무패", () => {
     expect(resultFor({ ...m, awayScore: 1 }, "arsenal")?.outcome).toBe("draw");
     expect(resultFor({ ...m, homeScore: null }, "arsenal")).toBeNull();
     expect(resultFor(m, "chelsea")).toBeNull();
+  });
+});
+
+describe("승부차기", () => {
+  it("ESPN: 팀 일정 응답(score 안)과 scoreboard(competitor)의 승부차기 점수", () => {
+    const ev = (home: object, away: object): EspnEvent =>
+      ({
+        id: "401921835",
+        date: "2026-10-27T19:45Z",
+        competitions: [
+          {
+            status: { type: { name: "STATUS_FINAL_PEN", completed: true } },
+            notes: [{ headline: "Fleetwood Town win 5-3 on penalties" }],
+            competitors: [
+              { homeAway: "home", team: { id: "3891", displayName: "Fleetwood Town" }, ...home },
+              { homeAway: "away", team: { id: "359", displayName: "Arsenal" }, ...away },
+            ],
+          },
+        ],
+      }) as EspnEvent;
+    expect(
+      parseEspnEvent(ev({ score: { value: 1, displayValue: "1", shootoutScore: 5 } }, { score: { value: 1, displayValue: "1", shootoutScore: 3 } })),
+    ).toMatchObject({ homeScore: 1, awayScore: 1, homePen: 5, awayPen: 3 });
+    expect(parseEspnEvent(ev({ score: "1", shootoutScore: 5 }, { score: "1", shootoutScore: 3 }))).toMatchObject({ homePen: 5, awayPen: 3 });
+    expect(parseEspnEvent(ev({ score: "2" }, { score: "1" }))?.homePen).toBeUndefined();
+  });
+
+  it("football-data: 승부차기 골이 더해진 fullTime 을 정규+연장과 승부차기로 나눈다", () => {
+    expect(fdResult({ fullTime: { home: 5, away: 4 }, regularTime: { home: 1, away: 1 }, extraTime: { home: 0, away: 0 }, penalties: { home: 4, away: 3 } })).toEqual({
+      homeScore: 1, awayScore: 1, homePen: 4, awayPen: 3,
+    });
+    expect(fdResult({ fullTime: { home: 6, away: 5 }, penalties: { home: 4, away: 3 } })).toMatchObject({ homeScore: 2, awayScore: 2 });
+    expect(fdResult({ fullTime: { home: 2, away: 1 } })).toEqual({ homeScore: 2, awayScore: 1 });
+  });
+
+  it("승패는 승부차기로, 점수는 정규·연장 그대로. 저장 후 라운드 자리의 승부차기 문구는 감춘다", async () => {
+    const m = { home: "arsenal", away: "everton", homeScore: 1, awayScore: 1, homePen: 3, awayPen: 5 } as ScheduleMatch;
+    expect(resultFor(m, "arsenal")).toEqual({ mine: 1, theirs: 1, outcome: "loss", pen: { mine: 3, theirs: 5 } });
+    expect(resultFor(m, "everton")).toMatchObject({ outcome: "win", pen: { mine: 5, theirs: 3 } });
+
+    const { db, eplId } = (await setupDb()) as { db: Db & { close(): Promise<void> }; eplId: number };
+    try {
+      await upsertMatches(db, eplId, "espn", [espnMatch({ roundLabel: "Everton win 5-3 on penalties", homeScore: 1, awayScore: 1, homePen: 3, awayPen: 5 })]);
+      const [saved] = await getMatchesForTeams(db, ["arsenal"], "ko");
+      expect(saved).toMatchObject({ homeScore: 1, awayScore: 1, homePen: 3, awayPen: 5, roundLabel: null });
+    } finally {
+      await db.close();
+    }
   });
 });

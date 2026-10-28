@@ -101,6 +101,7 @@ export const ru: Messages = {
     reveal: "Показать счёт",
     spoiler: "Скрыть счёт",
     spoilerHint: "Скрывает счёт и результаты завершённых матчей (для просмотра в записи)",
+    pens: "пен. {a}-{b}",
   },
   records: {
     teamsTab: "Турнирная таблица",

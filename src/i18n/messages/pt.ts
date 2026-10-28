@@ -101,6 +101,7 @@ export const pt: Messages = {
     reveal: "Ver resultado",
     spoiler: "Ocultar placares",
     spoilerHint: "Oculta placares e resultados (para assistir depois)",
+    pens: "pênaltis {a}-{b}",
   },
   records: {
     teamsTab: "Classificação",
