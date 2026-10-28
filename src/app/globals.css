@@ -1886,3 +1886,127 @@ a {
 .box-notes dd {
   margin: 0;
 }
+
+/* 날짜 패널: 같은 리그 다른 경기 (접힘 목록) */
+.league-day {
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.league-day-toggle {
+  width: 100%;
+  text-align: start;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.league-day-body {
+  margin-top: 8px;
+}
+
+.league-day-group + .league-day-group {
+  margin-top: 12px;
+}
+
+.league-day-group h3 {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 4px;
+}
+
+.league-day-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.league-day-list li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 7px 2px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.league-day-list li.tentative {
+  opacity: 0.75;
+}
+
+.ld-time {
+  flex: 0 0 auto;
+  min-width: 48px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ld-what {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.ld-teams {
+  overflow-wrap: anywhere;
+}
+
+.ld-meta {
+  font-size: 12px;
+}
+
+.league-day-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* 리그 페이지: 라운드·기간 이동 */
+.league-nav-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.league-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.league-nav a,
+.league-nav .disabled {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.league-nav .disabled {
+  color: var(--muted);
+  opacity: 0.5;
+}
+
+.league-nav a.current {
+  color: var(--accent);
+}

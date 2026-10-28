@@ -4,6 +4,7 @@ import { formatLabel, formatTitle } from "@/i18n/format";
 import { f1Driver } from "@/lib/f1names";
 import type { ScheduleMatch } from "@/lib/schedule";
 import { extraLabel, resultFor } from "./result";
+import { PodiumResult, ScoreResult } from "./spoiler";
 import { dateLabel, isDawn, matchDateKey, matchTimeLabel } from "./time";
 
 // 팀·리그 페이지의 경기 목록 (서버에서 그린다). 시각은 한국 시간 기준.
@@ -17,6 +18,7 @@ export function PageMatchList({
   intl,
   compName,
   showResult,
+  interactive,
 }: {
   matches: ScheduleMatch[];
   team: string | null; // 이 팀 기준으로 '내 팀 vs 상대 (홈/원정)'·승패 표시. 리그 페이지는 null
@@ -25,6 +27,8 @@ export function PageMatchList({
   intl: string;
   compName: (slug: string) => string;
   showResult?: boolean;
+  // 결과를 스포일러 방지·기록 버튼이 있는 화면 부품으로 (I18nProvider·SpoilerProvider 안에서만. 리그 페이지)
+  interactive?: boolean;
 }) {
   const label = (s: string) => formatLabel(s, m) ?? s;
   return (
@@ -67,8 +71,10 @@ export function PageMatchList({
                   {!r.pen && extraLabel(x.extra, m.results) && <small className="result-pen">{extraLabel(x.extra, m.results)}</small>}
                 </span>
               )}
-              {plainScore && <span className="result result-draw">{plainScore}</span>}
-              {showResult && isEvent && x.podium?.length ? (
+              {interactive && showResult && !mine && !isEvent && <ScoreResult match={x} />}
+              {!interactive && plainScore && <span className="result result-draw">{plainScore}</span>}
+              {interactive && showResult && isEvent && <PodiumResult match={x} />}
+              {!interactive && showResult && isEvent && x.podium?.length ? (
                 <span className="podium">
                   {x.title?.endsWith(":qualifying")
                     ? `${m.results.pole} ${f1Driver(x.podium[0].driverId, x.podium[0].name, locale)}`

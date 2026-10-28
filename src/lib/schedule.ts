@@ -151,8 +151,8 @@ interface MatchRowDb {
   podium: Podium[] | null;
 }
 
-// 경기 목록 공통 조회. $1 = 언어, where 는 $2 부터 쓰는 조건
-async function queryMatches(db: Db, locale: Locale, where: string, params: unknown[]): Promise<ScheduleMatch[]> {
+// 경기 목록 공통 조회 (리그 페이지도 쓴다). $1 = 언어, where 는 $2 부터 쓰는 조건
+export async function queryMatches(db: Db, locale: Locale, where: string, params: unknown[]): Promise<ScheduleMatch[]> {
   const rows = await db.query<MatchRowDb>(
     `select m.id, c.slug as competition, s.slug as sport, m.round_label, m.title, h.slug as home, a.slug as away,
        case when $1 = 'ko' then coalesce(h.short_ko, h.name_ko, m.home_placeholder)
@@ -215,18 +215,35 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Lo
   );
 }
 
-// 한 대회의 [from, to) 기간 경기 (리그 페이지의 '이번 주 경기')
-export async function getMatchesForCompetition(
+// 날짜 패널의 '같은 리그 다른 경기'에서 빼는 종목. 이벤트형(F1)은 팀·드라이버 선택 방식으로 따로 보여 준다
+export const NO_DAY_LIST_SPORTS = ["motorsport"];
+
+// 그 순간이 tz 에서 며칠인지 'YYYY-MM-DD' (서버용, 화면 쪽 toDateKey 와 같은 방식)
+const dayKey = (iso: string, tz: string) =>
+  new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: tz }).format(new Date(iso));
+
+// 여러 대회의 그날(tz 기준 dateKey) 경기 (날짜 패널의 '같은 리그 다른 경기'). F1 같은 이벤트형 종목은 뺀다
+export async function getCompetitionsDay(
   db: Db,
-  competition: string,
+  competitions: string[],
+  dateKey: string,
+  tz: string,
   locale: Locale,
-  from: Date,
-  to: Date,
 ): Promise<ScheduleMatch[]> {
-  return queryMatches(
+  if (competitions.length === 0) return [];
+  // 시간대 차이(최대 ±14시간)를 넉넉히 덮도록 앞뒤 하루를 더 받아 그 시간대 날짜로 거른다
+  const day = new Date(`${dateKey}T00:00:00Z`).getTime();
+  const rows = await queryMatches(
     db,
     locale,
-    `c.slug = $2 and coalesce(m.start_at, m.date_only::timestamptz) >= $3 and coalesce(m.start_at, m.date_only::timestamptz) < $4`,
-    [competition, from.toISOString(), to.toISOString()],
+    `c.slug = any(string_to_array($2, ',')) and s.slug <> all(string_to_array($3, ','))
+       and coalesce(m.start_at, m.date_only::timestamptz) >= $4 and coalesce(m.start_at, m.date_only::timestamptz) < $5`,
+    [
+      competitions.join(","),
+      NO_DAY_LIST_SPORTS.join(","),
+      new Date(day - 86_400_000).toISOString(),
+      new Date(day + 2 * 86_400_000).toISOString(),
+    ],
   );
+  return rows.filter((m) => m.status !== "cancelled" && (m.startAt ? dayKey(m.startAt, tz) : m.dateOnly) === dateKey);
 }

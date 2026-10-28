@@ -108,3 +108,32 @@ export function MatchResult({ match, team }: { match: ScheduleMatch; team: strin
     </>
   );
 }
+
+// 어느 팀 기준도 아닌 결과 '2:1' (같은 리그 다른 경기·리그 페이지). 스포일러 방지 중이면 '결과 보기'를 눌러야 보인다.
+export function ScoreResult({ match }: { match: ScheduleMatch }) {
+  const { m, t: fmt } = useI18n();
+  const { hide } = useSpoiler();
+  const [revealed, setRevealed] = useState(false);
+  if (match.homeScore == null || match.awayScore == null) return null;
+  if (hide && !revealed) {
+    return (
+      <button type="button" className="reveal-btn" onClick={() => setRevealed(true)}>
+        {m.results.reveal}
+      </button>
+    );
+  }
+  const extra = extraLabel(match.extra, m.results);
+  return (
+    <>
+      <span className="result result-draw">
+        {match.homeScore}:{match.awayScore}
+        {match.homePen != null && match.awayPen != null ? (
+          <small className="result-pen">{fmt(m.results.pens, { a: match.homePen, b: match.awayPen })}</small>
+        ) : (
+          extra && <small className="result-pen">{extra}</small>
+        )}
+      </span>
+      <BoxScoreButton match={match} team={match.home ?? ""} />
+    </>
+  );
+}

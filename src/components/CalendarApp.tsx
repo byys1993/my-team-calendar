@@ -6,12 +6,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { LOCALE_COOKIE, isLocale } from "@/i18n/config";
 import { useI18n } from "@/i18n/client";
 import { formatLabel, formatTitle } from "@/i18n/format";
-import { MAX_TEAMS, type Catalog, type ScheduleMatch } from "@/lib/schedule";
+import { MAX_TEAMS, NO_DAY_LIST_SPORTS, type Catalog, type ScheduleMatch } from "@/lib/schedule";
 import { SOURCE_CREDITS, SOURCE_LABEL } from "@/lib/sources";
 import { AccountMenu } from "./AccountMenu";
 import { ColorPicker } from "./ColorPicker";
 import { LanguageSelect } from "./LanguageSelect";
 import { useAccount } from "./useAccount";
+import { LeagueDay } from "./LeagueDay";
 import { MatchRow } from "./MatchRow";
 import { MonthCalendar } from "./MonthCalendar";
 import { TeamPicker } from "./TeamPicker";
@@ -267,7 +268,13 @@ export function CalendarApp({
     const max = Math.max(0, ...times);
     return max ? new Date(max) : null;
   }, [catalog.competitions, catalog.lastSyncAt]);
-  const dayItems = byDay.get(selectedKey) ?? [];
+  const dayItems = useMemo(() => byDay.get(selectedKey) ?? [], [byDay, selectedKey]);
+  // 그날 내 팀이 뛴 대회 (같은 리그 다른 경기용, 이벤트형 종목 제외)
+  const dayComps = useMemo(
+    () => [...new Set(dayItems.filter((v) => !NO_DAY_LIST_SPORTS.includes(v.match.sport)).map((v) => v.match.competition))],
+    [dayItems],
+  );
+  const dayIds = useMemo(() => new Set(dayItems.map((v) => v.match.id)), [dayItems]);
 
   return (
     <TimeZoneProvider tz={tz}>
@@ -451,6 +458,15 @@ export function CalendarApp({
                       <MatchRow key={v.match.id} view={v} teamName={teamName} competitionName={competitionName} showDate={false} />
                     ))}
                   </ul>
+                )}
+                {dayComps.length > 0 && (
+                  <LeagueDay
+                    key={`${selectedKey}|${dayComps.join(",")}`}
+                    competitions={dayComps}
+                    dateKey={selectedKey}
+                    excludeIds={dayIds}
+                    competitionName={competitionName}
+                  />
                 )}
               </section>
             )}
