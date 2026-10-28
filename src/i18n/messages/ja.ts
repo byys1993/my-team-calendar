@@ -101,6 +101,10 @@ export const ja: Messages = {
     spoiler: "ネタバレ防止",
     spoilerHint: "オンにすると終了した試合のスコアと勝敗を隠します（見逃し配信で見るとき）",
     pens: "PK {a}-{b}",
+    ot: "延長",
+    otN: "延長{n}",
+    inn: "延長{n}回",
+    so: "SO",
   },
   records: {
     teamsTab: "チーム順位",

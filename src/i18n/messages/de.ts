@@ -102,6 +102,10 @@ export const de: Messages = {
     spoiler: "Ergebnisse ausblenden",
     spoilerHint: "Blendet Endstände und Ergebnisse aus (für späteres Ansehen)",
     pens: "i. E. {a}-{b}",
+    ot: "n. V.",
+    otN: "{n}. Verl.",
+    inn: "{n} Innings",
+    so: "Penaltyschießen",
   },
   records: {
     teamsTab: "Tabelle",

@@ -18,6 +18,8 @@ interface MlbGame {
     away: { team: { id: number; name: string }; score?: number };
   };
   venue?: { name?: string };
+  scheduledInnings?: number;
+  linescore?: { currentInning?: number };
 }
 
 // R 정규시즌, F 와일드카드, D 디비전시리즈, L 챔피언십시리즈, W 월드시리즈
@@ -63,7 +65,12 @@ export function parseMlb(json: { dates: { games: MlbGame[] }[] }): SourceMatch[]
         status: st === "scheduled" && tbd ? "time_tbd" : st,
         venue: g.venue?.name ?? null,
         ...(g.status.abstractGameState === "Final" && !/postponed|suspended|cancel/i.test(g.status.detailedState)
-          ? { homeScore: g.teams.home.score ?? null, awayScore: g.teams.away.score ?? null }
+          ? {
+              homeScore: g.teams.home.score ?? null,
+              awayScore: g.teams.away.score ?? null,
+              // 정규 이닝보다 길어진 경기 = 연장 (몇 회까지 갔는지)
+              ...((g.linescore?.currentInning ?? 0) > (g.scheduledInnings ?? 9) ? { extra: `inn:${g.linescore!.currentInning}` } : {}),
+            }
           : {}),
       };
     }),
@@ -78,7 +85,7 @@ export function mlb(fetcher: Fetcher = fetch, now = () => new Date()): SourceAda
     const url =
       `https://statsapi.mlb.com/api/v1/schedule?sportId=${encodeURIComponent(sportId)}&gameType=${GAME_TYPES}` +
       `&startDate=${day(new Date(t + fromDays * 86_400_000))}&endDate=${day(new Date(t + toDays * 86_400_000))}` +
-      "&hydrate=venue";
+      "&hydrate=venue,linescore";
     return parseMlb(await getJson(fetcher, url));
   };
   return {

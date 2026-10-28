@@ -24,9 +24,7 @@ export default async function AdminHome() {
     console.log(`[admin] ${name} ${Date.now() - s}ms`);
     return r;
   };
-  const { competitions, failures, reviewCount } = await step("overview", () =>
-    adminOverview(db),
-  );
+  const { competitions, failures, reviewCount } = await step("overview", () => adminOverview(db));
   const visitors = await step("visitors", () => getStats(db));
   const ics = await step("ics", () => getIcsStats(db));
   const notify = await step("users", () =>
@@ -38,8 +36,7 @@ export default async function AdminHome() {
   const month = await step("funnel30", () => funnel(db, 30));
   console.log(`[admin] total ${Date.now() - started}ms`);
   // 방문 → 팀 선택 → 구독 창 → 구독 버튼 → 로그인 → 알림 켬 (기간 안에 한 번이라도 한 사람 수)
-  const subscribed = (f: FunnelRow) =>
-    Math.max(f.events.sub_apple, f.events.sub_google, f.events.sub_copy);
+  const subscribed = (f: FunnelRow) => Math.max(f.events.sub_apple, f.events.sub_google, f.events.sub_copy);
   const steps: [string, (f: FunnelRow) => number][] = [
     ["방문", (f) => f.visitors],
     ["팀 고름", (f) => f.events.team_pick],
@@ -50,32 +47,25 @@ export default async function AdminHome() {
     ["알림 메일 켬", (f) => f.events.notify_on],
     ["문의 보냄", (f) => f.events.contact_sent],
   ];
-  const pct = (n: number, f: FunnelRow) =>
-    f.visitors ? ` (${Math.round((n / f.visitors) * 100)}%)` : "";
+  const pct = (n: number, f: FunnelRow) => (f.visitors ? ` (${Math.round((n / f.visitors) * 100)}%)` : "");
   return (
     <>
       <h1>현황</h1>
       <p className="muted">시각은 모두 한국 시간입니다.</p>
       {reviewCount > 0 && (
         <p className="notice-box">
-          한국어 이름이 필요한 팀이 {reviewCount}개 있습니다.{" "}
-          <Link href="/admin/teams">팀 이름 고치기</Link>
+          한국어 이름이 필요한 팀이 {reviewCount}개 있습니다. <Link href="/admin/teams">팀 이름 고치기</Link>
         </p>
       )}
       <section>
         <h2>이용 현황</h2>
-        <p className="muted">
-          사이트에는 보이지 않는 숫자입니다. 사용자가 충분히 늘면 첫 화면에 보여
-          줄 수 있습니다.
-        </p>
+        <p className="muted">사이트에는 보이지 않는 숫자입니다. 사용자가 충분히 늘면 첫 화면에 보여 줄 수 있습니다.</p>
         <table className="admin-table">
           <tbody>
             <tr>
               <td>방문자 (접속 중 · 오늘 · 전체)</td>
               <td className="num">
-                {visitors.online.toLocaleString()} ·{" "}
-                {visitors.today.toLocaleString()} ·{" "}
-                {visitors.total.toLocaleString()}
+                {visitors.online.toLocaleString()} · {visitors.today.toLocaleString()} · {visitors.total.toLocaleString()}
               </td>
             </tr>
             <tr>
@@ -87,8 +77,7 @@ export default async function AdminHome() {
             <tr>
               <td>로그인 계정 (전체 · 알림 메일 켬)</td>
               <td className="num">
-                {notify[0].users.toLocaleString()} ·{" "}
-                {notify[0].on.toLocaleString()}
+                {notify[0].users.toLocaleString()} · {notify[0].on.toLocaleString()}
               </td>
             </tr>
           </tbody>
@@ -96,10 +85,7 @@ export default async function AdminHome() {
       </section>
       <section>
         <h2>이용 흐름</h2>
-        <p className="muted">
-          기간 안에 그 행동을 한 번이라도 한 사람 수 (괄호는 방문자 대비).
-          어디서 많이 빠지는지 보는 용도입니다.
-        </p>
+        <p className="muted">기간 안에 그 행동을 한 번이라도 한 사람 수 (괄호는 방문자 대비). 어디서 많이 빠지는지 보는 용도입니다.</p>
         <table className="admin-table">
           <thead>
             <tr>
@@ -140,15 +126,7 @@ export default async function AdminHome() {
           <tbody>
             {competitions.map((c) => (
               <tr key={c.slug}>
-                <td>
-                  {c.feed === "manual" ? (
-                    <Link href={`/admin/matches?league=${c.slug}`}>
-                      {c.name_ko}
-                    </Link>
-                  ) : (
-                    c.name_ko
-                  )}
-                </td>
+                <td>{c.feed === "manual" ? <Link href={`/admin/matches?league=${c.slug}`}>{c.name_ko}</Link> : c.name_ko}</td>
                 <td>{c.feed === "manual" ? "수동" : "자동"}</td>
                 <td className="num">{c.matches.toLocaleString()}</td>
                 <td>{when(c.last_success_at)}</td>

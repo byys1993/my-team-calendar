@@ -33,6 +33,8 @@ export interface SourceMatch {
   // 승부차기 점수 (승부차기로 끝난 경기만)
   homePen?: number | null;
   awayPen?: number | null;
+  // 정규 시간 안에 끝나지 않은 경기: 'ot' · 'ot:2'(2차 연장) · 'so'(슛아웃) · 'inn:12'(야구 연장 12회)
+  extra?: string | null;
   // 순위 경기(F1)의 결과: 결승·스프린트는 1~3위, 예선은 폴 포지션
   podium?: Podium[] | null;
 }

@@ -4,14 +4,17 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { useI18n } from "@/i18n/client";
 import type { ScheduleMatch } from "@/lib/schedule";
 import { f1Driver } from "@/lib/f1names";
-import { resultFor } from "./result";
+import { extraLabel, resultFor } from "./result";
 
 // 스포일러 방지: 켜면 끝난 경기의 점수·승패를 가리고, 경기마다 '결과 보기'를 눌러야 보인다.
 // 다시보기로 볼 사람을 위한 기능이라 이 브라우저에만 저장한다.
 
 const STORAGE_KEY = "mtc.spoiler.v1";
 
-const Ctx = createContext<{ hide: boolean; setHide(v: boolean): void }>({ hide: false, setHide: () => {} });
+const Ctx = createContext<{ hide: boolean; setHide(v: boolean): void }>({
+  hide: false,
+  setHide: () => {},
+});
 
 export function SpoilerProvider({ children }: { children: ReactNode }) {
   const [hide, setHideState] = useState(false);
@@ -70,9 +73,7 @@ export function PodiumResult({ match }: { match: ScheduleMatch }) {
   const isQuali = match.title?.endsWith(":qualifying");
   return (
     <span className="podium">
-      {isQuali
-        ? `${m.results.pole} ${name(podium[0])}`
-        : podium.map((p) => `${MEDAL[p.pos - 1] ?? `${p.pos}.`} ${name(p)}`).join("  ")}
+      {isQuali ? `${m.results.pole} ${name(podium[0])}` : podium.map((p) => `${MEDAL[p.pos - 1] ?? `${p.pos}.`} ${name(p)}`).join("  ")}
     </span>
   );
 }
@@ -84,6 +85,7 @@ export function MatchResult({ match, team }: { match: ScheduleMatch; team: strin
   const [revealed, setRevealed] = useState(false);
   const r = resultFor(match, team);
   if (!r) return null;
+  const extra = extraLabel(match.extra, m.results);
   if (hide && !revealed) {
     return (
       <button type="button" className="reveal-btn" onClick={() => setRevealed(true)}>
@@ -95,6 +97,7 @@ export function MatchResult({ match, team }: { match: ScheduleMatch; team: strin
     <span className={`result result-${r.outcome}`}>
       {m.results[r.outcome]} {r.mine}:{r.theirs}
       {r.pen && <small className="result-pen">{fmt(m.results.pens, { a: r.pen.mine, b: r.pen.theirs })}</small>}
+      {!r.pen && extra && <small className="result-pen">{extra}</small>}
     </span>
   );
 }

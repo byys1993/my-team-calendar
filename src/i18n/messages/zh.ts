@@ -101,6 +101,10 @@ export const zh: Messages = {
     spoiler: "防剧透",
     spoilerHint: "开启后隐藏已结束比赛的比分和胜负（适合看回放）",
     pens: "点球 {a}-{b}",
+    ot: "加时",
+    otN: "{n}次加时",
+    inn: "延长至{n}局",
+    so: "点球大战",
   },
   records: {
     teamsTab: "球队排名",

@@ -3,7 +3,7 @@ import type { Locale } from "@/i18n/config";
 import { formatLabel, formatTitle } from "@/i18n/format";
 import { f1Driver } from "@/lib/f1names";
 import type { ScheduleMatch } from "@/lib/schedule";
-import { resultFor } from "./result";
+import { extraLabel, resultFor } from "./result";
 import { dateLabel, isDawn, matchDateKey, matchTimeLabel } from "./time";
 
 // 팀·리그 페이지의 경기 목록 (서버에서 그린다). 시각은 한국 시간 기준.
@@ -39,7 +39,11 @@ export function PageMatchList({
         const plainScore =
           showResult && !mine && x.homeScore != null && x.awayScore != null
             ? `${x.homeScore}:${x.awayScore}` +
-              (x.homePen != null && x.awayPen != null ? ` (${fmt(m.results.pens, { a: x.homePen, b: x.awayPen })})` : "")
+              (x.homePen != null && x.awayPen != null
+                ? ` (${fmt(m.results.pens, { a: x.homePen, b: x.awayPen })})`
+                : extraLabel(x.extra, m.results)
+                  ? ` (${extraLabel(x.extra, m.results)})`
+                  : "")
             : null;
         const status = x.status !== "scheduled" && x.status !== "time_tbd" ? m.status[x.status] : null;
         const round = formatLabel(x.roundLabel, m);
@@ -60,6 +64,7 @@ export function PageMatchList({
                 <span className={`result result-${r.outcome}`}>
                   {m.results[r.outcome]} {r.mine}:{r.theirs}
                   {r.pen && <small className="result-pen">{fmt(m.results.pens, { a: r.pen.mine, b: r.pen.theirs })}</small>}
+                  {!r.pen && extraLabel(x.extra, m.results) && <small className="result-pen">{extraLabel(x.extra, m.results)}</small>}
                 </span>
               )}
               {plainScore && <span className="result result-draw">{plainScore}</span>}

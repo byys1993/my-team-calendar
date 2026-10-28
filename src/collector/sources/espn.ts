@@ -26,7 +26,7 @@ export interface EspnEvent {
     neutralSite?: boolean;
     venue?: { fullName?: string };
     competitors: EspnCompetitor[];
-    status?: { type?: { name?: string; completed?: boolean } };
+    status?: { type?: { name?: string; completed?: boolean; detail?: string } };
     notes?: { headline?: string }[];
   }[];
 }
@@ -102,9 +102,18 @@ export function parseEspnEvent(e: EspnEvent, path = "soccer/eng.1"): SourceMatch
           homeScore: scoreOf(c.competitors.find((x) => x.homeAway === "home")),
           awayScore: scoreOf(c.competitors.find((x) => x.homeAway === "away")),
           ...penOf(c.competitors),
+          ...extraOf(c.status?.type),
         }
       : {}),
   };
+}
+
+// 연장: 미국 리그는 'Final/OT', 'Final/2OT', 축구는 STATUS_FINAL_AET (승부차기 경기는 승부차기 점수로 따로 보여 준다)
+export function extraOf(t?: { name?: string; detail?: string }): { extra?: string } {
+  if (t?.name === "STATUS_FINAL_AET") return { extra: "ot" };
+  const ot = t?.detail?.match(/\/(\d*)OT\b/);
+  if (!ot) return {};
+  return { extra: Number(ot[1]) > 1 ? `ot:${ot[1]}` : "ot" };
 }
 
 // 승부차기 점수: scoreboard 응답은 competitor 에, 팀 일정 응답은 score 안에 있다

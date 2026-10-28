@@ -102,6 +102,10 @@ export const en = {
     spoiler: "Hide scores",
     spoilerHint: "Hide final scores and results (for watching replays later)",
     pens: "pens {a}-{b}",
+    ot: "OT",
+    otN: "{n}OT",
+    inn: "{n} inn.",
+    so: "SO",
   },
   records: {
     teamsTab: "Team standings",

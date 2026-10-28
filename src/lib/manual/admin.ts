@@ -95,11 +95,7 @@ function toAdmin(r: Row): AdminMatch {
 }
 
 // month: 'YYYY-MM' (한국 시간 기준)
-export async function listManualMatches(
-  db: Db,
-  league: string,
-  month: string,
-): Promise<AdminMatch[]> {
+export async function listManualMatches(db: Db, league: string, month: string): Promise<AdminMatch[]> {
   const from = `${month}-01T00:00:00+09:00`;
   const rows = await db.query<Row>(
     `${SELECT}
@@ -112,61 +108,35 @@ export async function listManualMatches(
   return rows.map(toAdmin);
 }
 
-export async function getManualMatch(
-  db: Db,
-  id: string,
-): Promise<AdminMatch | null> {
+export async function getManualMatch(db: Db, id: string): Promise<AdminMatch | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const [row] = await db.query<Row>(`${SELECT} where m.id = $1`, [id]);
   return row ? toAdmin(row) : null;
 }
 
-export async function manualKeyExists(
-  db: Db,
-  league: string,
-  gameKey: string,
-): Promise<boolean> {
-  const rows = await db.query(
-    "select 1 from match_source_ref where source = 'manual' and external_id = $1",
-    [`${league}:${gameKey}`],
-  );
+export async function manualKeyExists(db: Db, league: string, gameKey: string): Promise<boolean> {
+  const rows = await db.query("select 1 from match_source_ref where source = 'manual' and external_id = $1", [`${league}:${gameKey}`]);
   return rows.length > 0;
 }
 
 async function competitionId(db: Db, league: string): Promise<number> {
-  const [c] = await db.query<{ id: number }>(
-    "select id from competition where slug = $1 and feed = 'manual'",
-    [league],
-  );
+  const [c] = await db.query<{ id: number }>("select id from competition where slug = $1 and feed = 'manual'", [league]);
   if (!c) throw new Error(`수동 입력 대회가 아닙니다: ${league}`);
   return c.id;
 }
 
 export async function createManualMatch(db: Db, row: ManualRow) {
-  return saveManualMatches(db, await competitionId(db, row.league), [
-    toSourceMatch(row),
-  ]);
+  return saveManualMatches(db, await competitionId(db, row.league), [toSourceMatch(row)]);
 }
 
 // 화면에서 고친 내용은 그대로 반영한다 (CSV 와 달리 빈 칸이면 장소·라운드도 지운다).
 // 일정(날짜·시각·상태·장소·팀)이 바뀌면 sequence 를 올려 추후 ICS 구독에도 변경이 전달되게 한다.
-export async function updateManualMatch(
-  db: Db,
-  id: string,
-  row: ManualRow,
-): Promise<void> {
+export async function updateManualMatch(db: Db, id: string, row: ManualRow): Promise<void> {
   const before = await getManualMatch(db, id);
   if (!before) throw new Error("경기를 찾을 수 없습니다.");
   const m = toSourceMatch(row);
   const teamId = async (slug: string | null) =>
-    slug
-      ? ((
-          await db.query<{ id: number }>(
-            "select id from team where slug = $1",
-            [slug],
-          )
-        )[0]?.id ?? null)
-      : null;
+    slug ? ((await db.query<{ id: number }>("select id from team where slug = $1", [slug]))[0]?.id ?? null) : null;
   const scheduleChanged =
     before.date !== row.date ||
     before.time !== row.time ||
@@ -246,16 +216,8 @@ export async function reviewTeams(db: Db) {
   );
 }
 
-export async function updateTeamName(
-  db: Db,
-  slug: string,
-  nameKo: string,
-  shortKo: string | null,
-): Promise<void> {
-  await db.query(
-    "update team set name_ko = $2, short_ko = $3, needs_review = false where slug = $1",
-    [slug, nameKo, shortKo],
-  );
+export async function updateTeamName(db: Db, slug: string, nameKo: string, shortKo: string | null): Promise<void> {
+  await db.query("update team set name_ko = $2, short_ko = $3, needs_review = false where slug = $1", [slug, nameKo, shortKo]);
 }
 
 // 관리자 첫 화면: 대회별 상태와 최근 수집 실패
@@ -286,9 +248,7 @@ export async function adminOverview(db: Db) {
        from sync_run r join competition c on c.id = r.competition_id
        where not r.ok order by r.started_at desc limit 10`,
     ),
-    await db.query<{ n: number }>(
-      "select count(*)::int as n from team where needs_review",
-    ),
+    await db.query<{ n: number }>("select count(*)::int as n from team where needs_review"),
   ];
   return { competitions, failures, reviewCount: review[0].n };
 }

@@ -50,6 +50,7 @@ export interface ScheduleMatch {
   awayScore: number | null;
   homePen?: number | null; // 승부차기 점수 (승부차기로 끝난 경기만)
   awayPen?: number | null;
+  extra?: string | null; // 'ot' · 'ot:2' · 'so' · 'inn:12' (연장·슛아웃)
   broadcast: string | null; // 국내 중계 ('SPOTV, TVING'): 경기별 채널 + 대회 기본 플랫폼
   sequence: number; // 일정이 바뀔 때마다 +1 (ICS)
   updatedAt: string;
@@ -141,6 +142,7 @@ interface MatchRowDb {
   away_score: number | null;
   home_pen: number | null;
   away_pen: number | null;
+  extra: string | null;
   podium: Podium[] | null;
 }
 
@@ -153,7 +155,7 @@ async function queryMatches(db: Db, locale: Locale, where: string, params: unkno
        case when $1 = 'ko' then coalesce(a.short_ko, a.name_ko, m.away_placeholder)
             else coalesce(a.name_en, m.away_placeholder) end as away_label,
        m.start_at, to_char(m.date_only, 'YYYY-MM-DD') as date_only, m.status, m.venue, m.is_neutral, m.sequence, m.updated_at,
-       m.broadcast, c.broadcast as comp_broadcast, m.home_score, m.away_score, m.home_pen, m.away_pen, m.podium
+       m.broadcast, c.broadcast as comp_broadcast, m.home_score, m.away_score, m.home_pen, m.away_pen, m.extra, m.podium
      from match m
      join competition c on c.id = m.competition_id
      join sport s on s.id = c.sport_id
@@ -184,6 +186,7 @@ async function queryMatches(db: Db, locale: Locale, where: string, params: unkno
     awayScore: r.away_score,
     homePen: r.home_pen,
     awayPen: r.away_pen,
+    extra: r.extra,
     broadcast: mergeBroadcast(r.broadcast, r.comp_broadcast),
     sequence: r.sequence,
     updatedAt: r.updated_at.toISOString(),

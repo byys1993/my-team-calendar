@@ -1,3 +1,4 @@
+import type { Messages } from "@/i18n";
 import type { ScheduleMatch } from "@/lib/schedule";
 
 export type Outcome = "win" | "draw" | "loss";
@@ -18,8 +19,31 @@ export function resultFor(m: ScheduleMatch, team: string): TeamResult | null {
   const mine = isHome ? m.homeScore : m.awayScore;
   const theirs = isHome ? m.awayScore : m.homeScore;
   if (mine === theirs && m.homePen != null && m.awayPen != null && m.homePen !== m.awayPen) {
-    const pen = { mine: isHome ? m.homePen : m.awayPen, theirs: isHome ? m.awayPen : m.homePen };
-    return { mine, theirs, outcome: pen.mine > pen.theirs ? "win" : "loss", pen };
+    const pen = {
+      mine: isHome ? m.homePen : m.awayPen,
+      theirs: isHome ? m.awayPen : m.homePen,
+    };
+    return {
+      mine,
+      theirs,
+      outcome: pen.mine > pen.theirs ? "win" : "loss",
+      pen,
+    };
   }
-  return { mine, theirs, outcome: mine > theirs ? "win" : mine < theirs ? "loss" : "draw" };
+  return {
+    mine,
+    theirs,
+    outcome: mine > theirs ? "win" : mine < theirs ? "loss" : "draw",
+  };
+}
+
+// 정규 시간 안에 끝나지 않은 경기 표시: '연장', '2차 연장', '연장 12회', '슛아웃'
+export function extraLabel(extra: string | null | undefined, r: Messages["results"]): string | null {
+  if (!extra) return null;
+  if (extra === "so") return r.so;
+  if (extra === "ot") return r.ot;
+  const [kind, n] = extra.split(":");
+  if (kind === "ot" && n) return r.otN.replace("{n}", n);
+  if (kind === "inn" && n) return r.inn.replace("{n}", n);
+  return null;
 }

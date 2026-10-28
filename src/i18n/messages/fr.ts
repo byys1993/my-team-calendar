@@ -102,6 +102,10 @@ export const fr: Messages = {
     spoiler: "Masquer les scores",
     spoilerHint: "Masque les scores et résultats (pour regarder en différé)",
     pens: "t.a.b. {a}-{b}",
+    ot: "prol.",
+    otN: "{n} prol.",
+    inn: "{n} manches",
+    so: "tirs de barrage",
   },
   records: {
     teamsTab: "Classement",

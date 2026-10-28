@@ -25,6 +25,7 @@ interface NhlGame {
   seriesStatus?: { round?: number; gameNumberOfSeries?: number };
   homeTeam: NhlTeam;
   awayTeam: NhlTeam;
+  gameOutcome?: { lastPeriodType?: string; otPeriods?: number };
 }
 
 const STATE: Record<string, MatchStatus> = { PPD: "postponed", SUSP: "postponed", CNCL: "cancelled", TBD: "time_tbd" };
@@ -51,9 +52,16 @@ export function parseNhlGame(g: NhlGame): SourceMatch | null {
     venue: g.venue?.default ?? null,
     isNeutral: g.neutralSite ?? false,
     ...(g.gameState === "FINAL" || g.gameState === "OFF"
-      ? { homeScore: g.homeTeam.score ?? null, awayScore: g.awayTeam.score ?? null }
+      ? { homeScore: g.homeTeam.score ?? null, awayScore: g.awayTeam.score ?? null, ...nhlExtra(g.gameOutcome) }
       : {}),
   };
+}
+
+// 연장(OT)·슛아웃(SO)으로 끝난 경기
+function nhlExtra(o?: NhlGame["gameOutcome"]): { extra?: string } {
+  if (o?.lastPeriodType === "SO") return { extra: "so" };
+  if (o?.lastPeriodType === "OT") return { extra: (o.otPeriods ?? 1) > 1 ? `ot:${o.otPeriods}` : "ot" };
+  return {};
 }
 
 function collect(games: NhlGame[], into: Map<string, SourceMatch>) {
