@@ -3,7 +3,7 @@ import { upsertMatches } from "@/collector/upsert";
 import type { Db } from "@/lib/db";
 import { seed } from "@/lib/db/seed";
 import { getLeaguePage, isLeagueQueryValid } from "@/lib/pages";
-import { getCompetitionsDay } from "@/lib/schedule";
+import { getCompetitionMonth, getCompetitionsDay, isValidTz } from "@/lib/schedule";
 import { espnMatch, setupDb } from "./helpers";
 
 let db: Db & { close(): Promise<void> };
@@ -115,5 +115,28 @@ describe("같은 리그 다른 경기 (날짜 패널)", () => {
     const sat = await getCompetitionsDay(db, ["epl"], "2026-10-24", "Asia/Seoul", "en");
     expect(sat[0]).toMatchObject({ homeScore: 1, awayScore: 1, homeLabel: "Arsenal" });
     expect(await getCompetitionsDay(db, [], "2026-10-25", "Asia/Seoul", "ko")).toEqual([]);
+  });
+});
+
+describe("리그 일정 탭 (한 달)", () => {
+  it("그 시간대 기준 그 달의 경기만, 취소 경기는 빼고", async () => {
+    await upsertMatches(db, eplId, "espn", [
+      m("1", "2026-09-30T16:00:00Z", "359", "368", "@md:6"), // 한국 10월 1일 01시, 런던 9월 30일
+      m("2", "2026-10-18T14:00:00Z", "382", "359", "@md:8", [1, 2]),
+      m("3", "2026-10-31T16:00:00Z", "368", "382", "@md:10"), // 한국 11월 1일 01시
+      m("4", "2026-10-20T14:00:00Z", "368", "359", "@md:9"),
+    ]);
+    await db.query(`update match set status = 'cancelled' where start_at = '2026-10-20T14:00:00Z'`);
+    const seoul = await getCompetitionMonth(db, "epl", "2026-10", "Asia/Seoul", "ko");
+    expect(seoul.map((x) => x.startAt)).toEqual(["2026-09-30T16:00:00.000Z", "2026-10-18T14:00:00.000Z"]);
+    expect(seoul[1]).toMatchObject({ homeScore: 1, awayScore: 2 });
+    const london = await getCompetitionMonth(db, "epl", "2026-10", "Europe/London", "ko");
+    expect(london.map((x) => x.startAt)).toEqual(["2026-10-18T14:00:00.000Z", "2026-10-31T16:00:00.000Z"]);
+    expect(await getCompetitionMonth(db, "nope", "2026-10", "Asia/Seoul", "ko")).toEqual([]);
+  });
+
+  it("시간대 이름 검사", () => {
+    expect(isValidTz("Asia/Seoul")).toBe(true);
+    expect(isValidTz("Mars/Olympus")).toBe(false);
   });
 });

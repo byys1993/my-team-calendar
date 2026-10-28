@@ -235,6 +235,16 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Lo
 // 날짜 패널의 '같은 리그 다른 경기'에서 빼는 종목. 이벤트형(F1)은 팀·드라이버 선택 방식으로 따로 보여 준다
 export const NO_DAY_LIST_SPORTS = ["motorsport"];
 
+// API 로 받은 시간대 이름이 올바른지 ('Asia/Seoul')
+export function isValidTz(tz: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // 그 순간이 tz 에서 며칠인지 'YYYY-MM-DD' (서버용, 화면 쪽 toDateKey 와 같은 방식)
 const dayKey = (iso: string, tz: string) =>
   new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: tz }).format(new Date(iso));
@@ -263,4 +273,19 @@ export async function getCompetitionsDay(
     ],
   );
   return rows.filter((m) => m.status !== "cancelled" && (m.startAt ? dayKey(m.startAt, tz) : m.dateOnly) === dateKey);
+}
+
+// 한 대회의 한 달(tz 기준 'YYYY-MM') 경기 (리그 일정 탭의 달력)
+export async function getCompetitionMonth(db: Db, competition: string, month: string, tz: string, locale: Locale): Promise<ScheduleMatch[]> {
+  const [y, m] = month.split("-").map(Number);
+  // 시간대 차이를 덮도록 앞뒤 하루를 더 받아 그 시간대 날짜로 거른다
+  const from = Date.UTC(y, m - 1, 1) - 86_400_000;
+  const to = Date.UTC(y, m, 1) + 86_400_000;
+  const rows = await queryMatches(
+    db,
+    locale,
+    `c.slug = $2 and coalesce(m.start_at, m.date_only::timestamptz) >= $3 and coalesce(m.start_at, m.date_only::timestamptz) < $4`,
+    [competition, new Date(from).toISOString(), new Date(to).toISOString()],
+  );
+  return rows.filter((x) => x.status !== "cancelled" && (x.startAt ? dayKey(x.startAt, tz) : (x.dateOnly ?? "")).startsWith(`${month}-`));
 }

@@ -1979,6 +1979,9 @@ a {
 .league-day-link {
   display: inline-block;
   margin-top: 8px;
+  padding: 0;
+  background: transparent;
+  border: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--accent);
@@ -2022,4 +2025,66 @@ a {
 
 .league-nav a.current {
   color: var(--accent);
+}
+
+/* 리그 일정 탭: 달력 칸의 경기 수, 내 팀 경기가 있는 날은 팀 색 점 */
+.league-cal .records-tabs {
+  margin-bottom: 12px;
+}
+
+.lc-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.lc-count {
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 22px;
+  text-align: center;
+  padding: 1px 6px;
+  border-radius: 999px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+.lc-cell .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--team);
+}
+
+.league-cal .day-list h2 .small {
+  font-weight: 500;
+}
+
+/* 내 팀 경기 줄 */
+.league-day-list li.mine {
+  border-inline-start: 3px solid var(--team-ink, var(--team));
+  padding-inline-start: 8px;
+  background: color-mix(in srgb, var(--team) 7%, transparent);
+}
+
+.league-day-list li.mine .ld-teams {
+  font-weight: 700;
+}
+
+/* 휴대폰: 탭 세 개가 한 줄에 들어가게 */
+@media (max-width: 480px) {
+  .view-tabs button {
+    flex: 1;
+    padding: 8px 4px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .lc-count {
+    min-width: 0;
+    padding: 1px 4px;
+    font-size: 11px;
+  }
 }

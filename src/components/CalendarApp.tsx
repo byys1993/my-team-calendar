@@ -12,6 +12,7 @@ import { AccountMenu } from "./AccountMenu";
 import { ColorPicker } from "./ColorPicker";
 import { LanguageSelect } from "./LanguageSelect";
 import { useAccount } from "./useAccount";
+import { LeagueCalendar } from "./LeagueCalendar";
 import { LeagueDay } from "./LeagueDay";
 import { MatchRow } from "./MatchRow";
 import { MonthCalendar } from "./MonthCalendar";
@@ -127,8 +128,10 @@ export function CalendarApp({
   const [now, setNow] = useState<Date | null>(null);
   const [cursor, setCursor] = useState<{ y: number; m: number } | null>(null);
   const [selectedKey, setSelectedKey] = useState<string>("");
-  // 화면: 캘린더 / 순위(리그 순위표)
-  const [view, setView] = useState<"calendar" | "records">("calendar");
+  // 화면: 응원팀 일정(캘린더) / 리그 일정 / 리그 순위
+  const [view, setView] = useState<"calendar" | "league" | "records">("calendar");
+  // 리그 일정 탭을 특정 리그·날짜로 열 때 (같은 리그 다른 경기 → 리그 전체 일정)
+  const [leagueTarget, setLeagueTarget] = useState<{ comp: string; date: string } | null>(null);
   // 화면 시간대: '자동'이면 브라우저 시간대 (브라우저 값은 화면이 뜬 뒤에만 알 수 있다)
   const { pref: tzPref, setPref: setTzPref } = useTimeZonePref();
   const tz = now ? (tzPref === AUTO ? browserTimeZone() : tzPref) : "UTC";
@@ -364,10 +367,25 @@ export function CalendarApp({
         <button type="button" role="tab" aria-selected={view === "calendar"} onClick={() => setView("calendar")}>
           📅 {t.records.calendarTab}
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === "league"}
+          onClick={() => {
+            setView("league");
+            track("league_tab");
+          }}
+        >
+          🗓️ {t.app.leagueTab}
+        </button>
         <button type="button" role="tab" aria-selected={view === "records"} onClick={() => setView("records")}>
           📊 {t.records.tab}
         </button>
       </nav>
+
+      {view === "league" && todayKey && (
+        <LeagueCalendar catalog={catalog} selections={selections} todayKey={todayKey} target={leagueTarget} />
+      )}
 
       {view === "records" && <RecordsView catalog={catalog} selections={selections} />}
 
@@ -466,6 +484,11 @@ export function CalendarApp({
                     dateKey={selectedKey}
                     excludeIds={dayIds}
                     competitionName={competitionName}
+                    onOpenLeague={(comp) => {
+                      setLeagueTarget({ comp, date: selectedKey });
+                      setView("league");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
                   />
                 )}
               </section>

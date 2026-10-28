@@ -2,28 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n/client";
-import { formatLabel } from "@/i18n/format";
 import type { ScheduleMatch } from "@/lib/schedule";
-import { isTentative } from "./matchView";
-import { ScoreResult } from "./spoiler";
-import { isDawn, matchTimeLabel } from "./time";
+import { LeagueMatchList } from "./LeagueMatchList";
 import { useTz } from "./timezone";
 import { track } from "./track";
 
 // 날짜 패널 아래 '같은 리그 다른 경기 ▸': 그날 내 팀이 뛴 대회의 다른 경기. 처음엔 접혀 있고, 펼칠 때 받아 온다.
+// 맨 아래 '리그 전체 일정 →' 은 리그 일정 탭을 그 리그·그 날짜로 연다
 // competitions: 보여 줄 대회(내 팀 경기 순서), excludeIds: 이미 내 목록에 있는 경기
 export function LeagueDay({
   competitions,
   dateKey,
   excludeIds,
   competitionName,
+  onOpenLeague,
 }: {
   competitions: string[];
   dateKey: string;
   excludeIds: Set<string>;
   competitionName: (slug: string) => string;
+  onOpenLeague: (competition: string) => void; // 리그 일정 탭에서 이 리그·이 날짜로
 }) {
-  const { m: t, t: fmt, intl, locale } = useI18n();
+  const { m: t, t: fmt, locale } = useI18n();
   const tz = useTz();
   const [open, setOpen] = useState(false);
   const [matches, setMatches] = useState<ScheduleMatch[] | null>(null);
@@ -46,7 +46,6 @@ export function LeagueDay({
   }, [open, matches, comps, dateKey, tz, locale]);
 
   const others = matches?.filter((x) => !excludeIds.has(x.id)) ?? null;
-  const label = (s: string) => formatLabel(s, t) ?? s;
 
   return (
     <div className="league-day">
@@ -72,34 +71,11 @@ export function LeagueDay({
               return (
                 <section key={c} className="league-day-group">
                   {competitions.length > 1 && <h3>{competitionName(c)}</h3>}
-                  {list.length > 0 && (
-                    <ul className="league-day-list">
-                      {list.map((x) => {
-                        const status = x.status === "scheduled" ? null : t.status[x.status];
-                        const round = formatLabel(x.roundLabel, t);
-                        return (
-                          <li key={x.id} className={isTentative(x) ? "tentative" : undefined}>
-                            <span className="ld-time">
-                              {isDawn(x, tz) && "🌙"}
-                              {matchTimeLabel(x, intl, t.match.timeTbd, tz)}
-                            </span>
-                            <span className="ld-what">
-                              <span className="ld-teams">
-                                {label(x.homeLabel)} {t.match.vs} {label(x.awayLabel)}
-                              </span>
-                              {status && <span className="status">{status}</span>}
-                              <ScoreResult match={x} />
-                              {round && <span className="ld-meta muted">{round}</span>}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                  <a className="league-day-link" href={`/league/${c}`}>
+                  {list.length > 0 && <LeagueMatchList matches={list} />}
+                  <button type="button" className="league-day-link" onClick={() => onOpenLeague(c)}>
                     {competitions.length > 1 ? `${competitionName(c)} · ` : ""}
                     {t.app.leagueAll}
-                  </a>
+                  </button>
                 </section>
               );
             })}
