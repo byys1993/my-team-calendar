@@ -40,4 +40,8 @@ export default {
     if (event.cron === "7 * * * *") await sync(env);
     else await notify(env);
   },
+  // 주소를 브라우저로 열었을 때 오류 대신 안내만 보여 준다
+  async fetch() {
+    return new Response("my-team-calendar cron worker (예약 실행 전용)", { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+  },
 };
