@@ -5,6 +5,7 @@ import { useI18n } from "@/i18n/client";
 import type { ScheduleMatch } from "@/lib/schedule";
 import { f1Driver } from "@/lib/f1names";
 import { extraLabel, resultFor } from "./result";
+import { BoxScoreButton } from "./BoxScore";
 
 // 스포일러 방지: 켜면 끝난 경기의 점수·승패를 가리고, 경기마다 '결과 보기'를 눌러야 보인다.
 // 다시보기로 볼 사람을 위한 기능이라 이 브라우저에만 저장한다.
@@ -78,7 +79,7 @@ export function PodiumResult({ match }: { match: ScheduleMatch }) {
   );
 }
 
-// 목록의 결과 표시: '승 3:1'. 스포일러 방지 중이면 '결과 보기' 버튼을 눌러야 보인다.
+// 목록의 결과 표시: '승 3:1' (+ 미국 4대 리그는 '기록' 버튼). 스포일러 방지 중이면 '결과 보기' 버튼을 눌러야 보인다.
 export function MatchResult({ match, team }: { match: ScheduleMatch; team: string }) {
   const { m, t: fmt } = useI18n();
   const { hide } = useSpoiler();
@@ -94,10 +95,13 @@ export function MatchResult({ match, team }: { match: ScheduleMatch; team: strin
     );
   }
   return (
-    <span className={`result result-${r.outcome}`}>
-      {m.results[r.outcome]} {r.mine}:{r.theirs}
-      {r.pen && <small className="result-pen">{fmt(m.results.pens, { a: r.pen.mine, b: r.pen.theirs })}</small>}
-      {!r.pen && extra && <small className="result-pen">{extra}</small>}
-    </span>
+    <>
+      <span className={`result result-${r.outcome}`}>
+        {m.results[r.outcome]} {r.mine}:{r.theirs}
+        {r.pen && <small className="result-pen">{fmt(m.results.pens, { a: r.pen.mine, b: r.pen.theirs })}</small>}
+        {!r.pen && extra && <small className="result-pen">{extra}</small>}
+      </span>
+      <BoxScoreButton match={match} team={team} />
+    </>
   );
 }

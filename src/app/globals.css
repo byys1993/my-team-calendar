@@ -1711,3 +1711,123 @@ a {
   font-size: 12px;
   line-height: 1.4;
 }
+
+/* 경기 기록지 */
+.box-btn {
+  font: inherit;
+  font-size: 12px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  margin-inline-start: 6px;
+  cursor: pointer;
+}
+
+.box-btn:hover {
+  color: var(--text);
+}
+
+.box-dialog {
+  width: min(760px, calc(100vw - 16px));
+}
+
+.box-dialog .picker-head h2 {
+  font-size: 16px;
+}
+
+.box-body h3 {
+  font-size: 14px;
+  margin: 14px 0 6px;
+  color: var(--text);
+}
+
+.box-scroll {
+  overflow-x: auto;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.box-table {
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.box-table th,
+.box-table td {
+  padding: 4px 7px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.box-table thead th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.box-table tbody th {
+  text-align: start;
+  font-weight: 500;
+  position: sticky;
+  inset-inline-start: 0;
+  background: var(--surface);
+}
+
+.box-table small {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.box-table .box-note {
+  color: var(--accent, var(--muted));
+}
+
+.box-line,
+.box-players {
+  min-width: 100%;
+}
+
+.box-team {
+  width: 100%;
+}
+
+.box-team tbody th {
+  color: var(--muted);
+}
+
+.box-sum,
+.box-table td.box-sum {
+  font-weight: 700;
+}
+
+.box-sub th {
+  padding-inline-start: 18px;
+}
+
+.box-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 16px 0 0;
+}
+
+.box-tabs button {
+  flex: 1;
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.box-tabs button.on {
+  color: var(--text);
+  border-color: var(--text);
+  font-weight: 600;
+}

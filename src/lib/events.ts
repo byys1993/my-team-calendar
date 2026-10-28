@@ -6,6 +6,7 @@ import { seoulDay } from "@/lib/visitors";
 export const EVENTS = [
   "team_pick", // 팀을 하나라도 고름
   "share", // 내 팀 구성 공유 버튼
+  "box_open", // 끝난 경기 기록지를 엶
   "link_add", // 팀 페이지의 '이 팀 추가'로 들어옴
   "sub_open", // 캘린더 구독 창을 엶
   "sub_apple", // Apple 캘린더 추가를 누름

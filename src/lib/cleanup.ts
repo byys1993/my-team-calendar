@@ -1,4 +1,5 @@
 import type { Db } from "@/lib/db";
+import { BOX_KEEP_DAYS } from "@/lib/boxscoreStore";
 
 // 더 이상 필요 없는 기록을 지운다 (매시간 알림 발송 때 함께 실행). 개인정보는 필요 없어지면 바로 지운다는 원칙.
 // - 만료된 로그인 세션
@@ -6,12 +7,14 @@ import type { Db } from "@/lib/db";
 // - 요청 제한 기록: 하루 지난 것 (가장 긴 제한 창이 1시간)
 // - 접속 중 기록: 하루 지난 것 (오늘·전체 방문자 수는 따로 남는다)
 // - 캘린더 구독 기록: 90일 넘게 불리지 않은 것
+// - 경기 기록지: 3년(3시즌) 지난 경기 (다시 열면 그때 또 받는다)
 export interface CleanupResult {
   sessions: number;
   loginCodes: number;
   rateLimits: number;
   presence: number;
   icsFeeds: number;
+  boxscores: number;
 }
 
 export async function cleanupExpired(db: Db, now = new Date()): Promise<CleanupResult> {
@@ -24,5 +27,9 @@ export async function cleanupExpired(db: Db, now = new Date()): Promise<CleanupR
     presence: await count("delete from visitor_presence where last_seen < $1", [dayAgo]),
     // 90일 넘게 아무도 안 불러간 구독 주소
     icsFeeds: await count("delete from ics_feed where last_seen < $1", [new Date(now.getTime() - 90 * 86_400_000).toISOString()]),
+    boxscores: await count(
+      "delete from boxscore b using match m where m.id = b.match_id and m.start_at < $1",
+      [new Date(now.getTime() - BOX_KEEP_DAYS * 86_400_000).toISOString()],
+    ),
   };
 }
