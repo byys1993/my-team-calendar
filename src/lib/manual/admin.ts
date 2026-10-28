@@ -4,8 +4,18 @@ import { saveManualMatches, toSourceMatch, type ManualRow } from "./import";
 
 // 관리자 화면에서 쓰는 수동 입력 경기(KBO·KBL) 조회·수정. 화면 입출력은 모두 한국 시간이다.
 
-const kstDate = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" });
-const kstTime = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+const kstDate = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Seoul",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+const kstTime = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Asia/Seoul",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
 
 export function toKst(d: Date): { date: string; time: string } {
   return { date: kstDate.format(d), time: kstTime.format(d) };
@@ -85,7 +95,11 @@ function toAdmin(r: Row): AdminMatch {
 }
 
 // month: 'YYYY-MM' (한국 시간 기준)
-export async function listManualMatches(db: Db, league: string, month: string): Promise<AdminMatch[]> {
+export async function listManualMatches(
+  db: Db,
+  league: string,
+  month: string,
+): Promise<AdminMatch[]> {
   const from = `${month}-01T00:00:00+09:00`;
   const rows = await db.query<Row>(
     `${SELECT}
@@ -98,37 +112,61 @@ export async function listManualMatches(db: Db, league: string, month: string): 
   return rows.map(toAdmin);
 }
 
-export async function getManualMatch(db: Db, id: string): Promise<AdminMatch | null> {
+export async function getManualMatch(
+  db: Db,
+  id: string,
+): Promise<AdminMatch | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const [row] = await db.query<Row>(`${SELECT} where m.id = $1`, [id]);
   return row ? toAdmin(row) : null;
 }
 
-export async function manualKeyExists(db: Db, league: string, gameKey: string): Promise<boolean> {
-  const rows = await db.query("select 1 from match_source_ref where source = 'manual' and external_id = $1", [
-    `${league}:${gameKey}`,
-  ]);
+export async function manualKeyExists(
+  db: Db,
+  league: string,
+  gameKey: string,
+): Promise<boolean> {
+  const rows = await db.query(
+    "select 1 from match_source_ref where source = 'manual' and external_id = $1",
+    [`${league}:${gameKey}`],
+  );
   return rows.length > 0;
 }
 
 async function competitionId(db: Db, league: string): Promise<number> {
-  const [c] = await db.query<{ id: number }>("select id from competition where slug = $1 and feed = 'manual'", [league]);
+  const [c] = await db.query<{ id: number }>(
+    "select id from competition where slug = $1 and feed = 'manual'",
+    [league],
+  );
   if (!c) throw new Error(`수동 입력 대회가 아닙니다: ${league}`);
   return c.id;
 }
 
 export async function createManualMatch(db: Db, row: ManualRow) {
-  return saveManualMatches(db, await competitionId(db, row.league), [toSourceMatch(row)]);
+  return saveManualMatches(db, await competitionId(db, row.league), [
+    toSourceMatch(row),
+  ]);
 }
 
 // 화면에서 고친 내용은 그대로 반영한다 (CSV 와 달리 빈 칸이면 장소·라운드도 지운다).
 // 일정(날짜·시각·상태·장소·팀)이 바뀌면 sequence 를 올려 추후 ICS 구독에도 변경이 전달되게 한다.
-export async function updateManualMatch(db: Db, id: string, row: ManualRow): Promise<void> {
+export async function updateManualMatch(
+  db: Db,
+  id: string,
+  row: ManualRow,
+): Promise<void> {
   const before = await getManualMatch(db, id);
   if (!before) throw new Error("경기를 찾을 수 없습니다.");
   const m = toSourceMatch(row);
   const teamId = async (slug: string | null) =>
-    slug ? ((await db.query<{ id: number }>("select id from team where slug = $1", [slug]))[0]?.id ?? null) : null;
+    slug
+      ? ((
+          await db.query<{ id: number }>(
+            "select id from team where slug = $1",
+            [slug],
+          )
+        )[0]?.id ?? null)
+      : null;
   const scheduleChanged =
     before.date !== row.date ||
     before.time !== row.time ||
@@ -145,8 +183,20 @@ export async function updateManualMatch(db: Db, id: string, row: ManualRow): Pro
          home_placeholder = $7, away_placeholder = $8, round_label = $9, venue = $10, season = $11,
          sequence = sequence + $12, updated_at = now()
        where id = $1`,
-      [id, m.startAt, m.dateOnly ?? null, m.status, homeId, awayId,
-        m.homePlaceholder ?? null, m.awayPlaceholder ?? null, row.round, row.venue, m.season, scheduleChanged ? 1 : 0],
+      [
+        id,
+        m.startAt,
+        m.dateOnly ?? null,
+        m.status,
+        homeId,
+        awayId,
+        m.homePlaceholder ?? null,
+        m.awayPlaceholder ?? null,
+        row.round,
+        row.venue,
+        m.season,
+        scheduleChanged ? 1 : 0,
+      ],
     );
     await t.query(
       `update competition_status set last_success_at = now(), last_source = 'manual'
@@ -172,7 +222,13 @@ export async function manualTeams(db: Db, league: string) {
 
 // 자동 생성돼 한국어 이름이 필요한 팀
 export async function reviewTeams(db: Db) {
-  return db.query<{ slug: string; name_ko: string; short_ko: string | null; name_en: string; competitions: string }>(
+  return db.query<{
+    slug: string;
+    name_ko: string;
+    short_ko: string | null;
+    name_en: string;
+    competitions: string;
+  }>(
     // 팀마다 경기 전체를 훑지 않도록 (팀, 대회) 쌍을 한 번에 모은 뒤 합친다
     `with appearances as (
        select home_team_id as team_id, competition_id from match where home_team_id is not null
@@ -190,29 +246,49 @@ export async function reviewTeams(db: Db) {
   );
 }
 
-export async function updateTeamName(db: Db, slug: string, nameKo: string, shortKo: string | null): Promise<void> {
-  await db.query("update team set name_ko = $2, short_ko = $3, needs_review = false where slug = $1", [
-    slug,
-    nameKo,
-    shortKo,
-  ]);
+export async function updateTeamName(
+  db: Db,
+  slug: string,
+  nameKo: string,
+  shortKo: string | null,
+): Promise<void> {
+  await db.query(
+    "update team set name_ko = $2, short_ko = $3, needs_review = false where slug = $1",
+    [slug, nameKo, shortKo],
+  );
 }
 
 // 관리자 첫 화면: 대회별 상태와 최근 수집 실패
 export async function adminOverview(db: Db) {
-  const [competitions, failures, review] = await Promise.all([
-    db.query<{ slug: string; name_ko: string; feed: string; matches: number; last_success_at: Date | null; last_source: string | null }>(
+  // 한 연결에 동시에 보내지 않고 차례로 조회한다 (풀러에서 멈추는 일 방지)
+  const [competitions, failures, review] = [
+    await db.query<{
+      slug: string;
+      name_ko: string;
+      feed: string;
+      matches: number;
+      last_success_at: Date | null;
+      last_source: string | null;
+    }>(
       `select c.slug, c.name_ko, c.feed, (select count(*)::int from match m where m.competition_id = c.id) as matches,
          st.last_success_at, st.last_source
        from competition c left join competition_status st on st.competition_id = c.id
        order by c.display_order, c.id`,
     ),
-    db.query<{ name_ko: string; source: string; started_at: Date; error: string | null; is_fallback: boolean }>(
+    await db.query<{
+      name_ko: string;
+      source: string;
+      started_at: Date;
+      error: string | null;
+      is_fallback: boolean;
+    }>(
       `select c.name_ko, r.source, r.started_at, r.error, r.is_fallback
        from sync_run r join competition c on c.id = r.competition_id
        where not r.ok order by r.started_at desc limit 10`,
     ),
-    db.query<{ n: number }>("select count(*)::int as n from team where needs_review"),
-  ]);
+    await db.query<{ n: number }>(
+      "select count(*)::int as n from team where needs_review",
+    ),
+  ];
   return { competitions, failures, reviewCount: review[0].n };
 }
