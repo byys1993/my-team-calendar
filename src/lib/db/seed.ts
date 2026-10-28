@@ -24,6 +24,8 @@ interface Catalog {
     name_en: string;
     aliases?: string[];
     refs?: Record<string, string>;
+    venue?: string; // 홈 경기장 (출처가 경기장을 안 줄 때 쓴다)
+    venue_city?: string;
   }[];
   // 다국어 이름 (names-i18n.json): slug → { en, ja, ... }
   sportNames?: Record<string, Record<string, string>>;
@@ -69,6 +71,8 @@ export async function seed(db: Db, catalog: Catalog): Promise<void> {
     short_ko: t.short_ko ?? null,
     name_en: t.name_en,
     aliases: t.aliases ?? [],
+    venue: t.venue ?? null,
+    venue_city: t.venue_city ?? null,
   }));
   const refs = catalog.teams.flatMap((t) =>
     Object.entries(t.refs ?? {}).map(([source, external_id]) => ({ slug: t.slug, source, external_id })),
@@ -105,16 +109,16 @@ export async function seed(db: Db, catalog: Catalog): Promise<void> {
       [json(sources)],
     );
     await t.query(
-      `insert into team (sport_id, slug, name_ko, short_ko, name_en, aliases, primary_competition_id)
+      `insert into team (sport_id, slug, name_ko, short_ko, name_en, aliases, primary_competition_id, venue, venue_city)
        select s.id, x.slug, x.name_ko, x.short_ko, x.name_en,
-         array(select jsonb_array_elements_text(x.aliases)), c.id
+         array(select jsonb_array_elements_text(x.aliases)), c.id, x.venue, x.venue_city
        from jsonb_to_recordset($1::text::jsonb)
-         as x(slug text, sport text, competition text, name_ko text, short_ko text, name_en text, aliases jsonb)
+         as x(slug text, sport text, competition text, name_ko text, short_ko text, name_en text, aliases jsonb, venue text, venue_city text)
        join sport s on s.slug = x.sport
        left join competition c on c.slug = x.competition
        on conflict (slug) do update set name_ko = excluded.name_ko, short_ko = excluded.short_ko,
          name_en = excluded.name_en, aliases = excluded.aliases,
-         primary_competition_id = excluded.primary_competition_id`,
+         primary_competition_id = excluded.primary_competition_id, venue = excluded.venue, venue_city = excluded.venue_city`,
       [json(teams)],
     );
     await t.query(

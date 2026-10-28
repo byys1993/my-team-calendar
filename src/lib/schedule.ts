@@ -45,6 +45,7 @@ export interface ScheduleMatch {
   dateOnly: string | null;
   status: "scheduled" | "time_tbd" | "conditional" | "draw_pending" | "postponed" | "cancelled";
   venue: string | null;
+  venueCity?: string | null; // 경기장 도시 (홈팀 경기장으로 채운 경우만)
   isNeutral: boolean;
   podium: Podium[] | null; // F1 결과 (결승·스프린트 1~3위, 예선 폴 포지션)
   homeScore: number | null; // 끝난 경기 결과 (e스포츠는 세트 승수)
@@ -136,6 +137,7 @@ interface MatchRowDb {
   date_only: string | Date | null;
   status: ScheduleMatch["status"];
   venue: string | null;
+  venue_city: string | null;
   is_neutral: boolean;
   sequence: number;
   updated_at: Date;
@@ -157,7 +159,11 @@ async function queryMatches(db: Db, locale: Locale, where: string, params: unkno
             else coalesce(h.name_en, m.home_placeholder) end as home_label,
        case when $1 = 'ko' then coalesce(a.short_ko, a.name_ko, m.away_placeholder)
             else coalesce(a.name_en, m.away_placeholder) end as away_label,
-       m.start_at, to_char(m.date_only, 'YYYY-MM-DD') as date_only, m.status, m.venue, m.is_neutral, m.sequence, m.updated_at,
+       m.start_at, to_char(m.date_only, 'YYYY-MM-DD') as date_only, m.status,
+       -- 출처가 경기장을 안 주면(유럽 축구) 홈팀 경기장. 중립 경기·결승은 제외
+       coalesce(m.venue, case when not m.is_neutral and m.round_label is distinct from '@stage:final' then h.venue end) as venue,
+       case when m.venue is null and not m.is_neutral and m.round_label is distinct from '@stage:final' then h.venue_city end as venue_city,
+       m.is_neutral, m.sequence, m.updated_at,
        m.broadcast, c.broadcast as comp_broadcast, m.home_score, m.away_score, m.home_pen, m.away_pen, m.extra, m.podium
      from match m
      join competition c on c.id = m.competition_id
@@ -183,6 +189,7 @@ async function queryMatches(db: Db, locale: Locale, where: string, params: unkno
     dateOnly: typeof r.date_only === "string" ? r.date_only : null,
     status: r.status,
     venue: r.venue,
+    venueCity: r.venue_city,
     isNeutral: r.is_neutral,
     podium: r.podium,
     homeScore: r.home_score,

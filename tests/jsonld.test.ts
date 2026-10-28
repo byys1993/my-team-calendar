@@ -27,6 +27,11 @@ describe("이벤트 구조화 데이터", () => {
     expect(e?.endDate).toBe("2026-11-01T18:00:00.000Z");
   });
 
+  it("홈팀 경기장으로 채운 경기는 주소에 도시를 붙인다", () => {
+    const e = sportsEventJsonLd(match({ venueCity: "London, England" }), names, league);
+    expect(e?.location.address).toBe("Emirates Stadium, London, England");
+  });
+
   it("장소나 시각을 모르면 넣지 않는다", () => {
     expect(sportsEventJsonLd(match({ venue: null }), names, league)).toBeNull();
     expect(sportsEventJsonLd(match({ startAt: null }), names, league)).toBeNull();
