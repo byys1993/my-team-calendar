@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Db } from "@/lib/db";
-import { checkHealth, pickAlerts } from "@/lib/health";
+import { checkHealth, pickAlerts, recordSyncHeartbeat } from "@/lib/health";
 import { setupDb } from "./helpers";
 
 let db: Db & { close(): Promise<void> };
@@ -24,6 +24,12 @@ describe("데이터 이상 감지", () => {
     const issues = await checkHealth(db, now);
     expect(issues.map((i) => i.key)).toEqual(["stale-all"]);
     expect(issues[0].message).toContain("5시간째");
+  });
+
+  it("갱신할 대회가 없어도 수집이 돌고 있으면 알리지 않는다", async () => {
+    await db.query("insert into competition_status (competition_id, last_success_at) values ($1, $2)", [eplId, hoursAgo(5)]);
+    await recordSyncHeartbeat(db, new Date(hoursAgo(1)));
+    expect((await checkHealth(db, now)).map((i) => i.key)).not.toContain("stale-all");
   });
 
   it("3번 연속 실패, 한국어 이름 없는 팀", async () => {

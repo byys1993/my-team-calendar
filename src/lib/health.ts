@@ -24,7 +24,9 @@ export async function checkHealth(db: Db, now = new Date()): Promise<HealthIssue
      where c.feed = 'auto' order by c.display_order, c.id`,
   );
   const t = now.getTime();
-  const latest = Math.max(0, ...comps.map((c) => c.last_success_at?.getTime() ?? 0));
+  // 수집 실행 시각(갱신할 대회가 없어도 남음)과 마지막 성공 중 늦은 쪽
+  const [beat] = await db.query<{ ran_at: Date }>("select ran_at from sync_heartbeat where id = 1");
+  const latest = Math.max(beat?.ran_at.getTime() ?? 0, ...comps.map((c) => c.last_success_at?.getTime() ?? 0));
   if (latest && t - latest > STALE_ALL_H * HOUR) {
     issues.push({
       key: "stale-all",
@@ -74,6 +76,14 @@ export async function checkHealth(db: Db, now = new Date()): Promise<HealthIssue
     issues.push({ key: "standings-stale", message: `순위표가 하루 넘게 갱신되지 않은 대회: ${stale.map((s) => s.name_ko).join(", ")}` });
   }
   return issues;
+}
+
+// 수집 스크립트가 돌 때마다 호출한다
+export async function recordSyncHeartbeat(db: Db, now = new Date()): Promise<void> {
+  await db.query(
+    "insert into sync_heartbeat (id, ran_at) values (1, $1) on conflict (id) do update set ran_at = excluded.ran_at",
+    [now.toISOString()],
+  );
 }
 
 // 새로 생겼거나 12시간 넘게 알리지 않은 문제만 골라 '보냄'으로 표시한다

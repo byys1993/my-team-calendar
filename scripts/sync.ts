@@ -5,6 +5,7 @@ import { defaultAdapters } from "../src/collector/adapters";
 import { syncAll } from "../src/collector/run";
 import { syncStandings } from "../src/collector/standings";
 import { createPostgresDb } from "../src/lib/db/postgres";
+import { recordSyncHeartbeat } from "../src/lib/health";
 
 config({ path: [".env.local", ".env"], quiet: true });
 
@@ -16,6 +17,7 @@ const only = onlyIdx >= 0 ? args[onlyIdx + 1]?.split(",") : undefined;
 async function main() {
   const db = createPostgresDb(process.env.DATABASE_URL!, { max: 1 });
   try {
+    await recordSyncHeartbeat(db);
     const results = await syncAll(db, defaultAdapters(), { force, only, log: console.log });
     // 순위표 (3시간마다). 실패해도 일정 수집 결과에는 영향을 주지 않는다.
     await syncStandings(db, { force, only, log: console.log, footballDataKey: process.env.FOOTBALL_DATA_API_KEY });
