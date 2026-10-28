@@ -1,8 +1,25 @@
 // 경기 기록지(박스스코어): 출처마다 다른 응답을 화면이 그대로 그릴 수 있는 한 가지 모양으로 바꾼다.
 // 화면에서도 쓰므로 DB·서버 코드를 가져오지 않는다 (저장·조회는 lib/boxscoreStore.ts).
 
-// 기록지를 볼 수 있는 대회 (1단계: 미국 4대 리그)
-export const BOX_COMPETITIONS = new Set(["nba", "nfl", "mlb", "nhl"]);
+// 기록지를 볼 수 있는 대회 (1단계: 미국 4대 리그, 2단계: KBO·유럽 축구·대표팀)
+export const SOCCER_BOX_COMPETITIONS = new Set([
+  "epl",
+  "laliga",
+  "bundesliga",
+  "serie-a",
+  "ligue-1",
+  "ucl",
+  "uel",
+  "uecl",
+  "fa-cup",
+  "efl-cup",
+  "copa-del-rey",
+  "dfb-pokal",
+  "coppa-italia",
+  "coupe-de-france",
+  "korea-national",
+]);
+export const BOX_COMPETITIONS = new Set(["nba", "nfl", "mlb", "nhl", "kbo", ...SOCCER_BOX_COMPETITIONS]);
 
 export interface BoxLine {
   labels: string[]; // '1' '2' … 'OT' 'SO', 끝에 합계 'T' 또는 야구 'R' 'H' 'E'
@@ -22,12 +39,24 @@ export interface BoxGroup {
   rows: BoxRow[];
   totals?: string[];
 }
+// 축구 골·카드 (분 단위)
+export interface BoxEvent {
+  min: string; // "47'" · "90'+3'"
+  side: "home" | "away";
+  type: "goal" | "pen" | "own" | "yellow" | "red";
+  player: string;
+  assist?: string;
+}
 export interface BoxScore {
-  source: "espn" | "mlb" | "nhl";
+  source: "espn" | "mlb" | "nhl" | "kbo";
   line: BoxLine | null;
   stats: { key: string; away: string; home: string }[]; // key 가 번역 목록에 없으면 그대로(약어) 보인다
   away: BoxGroup[];
   home: BoxGroup[];
+  events?: BoxEvent[];
+  notes?: { label: string; text: string }[]; // KBO 결승타·홈런·실책 등 (출처 문구 그대로)
+  info?: { crowd?: string; duration?: string };
+  ref?: string; // 축구: 찾아 둔 ESPN 경기 ID (다시 받을 때 또 찾지 않게)
 }
 
 type Side = "home" | "away";
@@ -39,11 +68,27 @@ const periodLabel = (i: number, regulation: number) => {
   return n === 1 ? "OT" : `${n}OT`;
 };
 
-/* ---------------- ESPN (NBA·NFL, MLB·NHL 대체) ---------------- */
+/* ---------------- ESPN (NBA·NFL·축구, MLB·NHL 대체) ---------------- */
 
 interface EspnStat {
   name: string;
   displayValue: string;
+}
+interface EspnRosterPlayer {
+  starter?: boolean;
+  subbedIn?: boolean;
+  athlete: { displayName: string };
+  position?: { abbreviation?: string };
+  stats?: { name: string; displayValue: string }[];
+}
+interface EspnKeyEvent {
+  type: { type: string };
+  text?: string;
+  clock?: { displayValue?: string };
+  scoringPlay?: boolean;
+  shootout?: boolean;
+  team?: { id: string };
+  participants?: { athlete: { displayName: string } }[];
 }
 interface EspnAthlete {
   athlete: { displayName: string; position?: { abbreviation?: string } };
@@ -62,6 +107,9 @@ export interface EspnSummary {
       statistics: { name?: string; labels: string[]; athletes: EspnAthlete[]; totals?: string[] }[];
     }[];
   };
+  rosters?: { homeAway: Side; roster?: EspnRosterPlayer[] }[];
+  keyEvents?: EspnKeyEvent[];
+  gameInfo?: { attendance?: number };
 }
 
 // 팀 기록에서 보여 줄 항목 (ESPN 이름 → 화면 key). 농구는 세계 공통 약어 그대로.
@@ -88,7 +136,29 @@ const ESPN_TEAM_STATS: Record<string, [string, string][]> = {
     ["totalPenaltiesYards", "penalties"],
     ["possessionTime", "possession"],
   ],
+  soccer: [
+    ["possessionPct", "possessionPct"],
+    ["totalShots", "shots"],
+    ["shotsOnTarget", "onTarget"],
+    ["wonCorners", "corners"],
+    ["foulsCommitted", "fouls"],
+    ["offsides", "offsides"],
+    ["yellowCards", "yellow"],
+    ["redCards", "red"],
+    ["saves", "saves"],
+    ["accuratePasses", "passes"],
+  ],
 };
+// 축구 선수 기록: 골·도움·슈팅·유효 슈팅·파울·경고·퇴장
+const SOCCER_PLAYER_STATS: [string, string][] = [
+  ["totalGoals", "G"],
+  ["goalAssists", "A"],
+  ["totalShots", "SH"],
+  ["shotsOnTarget", "SOG"],
+  ["foulsCommitted", "FC"],
+  ["yellowCards", "YC"],
+  ["redCards", "RC"],
+];
 const REGULATION: Record<string, number> = { basketball: 4, football: 4, hockey: 3, baseball: 9 };
 
 // path 는 'basketball/nba' 같은 ESPN 경로
@@ -98,10 +168,10 @@ export function parseEspn(json: EspnSummary, path: string): BoxScore {
   const sideOf = new Map(competitors.map((c) => [c.id, c.homeAway]));
   const bySide = (side: Side) => competitors.find((c) => c.homeAway === side);
 
-  let line: BoxLine | null = null;
+  let line: BoxLine | null = null; // 축구는 전·후반 점수 대신 골 기록(events)을 보여 준다
   const home = bySide("home");
   const away = bySide("away");
-  if (home?.linescores?.length && away?.linescores?.length) {
+  if (sport !== "soccer" && home?.linescores?.length && away?.linescores?.length) {
     const n = Math.max(home.linescores.length, away.linescores.length);
     const reg = REGULATION[sport] ?? 4;
     const scores = (c: typeof home) => Array.from({ length: n }, (_, i) => c.linescores?.[i]?.displayValue ?? "-");
@@ -119,7 +189,7 @@ export function parseEspn(json: EspnSummary, path: string): BoxScore {
     const value = (side: Side) => teamOf(side)?.statistics?.find((s) => s.name === name)?.displayValue;
     const h = value("home");
     const a = value("away");
-    if (h != null && a != null) stats.push({ key, home: h, away: a });
+    if (h != null && a != null) stats.push(key === "possessionPct" ? { key, home: `${h}%`, away: `${a}%` } : { key, home: h, away: a });
   }
 
   const groups = (side: Side): BoxGroup[] => {
@@ -141,7 +211,47 @@ export function parseEspn(json: EspnSummary, path: string): BoxScore {
       .filter((g) => g.rows.length > 0);
   };
 
+  if (sport === "soccer") return { source: "espn", line: null, stats, ...soccerPlayers(json, sideOf) };
   return { source: "espn", line, stats, away: groups("away"), home: groups("home") };
+}
+
+// 축구: 출전 선수(선발 + 교체로 들어온 선수)와 골·카드
+function soccerPlayers(json: EspnSummary, sideOf: Map<string, Side>): Pick<BoxScore, "away" | "home" | "events" | "info"> {
+  const lineup = (side: Side): BoxGroup[] => {
+    const roster = json.rosters?.find((r) => r.homeAway === side)?.roster ?? [];
+    const rows = roster
+      .filter((p) => p.starter || p.subbedIn)
+      .map((p) => ({
+        name: p.athlete.displayName,
+        pos: p.starter ? p.position?.abbreviation : undefined,
+        sub: !p.starter,
+        stats: SOCCER_PLAYER_STATS.map(([name]) => p.stats?.find((s) => s.name === name)?.displayValue ?? ""),
+      }));
+    return rows.length ? [{ key: "lineup", labels: SOCCER_PLAYER_STATS.map(([, l]) => l), rows }] : [];
+  };
+  const events: BoxEvent[] = [];
+  for (const e of json.keyEvents ?? []) {
+    const side = e.team && sideOf.get(e.team.id);
+    const who = e.participants?.[0]?.athlete.displayName;
+    if (!side || !who || e.shootout) continue;
+    const t = e.type.type;
+    const type: BoxEvent["type"] | null = e.scoringPlay
+      ? /own/i.test(t) || /own goal/i.test(e.text ?? "")
+        ? "own"
+        : /penalty/i.test(t)
+          ? "pen"
+          : "goal"
+      : t === "yellow-card"
+        ? "yellow"
+        : t === "red-card" || t === "yellow-red-card"
+          ? "red"
+          : null;
+    if (!type) continue;
+    const assist = type === "goal" ? e.participants?.[1]?.athlete.displayName : undefined;
+    events.push({ min: e.clock?.displayValue ?? "", side, type, player: who, ...(assist ? { assist } : {}) });
+  }
+  const crowd = json.gameInfo?.attendance;
+  return { away: lineup("away"), home: lineup("home"), events, ...(crowd ? { info: { crowd: crowd.toLocaleString("en-US") } } : {}) };
 }
 
 /* ---------------- MLB Stats API ---------------- */
@@ -323,4 +433,106 @@ export function parseNhl(box: NhlBox, rail: NhlRail | null): BoxScore {
     ].filter((g) => g.rows.length > 0);
 
   return { source: "nhl", line, stats, away: groups(box.playerByGameStats.awayTeam), home: groups(box.playerByGameStats.homeTeam) };
+}
+
+/* ---------------- KBO (공식 경기센터 화면용 표 데이터) ---------------- */
+
+interface KboCell {
+  Text: string;
+}
+interface KboTable {
+  headers?: { row: KboCell[] }[];
+  rows?: { row: KboCell[] }[];
+  tfoot?: { row: KboCell[] }[];
+}
+// 표는 JSON 문자열 안에 또 JSON 문자열로 온다. 순서는 [원정, 홈].
+export interface KboBox {
+  tableEtc?: string;
+  arrHitter?: { table1: string; table2: string; table3: string }[];
+  arrPitcher?: { table: string }[];
+}
+export interface KboBoard {
+  CROWD_CN?: string;
+  USE_TM?: string;
+  table2?: string; // 이닝별 점수 [원정, 홈]
+  table3?: string; // R H E B
+}
+
+const kboText = (c: KboCell | undefined) =>
+  (c?.Text ?? "")
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+const kboTable = (s: string | undefined): KboTable => (s ? (JSON.parse(s) as KboTable) : {});
+const kboRows = (rows: KboTable["rows"]) => (rows ?? []).map((r) => r.row.map(kboText));
+
+export function parseKbo(box: KboBox, board: KboBoard | null): BoxScore {
+  let line: BoxLine | null = null;
+  const innings = kboRows(kboTable(board?.table2).rows);
+  const rhe = kboRows(kboTable(board?.table3).rows);
+  if (innings.length === 2) {
+    // 15회까지 칸이 있으므로 실제로 한 이닝까지만 (최소 9회). 9회말을 하지 않은 홈팀은 'X'
+    const played = Math.max(9, ...innings.map((r) => r.findLastIndex((v) => v !== "-" && v !== "") + 1));
+    const runs = (r: string[], home: boolean) => r.slice(0, played).map((v) => (v === "-" || v === "" ? (home ? "X" : "-") : v));
+    line = {
+      labels: [...Array.from({ length: played }, (_, i) => String(i + 1)), "R", "H", "E"],
+      away: [...runs(innings[0], false), ...(rhe[0] ?? []).slice(0, 3)],
+      home: [...runs(innings[1], true), ...(rhe[1] ?? []).slice(0, 3)],
+    };
+  }
+
+  const notes = kboRows(kboTable(box.tableEtc).rows)
+    .filter((r) => r.length >= 2 && r[1])
+    .map(([label, text]) => ({ label, text }));
+
+  const groups = (i: number): BoxGroup[] => {
+    const out: BoxGroup[] = [];
+    const h = box.arrHitter?.[i];
+    if (h) {
+      const who = kboRows(kboTable(h.table1).rows); // [타순, 포지션, 이름]
+      const plays = kboTable(h.table2);
+      const stats = kboTable(h.table3); // [타수, 안타, 타점, 득점, 타율]
+      const statRows = kboRows(stats.rows);
+      const rows = who.map(([order, pos, name], j) => ({
+        name,
+        pos,
+        sub: j > 0 && who[j - 1][0] === order, // 같은 타순이 이어지면 교체 선수
+        stats: statRows[j] ?? [],
+      }));
+      out.push({ key: "batting", labels: ["AB", "H", "RBI", "R", "AVG"], rows, totals: kboRows(stats.tfoot)[0] });
+      // 타석 결과 ('좌비', '1안' …): 이닝별
+      const playRows = kboRows(plays.rows);
+      out.push({
+        key: "plays",
+        labels: kboRows(plays.headers)[0] ?? [],
+        rows: rows.map((r, j) => ({ name: r.name, sub: r.sub, stats: playRows[j] ?? [] })),
+      });
+    }
+    const p = box.arrPitcher?.[i];
+    if (p) {
+      const t = kboTable(p.table);
+      const head = kboRows(t.headers)[0] ?? [];
+      const col = (name: string) => head.indexOf(name);
+      const cols = ["이닝", "피안타", "실점", "자책", "4사구", "삼진", "홈런", "투구수", "평균자책점"].map(col);
+      const rows = kboRows(t.rows).map((r) => ({
+        name: r[col("선수명")],
+        note: r[col("결과")] || undefined,
+        stats: cols.map((c) => (c < 0 ? "" : r[c])),
+      }));
+      // 합계 줄은 'TOTAL' 한 칸 뒤로 '이닝'부터 이어진다
+      const foot = kboRows(t.tfoot)[0];
+      const shift = col("이닝") - 1;
+      out.push({
+        key: "pitching",
+        labels: ["IP", "H", "R", "ER", "BB", "SO", "HR", "NP", "ERA"],
+        rows,
+        totals: foot ? cols.map((c) => (c < 0 ? "" : (foot[c - shift] ?? ""))) : undefined,
+      });
+    }
+    return out.filter((g) => g.rows.length > 0);
+  };
+
+  const info = { crowd: board?.CROWD_CN || undefined, duration: board?.USE_TM || undefined };
+  return { source: "kbo", line, stats: [], away: groups(0), home: groups(1), notes, info };
 }

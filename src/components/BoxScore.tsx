@@ -3,13 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { formatLabel } from "@/i18n/format";
-import { BOX_COMPETITIONS, type BoxGroup, type BoxScore } from "@/lib/boxscore";
+import { BOX_COMPETITIONS, SOCCER_BOX_COMPETITIONS, type BoxEvent, type BoxGroup, type BoxScore } from "@/lib/boxscore";
 import type { ScheduleMatch } from "@/lib/schedule";
 import { track } from "./track";
 
-const SOURCE_NAME: Record<BoxScore["source"], string> = { espn: "ESPN", mlb: "MLB Stats API", nhl: "NHL" };
+const SUM_LABELS = new Set(["T", "R", "H", "E"]); // 합계 칸 (굵게)
+const EVENT_ICON: Record<BoxEvent["type"], string> = { goal: "⚽", pen: "⚽", own: "⚽", yellow: "🟨", red: "🟥" };
+const SOURCE_NAME: Record<BoxScore["source"], string> = { espn: "ESPN", mlb: "MLB Stats API", nhl: "NHL", kbo: "KBO" };
 
-// 끝난 경기 결과 옆 '기록' 버튼 → 기록지 창 (처음 열 때 받아 온다)
+// 끝난 경기 결과 옆 '기록' 버튼 (미국 4대 리그·KBO·유럽 축구·대표팀) → 기록지 창 (처음 열 때 받아 온다)
 export function BoxScoreButton({ match, team }: { match: ScheduleMatch; team: string }) {
   const { m } = useI18n();
   const [open, setOpen] = useState(false);
@@ -54,13 +56,16 @@ function BoxScoreDialog({ match, team, onClose }: { match: ScheduleMatch; team: 
   const away = formatLabel(match.awayLabel, m) ?? match.awayLabel;
   const home = formatLabel(match.homeLabel, m) ?? match.homeLabel;
   const name = { away, home };
+  // 축구는 홈팀을 먼저, 야구·미국 리그는 원정팀을 먼저 쓴다
+  const order = SOCCER_BOX_COMPETITIONS.has(match.competition) ? (["home", "away"] as const) : (["away", "home"] as const);
+  const score = { away: match.awayScore, home: match.homeScore };
   const label = (key: string, list: Record<string, string>) => list[key] ?? key;
 
   return (
     <dialog ref={ref} className="picker auth-dialog box-dialog" onClose={onClose} aria-labelledby="box-title">
       <div className="picker-head">
         <h2 id="box-title">
-          {away} {match.awayScore} : {match.homeScore} {home}
+          {name[order[0]]} {score[order[0]]} : {score[order[1]]} {name[order[1]]}
         </h2>
         <button type="button" className="icon-btn" onClick={() => ref.current?.close()} aria-label={m.picker.close}>
           ✕
@@ -87,7 +92,7 @@ function BoxScoreDialog({ match, team, onClose }: { match: ScheduleMatch; team: 
                       <tr key={s}>
                         <th>{name[s]}</th>
                         {box.line![s].map((v, i) => (
-                          <td key={i} className={i >= box.line!.labels.length - (box.source === "mlb" ? 3 : 1) ? "box-sum" : undefined}>
+                          <td key={i} className={SUM_LABELS.has(box.line!.labels[i]) ? "box-sum" : undefined}>
                             {v}
                           </td>
                         ))}
@@ -98,6 +103,47 @@ function BoxScoreDialog({ match, team, onClose }: { match: ScheduleMatch; team: 
               </div>
             )}
 
+            {box.info && (box.info.crowd || box.info.duration) && (
+              <p className="muted small box-info">
+                {[
+                  box.info.crowd && m.box.crowd.replace("{n}", box.info.crowd),
+                  box.info.duration && m.box.duration.replace("{t}", box.info.duration),
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            )}
+
+            {box.events && box.events.length > 0 && (
+              <>
+                <h3>{m.box.events}</h3>
+                <ul className="box-events">
+                  {box.events.map((e, i) => (
+                    <li key={i} className={`box-ev-${e.side}`}>
+                      <span className="box-min">{e.min}</span> {EVENT_ICON[e.type]} {e.player}
+                      {e.type === "own" && <small> ({m.box.own})</small>}
+                      {e.type === "pen" && <small> ({m.box.pen})</small>}
+                      {e.assist && <small> ({e.assist})</small>}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            {box.notes && box.notes.length > 0 && (
+              <>
+                <h3>{m.box.notes}</h3>
+                <dl className="box-notes">
+                  {box.notes.map((n, i) => (
+                    <div key={i}>
+                      <dt>{n.label}</dt>
+                      <dd>{n.text}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </>
+            )}
+
             {box.stats.length > 0 && (
               <>
                 <h3>{m.box.teamStats}</h3>
@@ -105,16 +151,16 @@ function BoxScoreDialog({ match, team, onClose }: { match: ScheduleMatch; team: 
                   <thead>
                     <tr>
                       <th />
-                      <th>{away}</th>
-                      <th>{home}</th>
+                      <th>{name[order[0]]}</th>
+                      <th>{name[order[1]]}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {box.stats.map((s) => (
                       <tr key={s.key}>
                         <th>{label(s.key, m.box.stats)}</th>
-                        <td>{s.away}</td>
-                        <td>{s.home}</td>
+                        <td>{s[order[0]]}</td>
+                        <td>{s[order[1]]}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -123,7 +169,7 @@ function BoxScoreDialog({ match, team, onClose }: { match: ScheduleMatch; team: 
             )}
 
             <div className="box-tabs" role="tablist">
-              {(["away", "home"] as const).map((s) => (
+              {order.map((s) => (
                 <button
                   key={s}
                   type="button"

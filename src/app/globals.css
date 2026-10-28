@@ -1831,3 +1831,58 @@ a {
   border-color: var(--text);
   font-weight: 600;
 }
+
+.box-info {
+  margin: 6px 0 0;
+}
+
+/* 축구 골·카드: 홈은 왼쪽, 원정은 오른쪽 */
+.box-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+}
+
+.box-events li {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.box-events .box-ev-away {
+  text-align: end;
+}
+
+.box-min {
+  display: inline-block;
+  min-width: 42px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.box-events small {
+  color: var(--muted);
+}
+
+/* KBO 결승타·홈런 등 */
+.box-notes {
+  margin: 0;
+  font-size: 13px;
+}
+
+.box-notes div {
+  display: flex;
+  gap: 10px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.box-notes dt {
+  flex: none;
+  width: 56px;
+  color: var(--muted);
+}
+
+.box-notes dd {
+  margin: 0;
+}
