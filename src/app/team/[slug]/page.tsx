@@ -10,6 +10,8 @@ import { getLocale } from "@/i18n/server";
 import { getDb } from "@/lib/db";
 import { getTeamPage } from "@/lib/pages";
 import { SITE_URL } from "@/lib/site";
+import { sportsEventJsonLd } from "@/lib/jsonld";
+import { formatLabel } from "@/i18n/format";
 
 // 팀 페이지: '○○ 경기 일정' 검색으로 들어오는 입구. 서버에서 그리고 10분 캐시한다.
 // 같은 요청 안에서 제목(메타데이터)과 본문이 한 번만 조회하도록 묶는다.
@@ -58,14 +60,16 @@ export default async function TeamPage({ params }: Props) {
     url: `${SITE_URL}/team/${slug}`,
     ...(competition ? { memberOf: { "@type": "SportsOrganization", name: league } } : {}),
     event: upcoming
-      .filter((x) => x.startAt && !(x.title && !x.away))
-      .slice(0, 10)
-      .map((x) => ({
-        "@type": "SportsEvent",
-        name: `${x.homeLabel} vs ${x.awayLabel}`,
-        startDate: x.startAt,
-        ...(x.venue ? { location: { "@type": "Place", name: x.venue } } : {}),
-      })),
+      .filter((x) => !(x.title && !x.away))
+      .map((x) =>
+        sportsEventJsonLd(
+          x,
+          { home: formatLabel(x.homeLabel, m) ?? x.homeLabel, away: formatLabel(x.awayLabel, m) ?? x.awayLabel },
+          competition ? { name: league, url: `${SITE_URL}/league/${competition.slug}` } : null,
+        ),
+      )
+      .filter((e) => e !== null)
+      .slice(0, 10),
   };
 
   return (
