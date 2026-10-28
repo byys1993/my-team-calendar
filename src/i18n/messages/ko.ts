@@ -113,6 +113,9 @@ export const ko: Messages = {
     next: "다음 시즌은 보통 {month}에 시작해요. 일정이 나오면 자동으로 추가됩니다.",
     nextGeneric: "다음 일정이 발표되면 자동으로 추가됩니다.",
     last: "마지막 경기",
+    ongoing: "{league} 진행 중",
+    ongoingNext: "다음 경기가 정해지면 자동으로 추가돼요.",
+    ongoingOut: "탈락했다면 다음 시즌은 보통 {month}에 시작해요.",
   },
   box: {
     button: "기록",

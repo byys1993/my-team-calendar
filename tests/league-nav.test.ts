@@ -3,7 +3,7 @@ import { upsertMatches } from "@/collector/upsert";
 import type { Db } from "@/lib/db";
 import { seed } from "@/lib/db/seed";
 import { getLeaguePage, isLeagueQueryValid } from "@/lib/pages";
-import { getCompetitionMonth, getCompetitionsDay, isValidTz } from "@/lib/schedule";
+import { getCompetitionMonth, getCompetitionsDay, getOngoingCompetitions, isValidTz } from "@/lib/schedule";
 import { espnMatch, setupDb } from "./helpers";
 
 let db: Db & { close(): Promise<void> };
@@ -138,5 +138,28 @@ describe("리그 일정 탭 (한 달)", () => {
   it("시간대 이름 검사", () => {
     expect(isValidTz("Asia/Seoul")).toBe(true);
     expect(isValidTz("Mars/Olympus")).toBe(false);
+  });
+});
+
+describe("진행 중인 대회 (예정 경기가 없는 팀 카드)", () => {
+  it("앞으로 남은 경기(대진 미정 포함, 취소 제외)가 있는 대회만", async () => {
+    const day = (d: number) => new Date(Date.now() + d * 86_400_000).toISOString();
+    await upsertMatches(db, eplId, "espn", [m("1", day(-3), "359", "368", "@md:9", [1, 0])]);
+    expect(await getOngoingCompetitions(db, ["epl"])).toEqual([]); // 지난 경기만 → 시즌 종료
+    // 다음 대진이 아직 정해지지 않은 경기
+    await upsertMatches(db, eplId, "espn", [
+      {
+        ...m("2", day(2), "359", "368", "@stage:final"),
+        home: null,
+        away: null,
+        homePlaceholder: "@tbd",
+        awayPlaceholder: "@tbd",
+        status: "draw_pending",
+      },
+    ]);
+    expect(await getOngoingCompetitions(db, ["epl", "nope"])).toEqual(["epl"]);
+    await db.query(`update match set status = 'cancelled' where status = 'draw_pending'`);
+    expect(await getOngoingCompetitions(db, ["epl"])).toEqual([]);
+    expect(await getOngoingCompetitions(db, [])).toEqual([]);
   });
 });

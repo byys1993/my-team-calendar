@@ -122,6 +122,8 @@ export function CalendarApp({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [colorFor, setColorFor] = useState<string | null>(null);
   const [matches, setMatches] = useState<ScheduleMatch[]>([]);
+  // 앞으로 남은 경기가 있는 대회 (예정 경기가 없는 팀이라도 그 대회가 진행 중이면 '시즌 종료'라 하지 않는다)
+  const [ongoing, setOngoing] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // 시간대·오늘 날짜는 브라우저에서만 정한다 (서버 렌더링 결과와 어긋나지 않도록)
@@ -184,7 +186,10 @@ export function CalendarApp({
     setError(null);
     fetch(`/api/matches?teams=${encodeURIComponent(slugKey)}&lang=${locale}`, { signal: ctrl.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((d: { matches: ScheduleMatch[] }) => setMatches(d.matches))
+      .then((d: { matches: ScheduleMatch[]; ongoing?: string[] }) => {
+        setMatches(d.matches);
+        setOngoing(new Set(d.ongoing ?? []));
+      })
       .catch((e) => {
         if (e.name !== "AbortError") setError(t.app.loadError);
       })
@@ -431,7 +436,7 @@ export function CalendarApp({
                     team={s.slug}
                     last={lastByTeam.get(s.slug)}
                     competition={teamsBySlug.get(s.slug)?.competition ?? null}
-                    opponentName={teamShort}
+                    ongoingName={(c) => (ongoing.has(c) ? competitionName(c) : null)}
                   />
                 )}
               </article>

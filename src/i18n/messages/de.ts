@@ -114,6 +114,9 @@ export const de: Messages = {
     next: "Die nächste Saison beginnt meist im {month}. Die Spiele erscheinen hier automatisch.",
     nextGeneric: "Neue Spiele erscheinen hier automatisch, sobald sie feststehen.",
     last: "Letztes Spiel",
+    ongoing: "{league} läuft",
+    ongoingNext: "Das nächste Spiel wird automatisch hinzugefügt, sobald es feststeht.",
+    ongoingOut: "Falls ausgeschieden: Die nächste Saison beginnt meist im {month}.",
   },
   box: {
     button: "Statistik",

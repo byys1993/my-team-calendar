@@ -289,3 +289,15 @@ export async function getCompetitionMonth(db: Db, competition: string, month: st
   );
   return rows.filter((x) => x.status !== "cancelled" && (x.startAt ? dayKey(x.startAt, tz) : (x.dateOnly ?? "")).startsWith(`${month}-`));
 }
+
+// 이 대회들 중 앞으로 남은 경기(대진 미정 포함)가 있는 대회 (예정 경기가 없는 팀 카드: '시즌 종료' 대신 '진행 중')
+export async function getOngoingCompetitions(db: Db, competitions: string[]): Promise<string[]> {
+  if (competitions.length === 0) return [];
+  const rows = await db.query<{ slug: string }>(
+    `select distinct c.slug from match m join competition c on c.id = m.competition_id
+     where c.slug = any(string_to_array($1, ',')) and m.status <> 'cancelled'
+       and coalesce(m.start_at, m.date_only::timestamptz) >= now() - interval '2 hours'`,
+    [competitions.join(",")],
+  );
+  return rows.map((r) => r.slug).sort();
+}

@@ -114,6 +114,9 @@ export const en = {
     next: "The next season usually starts in {month}. Fixtures will appear here automatically.",
     nextGeneric: "New fixtures will appear here automatically once announced.",
     last: "Last match",
+    ongoing: "{league} in progress",
+    ongoingNext: "The next match will be added once it's set.",
+    ongoingOut: "If they're out, the next season usually starts in {month}.",
   },
   box: {
     button: "Box score",

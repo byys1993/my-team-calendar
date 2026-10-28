@@ -113,6 +113,9 @@ export const zh: Messages = {
     next: "下赛季通常在{month}开始，赛程公布后会自动添加。",
     nextGeneric: "新赛程公布后会自动添加。",
     last: "上一场",
+    ongoing: "{league}进行中",
+    ongoingNext: "下一场比赛确定后会自动添加。",
+    ongoingOut: "如果已被淘汰，下赛季通常在{month}开始。",
   },
   box: {
     button: "数据",

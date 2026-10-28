@@ -113,6 +113,9 @@ export const ja: Messages = {
     next: "次のシーズンは例年{month}に始まります。日程が出たら自動で追加されます。",
     nextGeneric: "次の日程が発表されたら自動で追加されます。",
     last: "前の試合",
+    ongoing: "{league} 開催中",
+    ongoingNext: "次の試合が決まると自動で追加されます。",
+    ongoingOut: "敗退していれば、次のシーズンは通常{month}に始まります。",
   },
   box: {
     button: "記録",

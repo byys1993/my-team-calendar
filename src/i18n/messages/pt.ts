@@ -114,6 +114,9 @@ export const pt: Messages = {
     next: "A próxima temporada costuma começar em {month}. Os jogos aparecerão aqui automaticamente.",
     nextGeneric: "Os novos jogos aparecerão aqui automaticamente quando forem anunciados.",
     last: "Último jogo",
+    ongoing: "{league} em andamento",
+    ongoingNext: "O próximo jogo será adicionado assim que for definido.",
+    ongoingOut: "Se foi eliminado, a próxima temporada costuma começar em {month}.",
   },
   box: {
     button: "Estatísticas",
