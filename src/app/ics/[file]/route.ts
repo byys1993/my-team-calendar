@@ -14,7 +14,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ file: st
   const lang = url.searchParams.get("lang");
   const locale: Locale = isLocale(lang) ? lang : "ko";
   const db = getDb();
-  const [matches, catalog] = await Promise.all([getMatchesForTeams(db, slugs, locale), getCatalog(db, locale)]);
+  // 차례로 조회 (한 연결에 동시에 보내면 Supabase 풀러에서 멈춘다)
+  const matches = await getMatchesForTeams(db, slugs, locale);
+  const catalog = await getCatalog(db, locale);
   // 구독 규모 세기 (실패해도 캘린더는 내려준다)
   await recordIcsFetch(db, slugs, locale).catch(() => {});
   const body = buildIcs({ matches, catalog, locale, siteUrl: process.env.SITE_URL ?? url.origin });

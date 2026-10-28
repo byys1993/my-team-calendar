@@ -67,13 +67,14 @@ const localName = (table: string) =>
 
 export async function getCatalog(db: Db, locale: Locale): Promise<Catalog> {
   const ko = locale === "ko";
-  const [sports, competitions, teams] = await Promise.all([
-    db.query<{ slug: string; name: string }>(
+  // 조회는 하나씩 차례로 (한 연결에 동시에 보내면 Supabase 풀러에서 멈춘다)
+  const [sports, competitions, teams] = [
+    await db.query<{ slug: string; name: string }>(
       `select s.slug, ${localName("s")} as name from sport s
        where exists (select 1 from team where team.sport_id = s.id) order by s.id`,
       [locale],
     ),
-    db.query<{
+    await db.query<{
       slug: string;
       name: string;
       sport: string;
@@ -87,13 +88,13 @@ export async function getCatalog(db: Db, locale: Locale): Promise<Catalog> {
        order by c.display_order, c.id`,
       [locale],
     ),
-    db.query<{ slug: string; name_ko: string; short_ko: string | null; name_en: string; sport: string; competition: string | null }>(
+    await db.query<{ slug: string; name_ko: string; short_ko: string | null; name_en: string; sport: string; competition: string | null }>(
       `select t.slug, t.name_ko, t.short_ko, t.name_en, s.slug as sport, c.slug as competition
        from team t join sport s on s.id = t.sport_id
        join competition c on c.id = coalesce(t.current_competition_id, t.primary_competition_id)
        where not t.needs_review`,
     ),
-  ]);
+  ];
   const collator = new Intl.Collator(INTL_LOCALE[locale]);
   return {
     sports: sports.map((s) => ({ slug: s.slug, name: s.name })),

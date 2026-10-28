@@ -20,7 +20,7 @@
 
 ## 기술 구성
 - Next.js 15 App Router + TypeScript, React 19. 스타일은 `src/app/globals.css` 하나 (색은 CSS 변수, 다크 모드 지원)
-- DB 접근: postgres.js(`prepare: false`, 운영 max 1). 대량 쓰기는 `jsonb_to_recordset($1::text::jsonb)` 로 한 번에 (값을 JSON 문자열로 넘기고 `::text::jsonb`)
+- DB 접근: postgres.js(`prepare: false`, 운영 max 1). **운영에서 한 연결로 여러 조회를 `Promise.all` 로 동시에 보내면 Supabase 풀러에서 응답이 멈춘다(5분 타임아웃, 로컬에선 재현 안 됨) → DB 조회는 항상 차례로 await**. 대량 쓰기는 `jsonb_to_recordset($1::text::jsonb)` 로 한 번에 (값을 JSON 문자열로 넘기고 `::text::jsonb`)
 - 마이그레이션: `db/migrations/NNN_*.sql` 순서대로 1회 적용. **`;` 로 문장을 나누므로 함수 본문·DO 블록 금지**. Vercel 빌드(`vercel-build`)와 Actions 가 `db:setup`(마이그레이션 + 시드)를 실행
 - 시드: `data/seed/*.json` (대회·팀·한국어 이름·국내 중계 기본값 `broadcast`). 수정하면 다음 배포/수집 때 반영
 - 다국어 10개(ko,en,zh,ja,es,fr,de,pt,ru,ar): `src/i18n/messages/*.ts` (타입 기준은 en.ts) — **문구를 추가하면 10개 파일 모두에** 넣는다. 라운드 등은 언어 중립 토큰(`@md:9`, `@series:kbo_ks|@game:3`, `@intl:asian_cup` …)으로 저장하고 `src/i18n/format.ts` 가 바꾼다
