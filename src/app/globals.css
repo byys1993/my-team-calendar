@@ -724,6 +724,25 @@ a {
   color: var(--muted);
 }
 
+/* F1: 주요 세션만 */
+.picker-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.picker-option input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.picker-option-hint {
+  margin: 4px 0 8px 26px;
+}
+
 /* F1: 시리즈 전체 / 팀 / 드라이버 */
 .picker-sub {
   font-size: 12px;

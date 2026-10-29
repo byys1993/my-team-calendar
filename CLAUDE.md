@@ -36,7 +36,7 @@
 - `src/lib/notify.ts` 알림 메일(각자 시간대·시각, 하루 1통, 보내기 전 선점으로 중복 방지), `ics.ts` 캘린더 구독, `visitors.ts` 방문자 수, `cleanup.ts` 오래된 기록 정리
 - `src/components/CalendarApp.tsx` 메인 화면 탭: 응원팀 일정 / 리그 일정(`LeagueCalendar.tsx`, API `/api/matches/league`) / 리그 순위(`RecordsView.tsx`). 날짜 패널의 '같은 리그 다른 경기'(`LeagueDay.tsx`, API `/api/matches/day`, 펼칠 때만 조회). `spoiler.tsx` 결과·스포일러 방지
 - 리그 페이지 `src/app/league/[slug]` 라운드(축구)·주 단위 이동, 팀 페이지 `src/app/team/[slug]` (구조화 데이터 `src/lib/jsonld.ts`: 경기장을 아는 경기만)
-- F1: 시리즈 팀 `f1` 에 모든 세션이 묶여 저장된다. 사용자는 팀·드라이버(`src/lib/f1picks.ts`, 시드 `data/seed/f1.json`)를 고르고, 고르면 F1 모든 세션 + 그 팀·드라이버 순위(`mine`). 'F1 주요 세션만'(`f1main.tsx`, 브라우저 저장 + 계정 `f1_main_only`)을 켜면 연습 주행·스프린트 예선을 뺀다 — API·ICS 는 `f1=main`, 알림 메일은 계정 값 `f1` 자체는 새로 고를 수 없지만 이미 고른 사람·구독 링크를 위해 남겨 둔다. 시즌이 바뀌면 `f1picks.ts` 와 시드를 함께 고친다
+- F1: 시리즈 팀 `f1` 에 모든 세션이 묶여 저장된다. 사용자는 팀·드라이버(`src/lib/f1picks.ts`, 시드 `data/seed/f1.json`)를 고르고, 고르면 F1 모든 세션 + 그 팀·드라이버 순위(`mine`). 'F1 주요 세션만'(팀 선택 창 F1 칸의 체크, `f1main.tsx` 브라우저 저장 + 계정 `f1_main_only`)을 켜면 연습 주행·스프린트 예선을 뺀다 — API·ICS 는 `f1=main`, 알림 메일은 계정 값 `f1` 자체는 새로 고를 수 없지만 이미 고른 사람·구독 링크를 위해 남겨 둔다. 시즌이 바뀌면 `f1picks.ts` 와 시드를 함께 고친다
 - 경기 기록지(📋 기록): `src/lib/boxscore.ts`(미국 리그·축구·KBO), `boxscoreKr.ts`(KBL·K리그·LoL), `boxscoreF1.ts`, 받아 오기·저장 `boxscoreStore.ts` → `boxscore` 표. 처음 열 때 받아 저장, 경기 직후엔 30분마다 갱신, 3년 지나면 `cleanup.ts` 가 정리
 - `src/app/admin` 관리자(ADMIN_PASSWORD, IP당 시간당 10회)
 - 자세한 배포·설정 절차: `docs/DEPLOY.md`, 시즌 전환: `docs/SEASON.md`, 다음 작업 후보: `docs/NEXT.md`

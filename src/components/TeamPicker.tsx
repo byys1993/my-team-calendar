@@ -14,9 +14,11 @@ interface Props {
   onRemove(slug: string): void;
   onClear(): void;
   onClose(): void;
+  f1MainOnly: boolean;
+  onF1MainOnly(v: boolean): void;
 }
 
-export function TeamPicker({ catalog, selections, onAdd, onRemove, onClear, onClose }: Props) {
+export function TeamPicker({ catalog, selections, onAdd, onRemove, onClear, onClose, f1MainOnly, onF1MainOnly }: Props) {
   const { m: t, t: fmt } = useI18n();
   const dialog = useRef<HTMLDialogElement>(null);
   const [sport, setSport] = useState(catalog.sports[0]?.slug ?? "");
@@ -100,6 +102,16 @@ export function TeamPicker({ catalog, selections, onAdd, onRemove, onClear, onCl
           return (
             <section key={comp.slug}>
               <h3>{comp.name}</h3>
+              {/* F1: 연습 주행·스프린트 예선을 뺄지 (화면·구독 주소·알림 메일) */}
+              {comp.slug === "f1" && (
+                <>
+                  <label className="picker-option">
+                    <input type="checkbox" checked={f1MainOnly} onChange={(e) => onF1MainOnly(e.target.checked)} />
+                    {t.app.f1Main}
+                  </label>
+                  <p className="muted small picker-option-hint">{t.app.f1MainHint}</p>
+                </>
+              )}
               {parts.map((part) => (
                 <div key={part.key}>
                   {part.title && <h4 className="picker-sub">{part.title}</h4>}

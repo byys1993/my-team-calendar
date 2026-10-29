@@ -26,8 +26,7 @@ import { CalendarSubscribe } from "./CalendarSubscribe";
 import { OffSeason } from "./OffSeason";
 import { ShareButton } from "./ShareButton";
 import { SpoilerProvider, SpoilerToggle } from "./spoiler";
-import { F1MainToggle, useF1MainOnly } from "./f1main";
-import { hasF1 } from "@/lib/f1picks";
+import { useF1MainOnly } from "./f1main";
 import { RecordsView } from "./RecordsView";
 import { ContactButton } from "./ContactForm";
 import { AUTO, browserTimeZone, isValidTimeZone, TimeZoneProvider, useTimeZonePref } from "./timezone";
@@ -374,7 +373,6 @@ export function CalendarApp({
         <CalendarSubscribe slugs={selections.filter((s) => s.enabled).map((s) => s.slug)} f1MainOnly={f1Main.on} />
         <ShareButton slugs={selections.map((s) => s.slug)} names={selections.map((s) => teamShort(s.slug))} />
         {selections.length > 0 && <SpoilerToggle />}
-        {hasF1(selections.map((s) => s.slug)) && <F1MainToggle on={f1Main.on} onChange={setF1Main} />}
       </section>
 
       {error && <p className="error">{error}</p>}
@@ -604,6 +602,8 @@ export function CalendarApp({
           }}
           onRemove={remove}
           onClear={clear}
+          f1MainOnly={f1Main.on}
+          onF1MainOnly={setF1Main}
           onClose={() => setPickerOpen(false)}
         />
       )}

@@ -49,9 +49,6 @@ export const F1_PICKS: Record<string, F1Pick> = {
 
 export const f1Pick = (slug: string): F1Pick | null => (Object.hasOwn(F1_PICKS, slug) ? F1_PICKS[slug] : null);
 
-// 고른 팀 중에 F1(시리즈 전체·팀·드라이버)이 있는지
-export const hasF1 = (slugs: string[]) => slugs.some((s) => s === F1_SERIES || f1Pick(s));
-
 // '주요 세션만'에서 빼는 세션: 연습 주행과 스프린트 예선 (제목 토큰 '@f1:<그랑프리>:<세션>' 의 세션)
 export const isMinorF1Session = (m: { competition: string; title: string | null }) =>
   m.competition === "f1" && /:(fp1|fp2|fp3|sprint_qualifying)$/.test(m.title ?? "");
