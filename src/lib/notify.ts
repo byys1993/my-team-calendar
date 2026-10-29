@@ -73,11 +73,15 @@ export function zonedHourToUtc(dateKey: string, hour: number, tz: string): Date 
 // 알림에 넣을 경기: 정해 둔 시각부터 24시간(매일) 또는 7일(매주) 안에 시작하는 경기.
 // 새벽 경기는 전날 메일에 미리 들어가고, 메일이 늦게 가더라도 이미 시작한 경기는 뺀다.
 // 기준은 '실제 보낸 순간'이 아니라 '정해 둔 시각'이라 매일 9시~다음 날 9시가 빈틈·겹침 없이 이어진다.
+// 기간은 정해 둔 시각보다 SEND_GRACE_MS 늦게 끊는다. 메일은 정한 시각 뒤 몇 분 지나 가므로(10분마다 호출)
+// 9시 정각·9시 5분 경기처럼 정한 시각 바로 뒤 경기는 전날 메일에 넣어야 어느 메일에서도 빠지지 않는다.
 // 시간 미정(날짜만) 경기는 기간이 시작하는 날짜부터 하루(매일) 또는 7일(매주) 안이면 넣는다.
+export const SEND_GRACE_MS = 30 * 60_000;
+
 export function pickMatches(matches: ScheduleMatch[], mode: NotifyMode, now: Date, tz: string, hour: number): ScheduleMatch[] {
   const today = toDateKey(now, tz);
   const days = mode === "weekly" ? 7 : 1;
-  const from = zonedHourToUtc(today, hour, tz).getTime();
+  const from = zonedHourToUtc(today, hour, tz).getTime() + SEND_GRACE_MS;
   const to = from + days * 86_400_000;
   return matches
     .filter((m) => m.status !== "cancelled")

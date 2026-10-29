@@ -74,6 +74,25 @@ describe("경기 알림 메일", () => {
     expect(sent).toHaveLength(2);
   });
 
+  it("정한 시각 정각·직후(30분 안) 경기는 전날 메일에 들어가 어느 메일에서도 빠지지 않는다", async () => {
+    await upsertMatches(db, eplId, "espn", [
+      // 서울 10/25(일) 09:00, 09:20, 09:30
+      espnMatch({ externalId: "4", startAt: "2026-10-25T00:00:00Z", home: { externalId: "359", name: "Arsenal" }, away: { externalId: "368", name: "Everton" } }),
+      espnMatch({ externalId: "5", startAt: "2026-10-25T00:20:00Z", home: { externalId: "368", name: "Everton" }, away: { externalId: "359", name: "Arsenal" } }),
+      espnMatch({ externalId: "6", startAt: "2026-10-25T00:30:00Z", home: { externalId: "359", name: "Arsenal" }, away: { externalId: "382", name: "Man City" } }),
+    ]);
+    const sent: OutgoingEmail[] = [];
+    const send = async (e: OutgoingEmail[]) => void sent.push(...e);
+    await runNotifications(db, send, { siteUrl: "https://x", now: seoul("2026-10-24T09:05:00") });
+    expect(sent[0].text).toContain("09:00  아스널 vs 에버턴 (홈)");
+    expect(sent[0].text).toContain("09:20  아스널 vs 에버턴 (원정)");
+    expect(sent[0].text).not.toContain("09:30");
+    // 다음 날 9시 5분 메일에는 09:30 경기만
+    await runNotifications(db, send, { siteUrl: "https://x", now: seoul("2026-10-25T09:05:00") });
+    expect(sent[1].text).not.toContain("09:00  ");
+    expect(sent[1].text).toContain("09:30  아스널 vs 맨체스터 시티 (홈)");
+  });
+
   it("메일이 늦게 가면 그 사이 이미 시작한 경기는 뺀다", async () => {
     const r = await runNotifications(db, async () => {}, { siteUrl: "https://x", now: seoul("2026-10-24T23:30:00") });
     expect(r).toMatchObject({ sent: 0, empty: 1 });
