@@ -10,7 +10,7 @@ import { getLocale } from "@/i18n/server";
 import { getDb } from "@/lib/db";
 import { getTeamPage } from "@/lib/pages";
 import { SITE_URL } from "@/lib/site";
-import { sportsEventJsonLd } from "@/lib/jsonld";
+import { sportsEventList } from "@/lib/jsonld";
 import { formatLabel } from "@/i18n/format";
 
 // 팀 페이지: '○○ 경기 일정' 검색으로 들어오는 입구. 서버에서 그리고 10분 캐시한다.
@@ -59,17 +59,13 @@ export default async function TeamPage({ params }: Props) {
     sport: team.sport,
     url: `${SITE_URL}/team/${slug}`,
     ...(competition ? { memberOf: { "@type": "SportsOrganization", name: league } } : {}),
-    event: upcoming
-      .filter((x) => !(x.title && !x.away))
-      .map((x) =>
-        sportsEventJsonLd(
-          x,
-          { home: formatLabel(x.homeLabel, m) ?? x.homeLabel, away: formatLabel(x.awayLabel, m) ?? x.awayLabel },
-          competition ? { name: league, url: `${SITE_URL}/league/${competition.slug}` } : null,
-        ),
-      )
-      .filter((e) => e !== null)
-      .slice(0, 10),
+    event: sportsEventList(
+      upcoming,
+      (l) => formatLabel(l, m) ?? l,
+      competition ? { name: league, url: `${SITE_URL}/league/${competition.slug}` } : null,
+      new Date(),
+      10,
+    ),
   };
 
   return (

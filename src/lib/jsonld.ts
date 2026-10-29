@@ -40,3 +40,18 @@ export function sportsEventJsonLd(x: ScheduleMatch, names: { home: string; away:
     ...(league ? { organizer: { "@type": "SportsOrganization", name: league.name, url: league.url } } : {}),
   };
 }
+
+// 팀·리그 페이지 공통: 아직 시작하지 않은 맞대결만 (F1 세션처럼 상대가 없는 일정은 뺀다), 최대 limit 개
+export function sportsEventList(
+  matches: ScheduleMatch[],
+  label: (l: string) => string,
+  league: { name: string; url: string } | null,
+  now: Date,
+  limit: number,
+) {
+  return matches
+    .filter((x) => !(x.title && !x.away) && x.startAt && new Date(x.startAt) > now)
+    .map((x) => sportsEventJsonLd(x, { home: label(x.homeLabel), away: label(x.awayLabel) }, league))
+    .filter((e) => e !== null)
+    .slice(0, limit);
+}

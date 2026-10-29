@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sportsEventJsonLd } from "@/lib/jsonld";
+import { sportsEventJsonLd, sportsEventList } from "@/lib/jsonld";
 import type { ScheduleMatch } from "@/lib/schedule";
 
 const match = (x: Partial<ScheduleMatch>) =>
@@ -30,6 +30,24 @@ describe("이벤트 구조화 데이터", () => {
   it("홈팀 경기장으로 채운 경기는 주소에 도시를 붙인다", () => {
     const e = sportsEventJsonLd(match({ venueCity: "London, England" }), names, league);
     expect(e?.location.address).toBe("Emirates Stadium, London, England");
+  });
+
+  it("목록: 지난 경기·상대 없는 일정·장소 모르는 경기는 빼고 limit 개까지", () => {
+    const now = new Date("2026-11-01T00:00:00Z");
+    const list = sportsEventList(
+      [
+        match({ homeLabel: "a", awayLabel: "b", startAt: "2026-10-31T15:00:00.000Z" }),
+        match({ homeLabel: "a", awayLabel: "b", title: "Race", away: null }),
+        match({ homeLabel: "a", awayLabel: "b", venue: null }),
+        match({ homeLabel: "@x", awayLabel: "c", away: "c" }),
+        match({ homeLabel: "d", awayLabel: "e", away: "e" }),
+      ],
+      (l) => l.replace("@x", "엑스"),
+      league,
+      now,
+      1,
+    );
+    expect(list.map((e) => e.name)).toEqual(["엑스 vs c"]);
   });
 
   it("장소나 시각을 모르면 넣지 않는다", () => {

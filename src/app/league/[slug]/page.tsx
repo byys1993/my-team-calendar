@@ -12,6 +12,7 @@ import { INTL_LOCALE, type Locale } from "@/i18n/config";
 import { formatLabel } from "@/i18n/format";
 import { getLocale } from "@/i18n/server";
 import { getDb } from "@/lib/db";
+import { sportsEventList } from "@/lib/jsonld";
 import { f1Driver, f1Team } from "@/lib/f1names";
 import { getLeaguePage, type LeagueNavQuery } from "@/lib/pages";
 import { SITE_URL } from "@/lib/site";
@@ -88,6 +89,8 @@ export default async function LeaguePage({ params, searchParams }: Props) {
     sport: competition.sport,
     url: `${SITE_URL}/league/${slug}`,
     ...(teams.length ? { member: teams.map((t) => ({ "@type": "SportsTeam", name: t.name, url: `${SITE_URL}/team/${t.slug}` })) } : {}),
+    // 지금 보는 라운드·주의 남은 경기 (경기장을 아는 것만)
+    event: sportsEventList(week, (l) => formatLabel(l, m) ?? l, { name: league, url: `${SITE_URL}/league/${slug}` }, new Date(), 20),
   };
 
   return (
