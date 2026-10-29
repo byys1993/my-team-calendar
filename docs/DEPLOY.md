@@ -59,6 +59,7 @@
 ## 그 뒤
 
 - **코드를 고치면**: GitHub에 올리기만 하면 Vercel이 자동으로 다시 배포합니다.
+- **미리보기 배포는 끔**: 비밀값이 Production 전용이라 다른 브랜치의 미리보기는 DB 주소가 없어 늘 실패합니다. 그래서 `vercel.json` 의 `git.deploymentEnabled` 로 작업 브랜치(`claude/**`·`codex/**`)는 배포하지 않습니다.
 - **일정 수집**: GitHub Actions가 매시간 돌고, 실패 기록은 사이트의 `/admin` 현황에서 볼 수 있습니다.
 - **KBL 일정**: `/admin` → CSV 올리기 (비밀번호는 Vercel에 넣은 `ADMIN_PASSWORD`).
 - **Supabase 무료 플랜**은 7일 동안 접속이 없으면 잠시 멈추는데, 매시간 수집이 돌아서 멈추지 않습니다.
