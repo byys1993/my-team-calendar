@@ -104,6 +104,11 @@ export const es: Messages = {
     widgetMac: "Mac: clic derecho en el escritorio → 'Editar widgets' → añade el widget 'Calendario' para ver los próximos partidos.",
     widgetIphone: "iPhone: mantén pulsada la pantalla de inicio, toca '+' arriba a la izquierda → añade el widget 'Calendario'.",
     note: "La URL cambia si cambias de equipos; vuelve a añadirla. Las apps de calendario pueden tardar unas horas en actualizarse.",
+    hintBody: "📅 Añádelo al calendario de tu móvil: la app te avisa antes de cada partido y los cambios de horario se actualizan solos.",
+    changedBody: "Tus equipos o ajustes cambiaron desde que añadiste el calendario. Vuelve a añadirlo para aplicarlos y borra la suscripción antigua en tu app de calendario (si no, los partidos pueden aparecer dos veces).",
+    changedAction: "Añadir de nuevo",
+    androidHint: "Si no funciona en el móvil, añádelo una vez desde el navegador de un ordenador. También aparecerá en el calendario del móvil con la misma cuenta de Google.",
+    otherDevices: "Añadir en otro dispositivo",
   },
   share: {
     button: "Compartir",

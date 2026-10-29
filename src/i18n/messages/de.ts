@@ -104,6 +104,11 @@ export const de: Messages = {
     widgetMac: "Mac: Rechtsklick auf den Schreibtisch → „Widgets bearbeiten“ → das Widget „Kalender“ hinzufügen.",
     widgetIphone: "iPhone: Home-Bildschirm lange drücken, oben links „+“ → das Widget „Kalender“ hinzufügen.",
     note: "Die URL ändert sich, wenn du Teams änderst – bitte erneut hinzufügen. Kalender-Apps aktualisieren evtl. erst nach einigen Stunden.",
+    hintBody: "📅 Füge ihn deinem Handykalender hinzu: Die Kalender-App erinnert dich vor jedem Spiel, und Terminänderungen werden automatisch übernommen.",
+    changedBody: "Deine Teams oder Einstellungen haben sich seit dem Hinzufügen geändert. Füge den Kalender erneut hinzu und lösche das alte Abo in deiner Kalender-App (sonst erscheinen Spiele eventuell doppelt).",
+    changedAction: "Erneut hinzufügen",
+    androidHint: "Klappt es auf dem Handy nicht, füge ihn einmal im Browser am Computer hinzu. Er erscheint dann auch im Handykalender desselben Google-Kontos.",
+    otherDevices: "Auf einem anderen Gerät hinzufügen",
   },
   share: {
     button: "Teilen",

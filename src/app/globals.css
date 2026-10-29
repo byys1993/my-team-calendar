@@ -1174,7 +1174,35 @@ a {
   border-radius: 999px;
   font-size: 13px;
   padding: 5px 12px;
+}
+
+.cal-sub-btn.ghost {
   color: var(--text);
+}
+
+/* 캘린더 구독 안내 칸 (처음 / 팀이 바뀐 뒤) */
+.sub-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 0 0 12px;
+}
+
+.sub-notice p {
+  margin: 0;
+  flex: 1 1 260px;
+}
+
+.sub-notice-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.sub-notice-actions button {
+  font-size: 13px;
+  padding: 6px 12px;
 }
 
 .ics-body .ics-link {

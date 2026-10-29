@@ -104,6 +104,11 @@ export const pt: Messages = {
     widgetMac: "Mac: clique com o botão direito na área de trabalho → 'Editar Widgets' → adicione o widget 'Calendário'.",
     widgetIphone: "iPhone: mantenha pressionada a tela inicial, toque em '+' no canto superior esquerdo → adicione o widget 'Calendário'.",
     note: "A URL muda quando você troca de times; adicione de novo. Os apps de calendário podem levar algumas horas para atualizar.",
+    hintBody: "📅 Adicione ao calendário do celular: o app avisa antes de cada jogo e as mudanças de horário são atualizadas sozinhas.",
+    changedBody: "Seus times ou configurações mudaram desde que você adicionou o calendário. Adicione de novo para aplicar e remova a assinatura antiga no app de calendário (senão os jogos podem aparecer duas vezes).",
+    changedAction: "Adicionar de novo",
+    androidHint: "Se não funcionar no celular, adicione uma vez pelo navegador de um computador. Ele também aparecerá no calendário do celular com a mesma conta Google.",
+    otherDevices: "Adicionar em outro dispositivo",
   },
   share: {
     button: "Compartilhar",

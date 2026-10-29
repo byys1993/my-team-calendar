@@ -104,6 +104,11 @@ export const en = {
     widgetMac: "Mac: right-click the desktop → 'Edit Widgets' → add the 'Calendar' widget to see upcoming matches.",
     widgetIphone: "iPhone: long-press the Home Screen, tap '+' at the top left → add the 'Calendar' widget.",
     note: "The URL changes when you change teams, so add it again. Calendar apps may take a few hours to refresh.",
+    hintBody: "📅 Add it to your phone calendar: the calendar app reminds you before each match, and schedule changes update automatically.",
+    changedBody: "Your teams or settings changed since you added the calendar. Add it again to apply them, and remove the old subscription in your calendar app (otherwise matches may show up twice).",
+    changedAction: "Add again",
+    androidHint: "If adding doesn't work on your phone, add it once from a computer browser. It will also show up in the phone calendar of the same Google account.",
+    otherDevices: "Add on another device",
   },
   share: {
     button: "Share",

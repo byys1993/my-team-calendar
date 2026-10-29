@@ -22,7 +22,7 @@ import { teamVars } from "@/lib/palette";
 import { useSelection } from "./selection";
 import { TimeZoneSelect } from "./TimeZoneSelect";
 import { VisitorBeacon } from "./VisitorStats";
-import { CalendarSubscribe } from "./CalendarSubscribe";
+import { CalendarSubscribe, SubscribeNotice, useSubscription } from "./CalendarSubscribe";
 import { OffSeason } from "./OffSeason";
 import { ShareButton } from "./ShareButton";
 import { SpoilerProvider, SpoilerToggle } from "./spoiler";
@@ -79,6 +79,7 @@ export function CalendarApp({
   const { account, checked, save } = auth;
   const router = useRouter();
   const f1Main = useF1MainOnly();
+  const subscription = useSubscription(selections.filter((s) => s.enabled).map((s) => s.slug), f1Main.on);
   const setF1Main = (v: boolean) => {
     f1Main.set(v);
     if (account) void save({ f1MainOnly: v });
@@ -370,10 +371,13 @@ export function CalendarApp({
             </button>
           </span>
         ))}
-        <CalendarSubscribe slugs={selections.filter((s) => s.enabled).map((s) => s.slug)} f1MainOnly={f1Main.on} />
+        <CalendarSubscribe sub={subscription} />
         <ShareButton slugs={selections.map((s) => s.slug)} names={selections.map((s) => teamShort(s.slug))} />
         {selections.length > 0 && <SpoilerToggle />}
       </section>
+
+      {/* 아직 캘린더에 추가하지 않았거나, 추가한 뒤 팀·설정이 바뀌었을 때 */}
+      {!pickerOpen && <SubscribeNotice sub={subscription} />}
 
       {error && <p className="error">{error}</p>}
 
