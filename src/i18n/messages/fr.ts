@@ -22,6 +22,8 @@ export const fr: Messages = {
     emptyHint: "Choisissez les équipes que vous soutenez. Jusqu'à {max} équipes.",
     toggleHide: "Cliquer pour masquer",
     toggleShow: "Cliquer pour afficher",
+    f1Main: "F1 : sessions clés seules",
+    f1MainHint: "N'affiche que les courses, qualifications et sprints (sans essais libres ni qualifications sprint). Réajoutez l'abonnement via « Ajouter au calendrier » pour l'appliquer ; une fois connecté, les e-mails d'alerte l'utilisent aussi.",
     changeColor: "Changer la couleur",
     colorTitle: "Choisir une couleur pour {team}",
     loadError: "Impossible de charger le calendrier. Réessayez dans un instant.",

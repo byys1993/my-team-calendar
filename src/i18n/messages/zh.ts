@@ -22,6 +22,8 @@ export const zh: Messages = {
     emptyHint: "请选择你支持的球队，最多可选 {max} 支。",
     toggleHide: "点击隐藏",
     toggleShow: "点击显示",
+    f1Main: "F1 仅主要环节",
+    f1MainHint: "只显示正赛、排位赛和冲刺赛（不含练习赛和冲刺排位赛）。日历订阅需在“添加到日历”中重新添加才会生效；登录后提醒邮件也会使用此设置。",
     changeColor: "更改颜色",
     colorTitle: "为 {team} 选择颜色",
     loadError: "无法加载赛程，请稍后再试。",

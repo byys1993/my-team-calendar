@@ -22,6 +22,8 @@ export const es: Messages = {
     emptyHint: "Elige los equipos que sigues. Puedes elegir hasta {max}.",
     toggleHide: "Haz clic para ocultar",
     toggleShow: "Haz clic para mostrar",
+    f1Main: "F1: solo sesiones clave",
+    f1MainHint: "Muestra solo carreras, clasificación y sprints (sin libres ni clasificación sprint). Vuelve a añadir la suscripción desde «Añadir al calendario» para aplicarlo allí; con sesión iniciada, también se aplica a los correos de aviso.",
     changeColor: "Cambiar color",
     colorTitle: "Elige un color para {team}",
     loadError: "No se pudo cargar el calendario. Inténtalo de nuevo en unos minutos.",

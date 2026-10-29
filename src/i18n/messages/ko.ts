@@ -22,6 +22,8 @@ export const ko: Messages = {
     emptyHint: "응원하는 팀을 골라 주세요. 최대 {max}팀까지 선택할 수 있어요.",
     toggleHide: "눌러서 숨기기",
     toggleShow: "눌러서 보이기",
+    f1Main: "F1 주요 세션만",
+    f1MainHint: "연습 주행·스프린트 예선은 빼고 결승·예선·스프린트만 보여요. 캘린더 구독은 '캘린더에 추가'에서 다시 추가해야 바뀌고, 로그인하면 알림 메일에도 적용돼요.",
     changeColor: "색 바꾸기",
     colorTitle: "{team} 색 고르기",
     loadError: "일정을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",

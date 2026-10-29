@@ -6,7 +6,7 @@ import { useI18n } from "@/i18n/client";
 
 // '캘린더에 추가': 켜 둔 팀들의 구독 주소(ICS)를 Apple 캘린더·구글 캘린더·기타 앱에 넣는 방법을 안내한다.
 // 캘린더에 들어가면 Mac·iPhone 의 기본 캘린더 위젯에도 다음 경기가 보인다.
-export function CalendarSubscribe({ slugs }: { slugs: string[] }) {
+export function CalendarSubscribe({ slugs, f1MainOnly }: { slugs: string[]; f1MainOnly: boolean }) {
   const { m } = useI18n();
   const [open, setOpen] = useState(false);
   if (slugs.length === 0) return null;
@@ -22,12 +22,12 @@ export function CalendarSubscribe({ slugs }: { slugs: string[] }) {
       >
         📅 {m.ics.button}
       </button>
-      {open && <SubscribeDialog slugs={slugs} onClose={() => setOpen(false)} />}
+      {open && <SubscribeDialog slugs={slugs} f1MainOnly={f1MainOnly} onClose={() => setOpen(false)} />}
     </>
   );
 }
 
-function SubscribeDialog({ slugs, onClose }: { slugs: string[]; onClose(): void }) {
+function SubscribeDialog({ slugs, f1MainOnly, onClose }: { slugs: string[]; f1MainOnly: boolean; onClose(): void }) {
   const { m, locale } = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
   const [copied, setCopied] = useState(false);
@@ -35,7 +35,8 @@ function SubscribeDialog({ slugs, onClose }: { slugs: string[]; onClose(): void 
     ref.current?.showModal();
   }, []);
 
-  const https = `${window.location.origin}/ics/${slugs.join(",")}.ics?lang=${locale}`;
+  // F1 주요 세션만이면 f1=main (설정을 바꾸면 주소가 바뀌므로 다시 추가해야 한다)
+  const https = `${window.location.origin}/ics/${slugs.join(",")}.ics?lang=${locale}${f1MainOnly ? "&f1=main" : ""}`;
   const webcal = https.replace(/^https?:/, "webcal:");
   const google = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcal)}`;
 

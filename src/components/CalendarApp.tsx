@@ -26,6 +26,8 @@ import { CalendarSubscribe } from "./CalendarSubscribe";
 import { OffSeason } from "./OffSeason";
 import { ShareButton } from "./ShareButton";
 import { SpoilerProvider, SpoilerToggle } from "./spoiler";
+import { F1MainToggle, useF1MainOnly } from "./f1main";
+import { hasF1 } from "@/lib/f1picks";
 import { RecordsView } from "./RecordsView";
 import { ContactButton } from "./ContactForm";
 import { AUTO, browserTimeZone, isValidTimeZone, TimeZoneProvider, useTimeZonePref } from "./timezone";
@@ -77,6 +79,11 @@ export function CalendarApp({
   const auth = useAccount();
   const { account, checked, save } = auth;
   const router = useRouter();
+  const f1Main = useF1MainOnly();
+  const setF1Main = (v: boolean) => {
+    f1Main.set(v);
+    if (account) void save({ f1MainOnly: v });
+  };
 
   // 로그인하면 계정에 저장된 팀을 불러오고(계정에 없으면 지금 고른 팀을 올리고), 이후 바뀔 때마다 저장한다.
   // synced: 마지막으로 계정과 맞춘 목록. null 이면 아직 맞추지 않음.
@@ -94,6 +101,9 @@ export function CalendarApp({
       synced.current = JSON.stringify(selections);
       void save({ selections, locale });
     }
+    // F1 주요 세션만: 계정이나 이 브라우저 중 한쪽이라도 켜 두었으면 켠다 (알림 메일도 같은 설정을 쓴다)
+    if (account.f1MainOnly) f1Main.set(true);
+    else if (f1Main.on) void save({ f1MainOnly: true });
     // 다른 기기에서 고른 시간대가 있으면 그대로 쓴다
     if (account.timeZone && isValidTimeZone(account.timeZone)) setTzPref(account.timeZone);
     else if (tzPref !== AUTO) void save({ timeZone: tzPref });
@@ -184,7 +194,7 @@ export function CalendarApp({
     const ctrl = new AbortController();
     setLoading(true);
     setError(null);
-    fetch(`/api/matches?teams=${encodeURIComponent(slugKey)}&lang=${locale}`, { signal: ctrl.signal })
+    fetch(`/api/matches?teams=${encodeURIComponent(slugKey)}&lang=${locale}${f1Main.on ? "&f1=main" : ""}`, { signal: ctrl.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d: { matches: ScheduleMatch[]; ongoing?: string[] }) => {
         setMatches(d.matches);
@@ -195,7 +205,7 @@ export function CalendarApp({
       })
       .finally(() => setLoading(false));
     return () => ctrl.abort();
-  }, [slugKey, locale, t]);
+  }, [slugKey, locale, t, f1Main.on]);
 
   const teamName = (slug: string) => teamsBySlug.get(slug)?.name ?? slug;
   const teamShort = (slug: string) => teamsBySlug.get(slug)?.short ?? slug;
@@ -361,9 +371,10 @@ export function CalendarApp({
             </button>
           </span>
         ))}
-        <CalendarSubscribe slugs={selections.filter((s) => s.enabled).map((s) => s.slug)} />
+        <CalendarSubscribe slugs={selections.filter((s) => s.enabled).map((s) => s.slug)} f1MainOnly={f1Main.on} />
         <ShareButton slugs={selections.map((s) => s.slug)} names={selections.map((s) => teamShort(s.slug))} />
         {selections.length > 0 && <SpoilerToggle />}
+        {hasF1(selections.map((s) => s.slug)) && <F1MainToggle on={f1Main.on} onChange={setF1Main} />}
       </section>
 
       {error && <p className="error">{error}</p>}

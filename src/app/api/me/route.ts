@@ -12,7 +12,7 @@ export async function GET() {
   return NextResponse.json({ user: user ? publicUser(user) : null }, { headers: noStore });
 }
 
-// PUT /api/me {selections?, locale?, timeZone?, notifyMode?, notifyHour?, lastTz?}
+// PUT /api/me {selections?, locale?, timeZone?, notifyMode?, notifyHour?, lastTz?, f1MainOnly?}
 // → 내 팀·언어·시간대·알림 메일 설정 저장 (timeZone: null 이면 자동, lastTz 는 지금 브라우저 시간대)
 export async function PUT(req: Request) {
   const user = await currentUser();
@@ -26,7 +26,8 @@ export async function PUT(req: Request) {
   const notifyMode = isNotifyMode(body.notifyMode) ? body.notifyMode : undefined;
   const notifyHour = isHour(body.notifyHour) ? body.notifyHour : undefined;
   const lastTz = isTimeZone(body.lastTz) ? body.lastTz : undefined;
-  await updateUser(getDb(), user.id, { selections, locale, timeZone, notifyMode, notifyHour, lastTz });
+  const f1MainOnly = typeof body.f1MainOnly === "boolean" ? body.f1MainOnly : undefined;
+  await updateUser(getDb(), user.id, { selections, locale, timeZone, notifyMode, notifyHour, lastTz, f1MainOnly });
   return NextResponse.json({ ok: true }, { headers: noStore });
 }
 

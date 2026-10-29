@@ -22,6 +22,8 @@ export const pt: Messages = {
     emptyHint: "Escolha os times que você acompanha. Até {max} times.",
     toggleHide: "Clique para ocultar",
     toggleShow: "Clique para mostrar",
+    f1Main: "F1: só sessões principais",
+    f1MainHint: "Mostra só corridas, classificação e sprints (sem treinos livres nem classificação sprint). Adicione de novo a assinatura em “Adicionar ao calendário” para aplicar lá; com login, os e-mails de alerta também usam esta opção.",
     changeColor: "Mudar cor",
     colorTitle: "Escolha uma cor para {team}",
     loadError: "Não foi possível carregar a agenda. Tente novamente em instantes.",

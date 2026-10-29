@@ -22,6 +22,8 @@ export const de: Messages = {
     emptyHint: "Wähle die Teams, die du unterstützt. Bis zu {max} Teams.",
     toggleHide: "Zum Ausblenden klicken",
     toggleShow: "Zum Einblenden klicken",
+    f1Main: "F1: nur Hauptsessions",
+    f1MainHint: "Zeigt nur Rennen, Qualifying und Sprints (ohne Training und Sprint-Qualifying). Füge das Kalender-Abo über „Zum Kalender hinzufügen“ neu hinzu, damit es dort gilt; angemeldet gilt es auch für Benachrichtigungs-E-Mails.",
     changeColor: "Farbe ändern",
     colorTitle: "Farbe für {team} wählen",
     loadError: "Der Spielplan konnte nicht geladen werden. Bitte versuche es gleich noch einmal.",

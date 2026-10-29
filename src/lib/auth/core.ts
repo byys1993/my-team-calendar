@@ -17,7 +17,7 @@ export const NOTIFY_MODES: NotifyMode[] = ["off", "daily", "weekly"];
 
 // 계정 조회에 쓰는 열 (u = app_user)
 const USER_COLS = `u.id, u.email, u.locale, u.time_zone as "timeZone", u.selections,
-  u.notify_mode as "notifyMode", u.notify_hour as "notifyHour", u.last_tz as "lastTz"`;
+  u.notify_mode as "notifyMode", u.notify_hour as "notifyHour", u.last_tz as "lastTz", u.f1_main_only as "f1MainOnly"`;
 
 export interface User {
   id: string;
@@ -28,6 +28,7 @@ export interface User {
   notifyMode: NotifyMode;
   notifyHour: number;
   lastTz: string | null; // 마지막으로 본 브라우저 시간대
+  f1MainOnly: boolean; // F1 결승·예선·스프린트만
 }
 
 // 'Asia/Seoul' 같은 IANA 시간대 이름인지
@@ -161,6 +162,7 @@ export async function updateUser(
     notifyMode?: NotifyMode;
     notifyHour?: number;
     lastTz?: string;
+    f1MainOnly?: boolean;
   },
 ): Promise<void> {
   if (patch.selections) {
@@ -175,6 +177,9 @@ export async function updateUser(
     await db.query("update app_user set notify_hour = $2 where id = $1", [userId, patch.notifyHour]);
   }
   if (patch.lastTz) await db.query("update app_user set last_tz = $2 where id = $1", [userId, patch.lastTz]);
+  if (patch.f1MainOnly !== undefined) {
+    await db.query("update app_user set f1_main_only = $2 where id = $1", [userId, patch.f1MainOnly]);
+  }
 }
 
 export const isNotifyMode = (v: unknown): v is NotifyMode => NOTIFY_MODES.includes(v as NotifyMode);

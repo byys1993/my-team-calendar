@@ -48,6 +48,7 @@ export const publicUser = (u: User) => ({
   notifyMode: u.notifyMode,
   notifyHour: u.notifyHour,
   lastTz: u.lastTz,
+  f1MainOnly: u.f1MainOnly,
 });
 
 export const bad = (error: string, status = 400) => NextResponse.json({ error }, { status });

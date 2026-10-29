@@ -22,6 +22,8 @@ export const en = {
     emptyHint: "Pick the teams you support. You can choose up to {max}.",
     toggleHide: "Click to hide",
     toggleShow: "Click to show",
+    f1Main: "F1 key sessions only",
+    f1MainHint: "Shows only races, qualifying and sprints (no practice or sprint qualifying). Re-add your calendar subscription from 'Add to calendar app' to apply it there; when signed in, alert emails use it too.",
     changeColor: "Change color",
     colorTitle: "Pick a color for {team}",
     loadError: "Couldn't load the schedule. Please try again shortly.",

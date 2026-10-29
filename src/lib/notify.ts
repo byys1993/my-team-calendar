@@ -32,6 +32,7 @@ interface Row {
   selections: SelectionItem[];
   notify_mode: NotifyMode;
   notify_hour: number;
+  f1_main_only: boolean;
   last_notified_on: string | null;
 }
 
@@ -180,7 +181,7 @@ export async function runNotifications(
   const now = opts.now ?? new Date();
   const max = opts.maxPerRun ?? MAX_PER_RUN;
   const rows = await db.query<Row>(
-    `select id, email, locale, time_zone, last_tz, selections, notify_mode, notify_hour,
+    `select id, email, locale, time_zone, last_tz, selections, notify_mode, notify_hour, f1_main_only,
        to_char(last_notified_on, 'YYYY-MM-DD') as last_notified_on
      from app_user where notify_mode <> 'off' order by id`,
   );
@@ -196,7 +197,8 @@ export async function runNotifications(
     const today = toDateKey(now, tz);
     const slugs = (r.selections ?? []).filter((s) => s.enabled).map((s) => s.slug);
     const locale: Locale = isLocale(r.locale) ? r.locale : "ko";
-    const matches = pickMatches(await getMatchesForTeams(db, slugs, locale), r.notify_mode, now, tz, r.notify_hour);
+    const all = await getMatchesForTeams(db, slugs, locale, { f1MainOnly: r.f1_main_only });
+    const matches = pickMatches(all, r.notify_mode, now, tz, r.notify_hour);
     if (matches.length === 0) {
       emptyDone.push({ userId: r.id, today });
       continue;

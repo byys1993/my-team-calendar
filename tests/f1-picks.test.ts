@@ -7,7 +7,7 @@ import type { Db } from "@/lib/db";
 import { createMemoryDb } from "@/lib/db/pglite";
 import { migrate } from "@/lib/db/migrate";
 import { seed } from "@/lib/db/seed";
-import { F1_PICKS, pickResults } from "@/lib/f1picks";
+import { F1_PICKS, hasF1, isMinorF1Session, pickResults } from "@/lib/f1picks";
 import { getLeaguePage, getTeamPage, sitemapEntries } from "@/lib/pages";
 import { getMatchesForTeams } from "@/lib/schedule";
 
@@ -84,6 +84,19 @@ describe("F1 팀·드라이버 고르기", () => {
       expect(await getMatchesForTeams(db, ["f1"], "ko")).toHaveLength(3);
       expect((await getMatchesForTeams(db, ["f1"], "ko"))[2].mine).toBeUndefined();
       expect(await getMatchesForTeams(db, ["arsenal"], "ko")).toEqual([]);
+    });
+
+    it("주요 세션만: 연습 주행·스프린트 예선은 빼고 결승·예선·스프린트만 (화면·구독·알림 메일 공통)", async () => {
+      const titles = async (slugs: string[]) =>
+        (await getMatchesForTeams(db, slugs, "ko", { f1MainOnly: true })).map((m) => m.title?.split(":").pop());
+      expect(await titles(["f1-hamilton"])).toEqual(["qualifying", "race"]);
+      expect(await titles(["f1"])).toEqual(["qualifying", "race"]);
+      expect(isMinorF1Session({ competition: "f1", title: "@f1:Qatar Grand Prix:sprint_qualifying" })).toBe(true);
+      expect(isMinorF1Session({ competition: "f1", title: "@f1:Qatar Grand Prix:sprint" })).toBe(false);
+      expect(isMinorF1Session({ competition: "epl", title: null })).toBe(false);
+      expect(hasF1(["arsenal", "f1-norris"])).toBe(true);
+      expect(hasF1(["f1"])).toBe(true);
+      expect(hasF1(["arsenal"])).toBe(false);
     });
 
     it("시리즈 전체(f1)는 리그 페이지 팀 목록·사이트맵에서 빼고, 페이지 자체는 그대로", async () => {

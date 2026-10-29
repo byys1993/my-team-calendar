@@ -11,6 +11,7 @@ export interface Account {
   notifyMode: NotifyMode;
   notifyHour: number;
   lastTz: string | null;
+  f1MainOnly: boolean;
 }
 
 export type NotifyMode = "off" | "daily" | "weekly";
@@ -21,6 +22,7 @@ type Patch = {
   notifyMode?: NotifyMode;
   notifyHour?: number;
   lastTz?: string;
+  f1MainOnly?: boolean;
 };
 
 export type AuthError = "invalid_email" | "wait" | "too_many" | "invalid_code" | "send_failed" | "captcha" | "failed";

@@ -5,7 +5,7 @@ import { buildIcs, parseTeamList } from "@/lib/ics";
 import { recordIcsFetch } from "@/lib/icsStats";
 import { getCatalog, getMatchesForTeams } from "@/lib/schedule";
 
-// GET /ics/<팀 slug,팀 slug>.ics?lang=ko → 그 팀들의 경기 캘린더 (캘린더 앱 구독용)
+// GET /ics/<팀 slug,팀 slug>.ics?lang=ko[&f1=main] → 그 팀들의 경기 캘린더 (캘린더 앱 구독용, f1=main 이면 F1 결승·예선·스프린트만)
 // 로그인 없이 쓰는 주소라 팀 목록이 곧 주소다. CDN 에 30분 캐시해 캘린더 앱이 자주 불러도 DB 부담이 적다.
 export async function GET(req: Request, { params }: { params: Promise<{ file: string }> }) {
   const file = decodeURIComponent((await params).file);
@@ -16,7 +16,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ file: st
   const locale: Locale = isLocale(lang) ? lang : "ko";
   const db = getDb();
   // 차례로 조회 (한 연결에 동시에 보내면 Supabase 풀러에서 멈춘다)
-  const matches = await getMatchesForTeams(db, slugs, locale);
+  const matches = await getMatchesForTeams(db, slugs, locale, { f1MainOnly: url.searchParams.get("f1") === "main" });
   const catalog = await getCatalog(db, locale);
   // 구독 규모 세기: 캘린더 앱만 (명령줄 도구·로봇 제외). 실패해도 캘린더는 내려준다
   if (!isBot(req.headers.get("user-agent"))) await recordIcsFetch(db, slugs, locale).catch(() => {});

@@ -1,6 +1,6 @@
 import { INTL_LOCALE, type Locale } from "@/i18n/config";
 import type { Podium } from "@/collector/types";
-import { f1Pick, pickResults } from "./f1picks";
+import { f1Pick, isMinorF1Session, pickResults } from "./f1picks";
 import type { Db } from "./db";
 
 // 사이트(서버)와 화면(클라이언트)이 함께 쓰는 응답 타입.
@@ -218,11 +218,16 @@ export async function queryMatches(
 }
 
 // 선택한 팀들의 경기. 지난 경기는 두 달 전까지만 (달력에서 지난 달을 볼 수 있도록)
-// F1 팀·드라이버를 고르면 F1 의 모든 세션 (어느 팀·드라이버든 모든 세션에 나온다)
-export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Locale): Promise<ScheduleMatch[]> {
+// F1 팀·드라이버를 고르면 F1 의 모든 세션 (어느 팀·드라이버든 모든 세션에 나온다). f1MainOnly 면 결승·예선·스프린트만
+export async function getMatchesForTeams(
+  db: Db,
+  teamSlugs: string[],
+  locale: Locale,
+  opts: { f1MainOnly?: boolean } = {},
+): Promise<ScheduleMatch[]> {
   if (teamSlugs.length === 0) return [];
   const picks = teamSlugs.filter((s) => f1Pick(s));
-  return queryMatches(
+  const rows = await queryMatches(
     db,
     locale,
     `(h.slug = any(string_to_array($2, ',')) or a.slug = any(string_to_array($2, ',')) or (c.slug = 'f1' and $3::boolean))
@@ -230,6 +235,7 @@ export async function getMatchesForTeams(db: Db, teamSlugs: string[], locale: Lo
     [teamSlugs.join(","), picks.length > 0],
     picks,
   );
+  return opts.f1MainOnly ? rows.filter((m) => !isMinorF1Session(m)) : rows;
 }
 
 // 날짜 패널의 '같은 리그 다른 경기'에서 빼는 종목. 이벤트형(F1)은 팀·드라이버 선택 방식으로 따로 보여 준다
