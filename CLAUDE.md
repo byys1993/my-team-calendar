@@ -39,7 +39,7 @@
 - F1: 시리즈 팀 `f1` 에 모든 세션이 묶여 저장된다. 사용자는 팀·드라이버(`src/lib/f1picks.ts`, 시드 `data/seed/f1.json`)를 고르고, 고르면 F1 모든 세션 + 그 팀·드라이버 순위(`mine`). `f1` 자체는 새로 고를 수 없지만 이미 고른 사람·구독 링크를 위해 남겨 둔다. 시즌이 바뀌면 `f1picks.ts` 와 시드를 함께 고친다
 - 경기 기록지(📋 기록): `src/lib/boxscore.ts`(미국 리그·축구·KBO), `boxscoreKr.ts`(KBL·K리그·LoL), `boxscoreF1.ts`, 받아 오기·저장 `boxscoreStore.ts` → `boxscore` 표. 처음 열 때 받아 저장, 경기 직후엔 30분마다 갱신, 3년 지나면 `cleanup.ts` 가 정리
 - `src/app/admin` 관리자(ADMIN_PASSWORD, IP당 시간당 10회)
-- 자세한 배포·설정 절차: `docs/DEPLOY.md`, 시즌 전환: `docs/SEASON.md`
+- 자세한 배포·설정 절차: `docs/DEPLOY.md`, 시즌 전환: `docs/SEASON.md`, 다음 작업 후보: `docs/NEXT.md`
 - 운영 점검: 데이터 이상 감지 메일(`src/lib/health.ts`, 10분마다 점검), 관리자 현황의 이용 흐름(`src/lib/events.ts`)
 
 ## 로컬 개발 (Windows)
