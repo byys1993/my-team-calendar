@@ -23,6 +23,8 @@ export const SOCCER_BOX_COMPETITIONS = new Set([
 // 3단계: KBL·K리그·LoL (공식 홈페이지·LoL Esports 데이터)
 export const KLEAGUE_BOX_COMPETITIONS = new Set(["k-league-1", "k-league-2"]);
 export const LOL_BOX_COMPETITIONS = new Set(["lck", "lol-first-stand", "msi", "worlds"]);
+// 4단계: V-리그
+export const KOVO_BOX_COMPETITIONS = new Set(["v-league-men", "v-league-women"]);
 export const BOX_COMPETITIONS = new Set([
   "f1",
   "nba",
@@ -34,6 +36,7 @@ export const BOX_COMPETITIONS = new Set([
   ...SOCCER_BOX_COMPETITIONS,
   ...KLEAGUE_BOX_COMPETITIONS,
   ...LOL_BOX_COMPETITIONS,
+  ...KOVO_BOX_COMPETITIONS,
 ]);
 // 원정팀을 먼저 쓰는 대회 (야구·미국 리그). 나머지는 홈팀(e스포츠는 첫 번째 팀) 먼저.
 export const AWAY_FIRST_COMPETITIONS = new Set(["nba", "nfl", "mlb", "nhl", "kbo"]);
@@ -73,7 +76,7 @@ export interface BoxSet {
   away: BoxRow[];
 }
 export interface BoxScore {
-  source: "espn" | "mlb" | "nhl" | "kbo" | "kbl" | "kleague" | "lolesports" | "jolpica";
+  source: "espn" | "mlb" | "nhl" | "kbo" | "kbl" | "kleague" | "kovo" | "lolesports" | "jolpica";
   line: BoxLine | null;
   stats: { key: string; away: string; home: string }[]; // key 가 번역 목록에 없으면 그대로(약어) 보인다
   away: BoxGroup[];

@@ -9,6 +9,7 @@ export const COLUMNS: Record<string, ColKey[]> = {
   soccer: ["gp", "w", "d", "l", "gd", "pts"],
   baseball: ["gp", "w", "l", "d", "pct", "gb"],
   basketball: ["gp", "w", "l", "pct", "gb"],
+  volleyball: ["gp", "w", "l", "gd", "pts"], // gd = 세트 득실
   "american-football": ["w", "l", "d", "pct", "gb"],
   hockey: ["gp", "w", "l", "otl", "pts"],
   esports: ["w", "l"],

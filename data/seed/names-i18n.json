@@ -4,6 +4,7 @@
     "motorsport": { "en": "Motorsport", "zh": "赛车", "ja": "モータースポーツ", "es": "Automovilismo", "fr": "Sport automobile", "de": "Motorsport", "pt": "Automobilismo", "ru": "Автоспорт", "ar": "رياضة السيارات" },
     "baseball": { "en": "Baseball", "zh": "棒球", "ja": "野球", "es": "Béisbol", "fr": "Baseball", "de": "Baseball", "pt": "Beisebol", "ru": "Бейсбол", "ar": "البيسبول" },
     "basketball": { "en": "Basketball", "zh": "篮球", "ja": "バスケットボール", "es": "Baloncesto", "fr": "Basket-ball", "de": "Basketball", "pt": "Basquete", "ru": "Баскетбол", "ar": "كرة السلة" },
+    "volleyball": { "en": "Volleyball", "zh": "排球", "ja": "バレーボール", "es": "Voleibol", "fr": "Volley-ball", "de": "Volleyball", "pt": "Vôlei", "ru": "Волейбол", "ar": "الكرة الطائرة" },
     "american-football": { "en": "American football", "zh": "美式橄榄球", "ja": "アメフト", "es": "Fútbol americano", "fr": "Football américain", "de": "American Football", "pt": "Futebol americano", "ru": "Американский футбол", "ar": "كرة القدم الأمريكية" },
     "hockey": { "en": "Ice hockey", "zh": "冰球", "ja": "アイスホッケー", "es": "Hockey sobre hielo", "fr": "Hockey sur glace", "de": "Eishockey", "pt": "Hóquei no gelo", "ru": "Хоккей", "ar": "هوكي الجليد" },
     "esports": { "en": "Esports", "zh": "电子竞技", "ja": "eスポーツ", "es": "Esports", "fr": "Esport", "de": "E-Sport", "pt": "eSports", "ru": "Киберспорт", "ar": "الرياضات الإلكترونية" }
@@ -30,6 +31,8 @@
     "nhl": { "en": "NHL", "zh": "NHL 国家冰球联盟", "ja": "NHL", "es": "NHL", "fr": "LNH", "de": "NHL", "pt": "NHL", "ru": "НХЛ", "ar": "دوري الهوكي الوطني NHL" },
     "kbo": { "en": "KBO League", "zh": "韩国职棒联赛", "ja": "KBOリーグ", "es": "Liga KBO", "fr": "KBO League", "de": "KBO League", "pt": "Liga KBO", "ru": "Лига KBO", "ar": "دوري KBO الكوري" },
     "kbl": { "en": "KBL", "zh": "韩国篮球联赛", "ja": "KBL", "es": "KBL", "fr": "KBL", "de": "KBL", "pt": "KBL", "ru": "KBL", "ar": "دوري كرة السلة الكوري KBL" },
+    "v-league-men": { "en": "V-League Men", "zh": "韩国排球V联赛 男子组", "ja": "Vリーグ 男子", "es": "V-League masculina", "fr": "V-League masculine", "de": "V-League Männer", "pt": "V-League masculina", "ru": "V-лига (мужчины)", "ar": "الدوري الكوري للكرة الطائرة (رجال)" },
+    "v-league-women": { "en": "V-League Women", "zh": "韩国排球V联赛 女子组", "ja": "Vリーグ 女子", "es": "V-League femenina", "fr": "V-League féminine", "de": "V-League Frauen", "pt": "V-League feminina", "ru": "V-лига (женщины)", "ar": "الدوري الكوري للكرة الطائرة (سيدات)" },
     "lck": { "en": "LCK", "zh": "LCK", "ja": "LCK", "es": "LCK", "fr": "LCK", "de": "LCK", "pt": "LCK", "ru": "LCK", "ar": "LCK" },
     "lol-first-stand": { "en": "LoL First Stand", "zh": "英雄联盟先锋赛", "ja": "LoL ファーストスタンド", "es": "LoL First Stand", "fr": "LoL First Stand", "de": "LoL First Stand", "pt": "LoL First Stand", "ru": "LoL First Stand", "ar": "LoL First Stand" },
     "msi": { "en": "MSI", "zh": "MSI 季中冠军赛", "ja": "MSI", "es": "MSI", "fr": "MSI", "de": "MSI", "pt": "MSI", "ru": "MSI", "ar": "MSI" },

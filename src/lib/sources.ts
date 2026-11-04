@@ -44,6 +44,11 @@ export const SOURCE_CREDITS: Record<string, { label: string; url: string; text: 
     url: "https://www.kbl.or.kr/",
     text: { ko: "KBL 일정: KBL 공식 홈페이지", en: "KBL schedule: KBL official website" },
   },
+  kovo: {
+    label: "KOVO",
+    url: "https://kovo.co.kr/",
+    text: { ko: "V-리그 일정: 한국배구연맹 공식 홈페이지", en: "V-League schedule: KOVO official website" },
+  },
   kleague: {
     label: "K League",
     url: "https://www.kleague.com/",

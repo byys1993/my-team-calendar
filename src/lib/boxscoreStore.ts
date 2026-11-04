@@ -1,6 +1,7 @@
 import type { Db } from "@/lib/db";
 import type { Fetcher } from "@/collector/types";
 import { getJson } from "@/collector/sources/http";
+import { kovoGet } from "@/collector/sources/kovo";
 import {
   BOX_COMPETITIONS,
   parseEspn,
@@ -17,18 +18,21 @@ import {
   type NhlBox,
   type NhlRail,
   KLEAGUE_BOX_COMPETITIONS,
+  KOVO_BOX_COMPETITIONS,
   LOL_BOX_COMPETITIONS,
 } from "@/lib/boxscore";
 import {
   parseKbl,
   parseKleague,
   parseKleagueLineup,
+  parseKovo,
   parseLol,
   type KblMatch,
   type KblPlayerStat,
   type KblTeamRecord,
   type KleagueInfo,
   type KleagueRecord,
+  type KovoDetail,
   type LolEventDetails,
   type LolWindow,
 } from "@/lib/boxscoreKr";
@@ -144,6 +148,8 @@ async function fetchBox(fetcher: Fetcher, g: Game): Promise<BoxScore | null> {
   if (g.competition === "kbl" && kbl) return fetchKbl(fetcher, kbl);
   const kleague = g.ref("kleague");
   if (KLEAGUE_BOX_COMPETITIONS.has(g.competition) && kleague) return fetchKleague(fetcher, kleague, g.competition);
+  const kovo = g.ref("kovo");
+  if (KOVO_BOX_COMPETITIONS.has(g.competition) && kovo) return fetchKovo(fetcher, kovo, g.competition);
   const f1 = parseF1Ref(g.ref("jolpica") ?? "");
   if (g.competition === "f1") return f1 ? fetchF1(fetcher, f1) : null;
   const lol = g.ref("lolesports");
@@ -255,6 +261,14 @@ async function fetchKbl(fetcher: Fetcher, gmkey: string): Promise<BoxScore | nul
   const players = await getJson<KblPlayerStat[]>(fetcher, `${KBL_API}/${id}/player-stat`, KBL_HEADERS);
   const teams = await getJson<KblTeamRecord[]>(fetcher, `${KBL_API}/${id}/team-record`, KBL_HEADERS).catch(() => []);
   return parseKbl(match, Array.isArray(players) ? players : [], Array.isArray(teams) ? teams : []);
+}
+
+// V-리그 경기 상세: 경기 ID는 '시즌-리그-경기번호' (예: 023-201-2)
+async function fetchKovo(fetcher: Fetcher, ref: string, competition: string): Promise<BoxScore | null> {
+  const [season, league, gnum] = ref.split("-");
+  if (!season || !league || !gnum) return null;
+  const gender = competition === "v-league-women" ? "2" : "1";
+  return parseKovo(await kovoGet<KovoDetail>(fetcher, `/stat/game-schedule/${gnum}?seasonCode=${season}&leagueCode=${league}&gender=${gender}`));
 }
 
 // K리그 경기센터: 골·카드(matchInfo)와 팀 기록(matchRecord)은 JSON, 출전 명단은 경기 화면 HTML 에만 있다.

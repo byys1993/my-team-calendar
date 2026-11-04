@@ -1,5 +1,6 @@
 import type { Db } from "@/lib/db";
 import { TEAM_CODE as KBO_TEAM_CODE } from "./sources/kbo";
+import { KOVO_REGULAR, kovoGet, kovoSeason } from "./sources/kovo";
 import { getJson, request, sleep, SourceError } from "./sources/http";
 import { fetchLeaders } from "./leaders";
 import type { Fetcher } from "./types";
@@ -33,6 +34,7 @@ type Spec =
   | { source: "nhl" }
   | { source: "kbo" }
   | { source: "kbl" }
+  | { source: "kovo"; gender: string }
   | { source: "kleague"; league: string }
   | { source: "lolesports"; league: string }
   | { source: "jolpica" };
@@ -53,6 +55,8 @@ export const STANDINGS: Record<string, Spec> = {
   nhl: { source: "nhl" },
   kbo: { source: "kbo" },
   kbl: { source: "kbl" },
+  "v-league-men": { source: "kovo", gender: "1" },
+  "v-league-women": { source: "kovo", gender: "2" },
   "k-league-1": { source: "kleague", league: "1" },
   "k-league-2": { source: "kleague", league: "2" },
   lck: { source: "lolesports", league: "98767991310872058" },
@@ -261,6 +265,35 @@ export function parseKblStandings(list: KblRank[]): StandingTableIn {
   };
 }
 
+// --- V-리그 (user-api.kovo.co.kr, 현재 시즌 정규리그). winp 가 승점이다
+interface KovoRank {
+  rank: number;
+  tcode: string;
+  tsname: string;
+  win: number;
+  lost: number;
+  swin: number; // 이긴 세트
+  slost: number; // 진 세트
+  winp: number;
+}
+export function parseKovoStandings(list: KovoRank[]): StandingTableIn {
+  return {
+    kind: "teams",
+    season: null,
+    groups: [
+      {
+        name: null,
+        rows: list.map((r) => ({
+          rank: r.rank,
+          ref: { source: "kovo", externalId: r.tcode, name: r.tsname },
+          name: r.tsname,
+          stats: { gp: r.win + r.lost, w: r.win, l: r.lost, gd: r.swin - r.slost, pts: r.winp },
+        })),
+      },
+    ],
+  };
+}
+
 // --- K리그 공식 홈페이지
 interface KleagueRank {
   rank: number;
@@ -416,6 +449,11 @@ export async function fetchStandings(
     }
     case "kbl":
       return [parseKblStandings(await getJson<KblRank[]>(fetcher, "https://api.kbl.or.kr/league/rank/team", KBL_HEADERS))];
+    case "kovo": {
+      const season = await kovoSeason(fetcher);
+      const list = await kovoGet<KovoRank[]>(fetcher, `/stat/league/team-rank?seasonCode=${season}&gender=${spec.gender}&leagueCode=${KOVO_REGULAR}&round=0`);
+      return [parseKovoStandings(list)];
+    }
     case "kleague": {
       const year = kstYear(now);
       // POST 본문으로 보내면 리그 번호를 무시하고 K리그1 을 준다. 화면처럼 주소에 붙여 보낸다.

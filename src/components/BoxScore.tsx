@@ -19,13 +19,14 @@ const SOURCE_NAME: Record<BoxScore["source"], string> = {
   kbo: "KBO",
   kbl: "KBL",
   kleague: "K League",
+  kovo: "KOVO",
   lolesports: "LoL Esports",
   jolpica: "Jolpica F1",
 };
 type Side = "home" | "away";
 type TeamStat = BoxScore["stats"][number];
 
-// 끝난 경기 결과 옆 '기록' 버튼 (미국 4대 리그·KBO·KBL·축구·K리그·LoL·F1) → 기록지 창 (처음 열 때 받아 온다)
+// 끝난 경기 결과 옆 '기록' 버튼 (미국 4대 리그·KBO·KBL·V-리그·축구·K리그·LoL·F1) → 기록지 창 (처음 열 때 받아 온다)
 export function BoxScoreButton({ match, team }: { match: ScheduleMatch; team: string }) {
   const { m } = useI18n();
   const [open, setOpen] = useState(false);

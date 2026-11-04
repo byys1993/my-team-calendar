@@ -1,4 +1,5 @@
 import { TEAM_CODE as KBO_TEAM_CODE } from "./sources/kbo";
+import { KOVO_REGULAR, kovoGet, kovoSeason } from "./sources/kovo";
 import { getJson, request, sleep, SourceError } from "./sources/http";
 import type { StandingRowIn, StandingTableIn } from "./standings";
 import type { Fetcher } from "./types";
@@ -102,6 +103,44 @@ export function parseKblLeaders(parts: KblLeaderPart[]): StandingTableIn {
           ref: { source: "kbl", externalId: x.player.tcode, name: x.player.tname },
           sub: x.player.tname,
           stats: { value: fixed(x.value, 1) },
+        })),
+      ),
+    ];
+  });
+  return { kind: "leaders", season: null, groups };
+}
+
+// --- V-리그 부문별 순위 (user-api.kovo.co.kr). sup 이 그 부문의 값이다
+export interface KovoLeader {
+  rank: number;
+  pname: string;
+  tcode: string;
+  tsname: string;
+  sup: number;
+}
+// 출처 부문 코드, 화면 키, 값 표기 (득점은 합계, 공격·리시브는 %, 나머지는 세트당 평균)
+const KOVO_PARTS: [string, string, (v: number) => string][] = [
+  ["point", "vbPoints", (v) => fixed(v, 0)],
+  ["at", "vbAttack", (v) => `${fixed(v, 2)}%`],
+  ["b", "vbBlock", (v) => fixed(v, 2)],
+  ["s", "vbServe", (v) => fixed(v, 2)],
+  ["set", "vbSet", (v) => fixed(v, 2)],
+  ["d", "vbDig", (v) => fixed(v, 2)],
+  ["r", "vbReceive", (v) => `${fixed(v, 2)}%`],
+];
+export function parseKovoLeaders(parts: Record<string, KovoLeader[]>): StandingTableIn {
+  const groups = KOVO_PARTS.flatMap(([part, key, value]) => {
+    const list = parts[part];
+    if (!list?.length) return [];
+    return [
+      group(
+        key,
+        list.map((x) => ({
+          rank: x.rank,
+          name: x.pname,
+          ref: { source: "kovo", externalId: x.tcode, name: x.tsname },
+          sub: x.tsname,
+          stats: { value: value(x.sup) },
         })),
       ),
     ];
@@ -342,6 +381,7 @@ export type LeaderSpec =
   | { source: "espn"; path: string }
   | { source: "mlb" | "nhl" | "kbo" | "kbl" | "jolpica" }
   | { source: "kleague"; league: string }
+  | { source: "kovo"; gender: string }
   | { source: string };
 
 // 개인 순위를 받을 수 있는 출처만 결과를 낸다 (LCK·UEL 등은 null)
@@ -394,6 +434,19 @@ export async function fetchLeaders(
     }
     case "kbl":
       return parseKblLeaders(await getJson<KblLeaderPart[]>(fetcher, "https://api.kbl.or.kr/league/season-leader", KBL_HEADERS));
+    case "kovo": {
+      if (!("gender" in spec)) return null;
+      const season = await kovoSeason(fetcher);
+      const parts: Record<string, KovoLeader[]> = {};
+      for (const [part] of KOVO_PARTS) {
+        const page = await kovoGet<{ content?: KovoLeader[] }>(
+          fetcher,
+          `/stat/league/player-rank?seasonCode=${season}&gender=${spec.gender}&leagueCode=${KOVO_REGULAR}&round=0&rpart=${part}&sort=rank,asc&size=${TOP}`,
+        );
+        parts[part] = page.content ?? [];
+      }
+      return parseKovoLeaders(parts);
+    }
     case "kleague": {
       if (!("league" in spec)) return null;
       const year = kstYear(now);

@@ -4,6 +4,7 @@
     { "slug": "motorsport", "name_ko": "모터스포츠" },
     { "slug": "baseball", "name_ko": "야구" },
     { "slug": "basketball", "name_ko": "농구" },
+    { "slug": "volleyball", "name_ko": "배구" },
     { "slug": "american-football", "name_ko": "미식축구" },
     { "slug": "hockey", "name_ko": "아이스하키" },
     { "slug": "esports", "name_ko": "e스포츠" }

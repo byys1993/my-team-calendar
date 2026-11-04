@@ -8,6 +8,8 @@ export const SEASON_START_MONTH: Record<string, number> = {
   "k-league-1": 2,
   "k-league-2": 3,
   kbl: 10,
+  "v-league-men": 10,
+  "v-league-women": 10,
   lck: 1,
   epl: 8,
   laliga: 8,

@@ -8,6 +8,7 @@ const DURATION_MIN: Record<string, number> = {
   soccer: 120,
   baseball: 180,
   basketball: 150,
+  volleyball: 150,
   "american-football": 210,
   hockey: 150,
   motorsport: 120,

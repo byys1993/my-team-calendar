@@ -3,7 +3,11 @@
     { "slug": "kbo", "broadcast": "TVING", "sport": "baseball", "name_ko": "KBO 리그", "type": "league", "display_order": 10,
       "sources": [{ "source": "kbo", "external_id": "1" }] },
     { "slug": "kbl", "sport": "basketball", "name_ko": "KBL", "type": "league", "display_order": 10,
-      "sources": [{ "source": "kbl", "external_id": "kbl" }] }
+      "sources": [{ "source": "kbl", "external_id": "kbl" }] },
+    { "slug": "v-league-men", "sport": "volleyball", "name_ko": "V-리그 남자부", "type": "league", "display_order": 10,
+      "sources": [{ "source": "kovo", "external_id": "1" }] },
+    { "slug": "v-league-women", "sport": "volleyball", "name_ko": "V-리그 여자부", "type": "league", "display_order": 11,
+      "sources": [{ "source": "kovo", "external_id": "2" }] }
   ],
   "teams": [
     { "slug": "kbo-lg", "sport": "baseball", "competition": "kbo", "name_ko": "LG 트윈스", "short_ko": "LG", "name_en": "LG Twins", "aliases": ["LG"], "refs": { "kbo": "LG", "manual": "kbo-lg" } },
@@ -26,6 +30,20 @@
     { "slug": "kbl-jkj", "sport": "basketball", "competition": "kbl", "name_ko": "안양 정관장 레드부스터스", "short_ko": "정관장", "name_en": "Anyang Jung Kwan Jang Red Boosters", "aliases": ["KGC"], "refs": { "kbl": "70", "manual": "kbl-jkj" } },
     { "slug": "kbl-sono", "sport": "basketball", "competition": "kbl", "name_ko": "고양 소노 스카이거너스", "short_ko": "소노", "name_en": "Goyang Sono Skygunners", "aliases": [], "refs": { "kbl": "66", "manual": "kbl-sono" } },
     { "slug": "kbl-kogas", "sport": "basketball", "competition": "kbl", "name_ko": "대구 한국가스공사 페가수스", "short_ko": "가스공사", "name_en": "Daegu KOGAS Pegasus", "aliases": ["한국가스공사"], "refs": { "kbl": "64", "manual": "kbl-kogas" } },
-    { "slug": "kbl-samsung", "sport": "basketball", "competition": "kbl", "name_ko": "서울 삼성 썬더스", "short_ko": "삼성", "name_en": "Seoul Samsung Thunders", "aliases": [], "refs": { "kbl": "35", "manual": "kbl-samsung" } }
+    { "slug": "kbl-samsung", "sport": "basketball", "competition": "kbl", "name_ko": "서울 삼성 썬더스", "short_ko": "삼성", "name_en": "Seoul Samsung Thunders", "aliases": [], "refs": { "kbl": "35", "manual": "kbl-samsung" } },
+    { "slug": "vleague-korean-air", "sport": "volleyball", "competition": "v-league-men", "name_ko": "인천 대한항공 점보스", "short_ko": "대한항공", "name_en": "Incheon Korean Air Jumbos", "aliases": [], "refs": { "kovo": "1001" } },
+    { "slug": "vleague-hyundai-capital", "sport": "volleyball", "competition": "v-league-men", "name_ko": "천안 현대캐피탈 스카이워커스", "short_ko": "현대캐피탈", "name_en": "Cheonan Hyundai Capital Skywalkers", "aliases": [], "refs": { "kovo": "1005" } },
+    { "slug": "vleague-kb", "sport": "volleyball", "competition": "v-league-men", "name_ko": "의정부 KB손해보험 스타즈", "short_ko": "KB손해보험", "name_en": "Uijeongbu KB Insurance Stars", "aliases": [], "refs": { "kovo": "1004" } },
+    { "slug": "vleague-woori", "sport": "volleyball", "competition": "v-league-men", "name_ko": "서울 우리카드 우리WON", "short_ko": "우리카드", "name_en": "Seoul Woori Card WooriWON", "aliases": [], "refs": { "kovo": "1009" } },
+    { "slug": "vleague-kepco", "sport": "volleyball", "competition": "v-league-men", "name_ko": "수원 한국전력 빅스톰", "short_ko": "한국전력", "name_en": "Suwon KEPCO Vixtorm", "aliases": [], "refs": { "kovo": "1006" } },
+    { "slug": "vleague-samsung", "sport": "volleyball", "competition": "v-league-men", "name_ko": "대전 삼성화재 블루팡스", "short_ko": "삼성화재", "name_en": "Daejeon Samsung Fire Bluefangs", "aliases": [], "refs": { "kovo": "1002" } },
+    { "slug": "vleague-ok", "sport": "volleyball", "competition": "v-league-men", "name_ko": "부산 OK저축은행 읏맨", "short_ko": "OK저축은행", "name_en": "Busan OK Savings Bank OKman", "aliases": [], "refs": { "kovo": "1008" } },
+    { "slug": "vleague-heungkuk", "sport": "volleyball", "competition": "v-league-women", "name_ko": "인천 흥국생명 핑크스파이더스", "short_ko": "흥국생명", "name_en": "Incheon Heungkuk Life Pink Spiders", "aliases": [], "refs": { "kovo": "2004" } },
+    { "slug": "vleague-hyundai-ec", "sport": "volleyball", "competition": "v-league-women", "name_ko": "수원 현대건설 힐스테이트", "short_ko": "현대건설", "name_en": "Suwon Hyundai E&C Hillstate", "aliases": [], "refs": { "kovo": "2001" } },
+    { "slug": "vleague-expressway", "sport": "volleyball", "competition": "v-league-women", "name_ko": "김천 한국도로공사 하이패스", "short_ko": "한국도로공사", "name_en": "Gimcheon Korea Expressway Hi-Pass", "aliases": [], "refs": { "kovo": "2002" } },
+    { "slug": "vleague-gs", "sport": "volleyball", "competition": "v-league-women", "name_ko": "서울 GS칼텍스 KIXX", "short_ko": "GS칼텍스", "name_en": "Seoul GS Caltex KIXX", "aliases": [], "refs": { "kovo": "2005" } },
+    { "slug": "vleague-ibk", "sport": "volleyball", "competition": "v-league-women", "name_ko": "화성 IBK기업은행 알토스", "short_ko": "IBK기업은행", "name_en": "Hwaseong IBK Altos", "aliases": [], "refs": { "kovo": "2006" } },
+    { "slug": "vleague-jkj", "sport": "volleyball", "competition": "v-league-women", "name_ko": "대전 정관장 레드스파크스", "short_ko": "정관장", "name_en": "Daejeon Jung Kwan Jang Red Sparks", "aliases": [], "refs": { "kovo": "2003" } },
+    { "slug": "vleague-soop", "sport": "volleyball", "competition": "v-league-women", "name_ko": "SOOP SOOPers", "short_ko": "SOOP", "name_en": "SOOP SOOPers", "aliases": [], "refs": { "kovo": "2008" } }
   ]
 }

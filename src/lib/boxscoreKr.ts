@@ -1,4 +1,4 @@
-// 3단계 기록지: KBL·K리그(공식 홈페이지 데이터)와 LoL(LoL Esports 데이터). 모양은 lib/boxscore.ts 와 같다.
+// 3단계 기록지: KBL·K리그·V-리그(공식 홈페이지 데이터)와 LoL(LoL Esports 데이터). 모양은 lib/boxscore.ts 와 같다.
 import type { BoxEvent, BoxGroup, BoxRow, BoxScore, BoxSet } from "@/lib/boxscore";
 
 type Side = "home" | "away";
@@ -128,6 +128,105 @@ export function parseKbl(match: KblMatch, players: KblPlayerStat[], teams: KblTe
     duration: time ? `${Number(time.slice(0, 2))}:${time.slice(2)}` : undefined,
   };
   return { source: "kbl", line, stats, away: groups("away"), home: groups("home"), info };
+}
+
+/* ---------------- V-리그 ---------------- */
+
+type SetNo = 1 | 2 | 3 | 4 | 5;
+export type KovoGameDetail = { hcode: string; acode: string; spectators?: number | null; sptime?: string | null } & Partial<
+  Record<`hs${SetNo}point` | `as${SetNo}point`, number | null>
+>;
+interface KovoRecords {
+  tcode: string;
+  point?: number; // 팀 기록은 상대 범실로 얻은 점수까지 포함 (경기 총득점과 같다)
+  att?: number; // 공격 시도
+  ats?: number; // 공격 성공
+  atsp?: number; // 공격 성공률
+  ss?: number; // 서브 득점
+  bs?: number; // 블로킹 득점
+  ds?: number; // 디그 성공
+  sets?: number; // 세트 성공
+  rt?: number; // 리시브 시도
+  rsp?: number; // 리시브 효율
+  err?: number; // 범실
+}
+export interface KovoPlayer extends KovoRecords {
+  pname: string;
+  position?: string;
+  // 세트별 출전: '-1' 선발, '-2' 뛰지 않음, 그 밖의 값은 교체로 들어온 경우
+  ynS1?: string;
+  ynS2?: string;
+  ynS3?: string;
+  ynS4?: string;
+  ynS5?: string;
+}
+export interface KovoDetail {
+  game: KovoGameDetail;
+  player: KovoPlayer[];
+  team: KovoRecords[];
+}
+
+const KOVO_LABELS = ["PTS", "ATK", "ATK%", "ACE", "BLK", "DIG", "SET", "RCV%", "ERR"];
+const SET_NUMBERS: SetNo[] = [1, 2, 3, 4, 5];
+const rate = (v?: number) => String(Math.round((v ?? 0) * 10) / 10);
+const kovoLine = (r: KovoRecords) => [
+  str(r.point),
+  made(r.ats, r.att),
+  r.att ? rate(r.atsp) : "-",
+  str(r.ss),
+  str(r.bs),
+  str(r.ds),
+  str(r.sets),
+  r.rt ? rate(r.rsp) : "-",
+  str(r.err),
+];
+
+export function parseKovo({ game, player, team }: KovoDetail): BoxScore {
+  // 치르지 않은 세트는 0 : 0 으로 온다
+  const played = SET_NUMBERS.filter((n) => (game[`hs${n}point`] ?? 0) + (game[`as${n}point`] ?? 0) > 0);
+  const points = (side: "hs" | "as") => played.map((n) => game[`${side}${n}point`] ?? 0);
+  const sum = (xs: number[]) => String(xs.reduce((s, x) => s + x, 0));
+  const line: BoxScore["line"] = played.length
+    ? {
+        labels: [...played.map(String), "T"],
+        home: [...points("hs").map(String), sum(points("hs"))],
+        away: [...points("as").map(String), sum(points("as"))],
+      }
+    : null;
+
+  const code = { home: game.hcode, away: game.acode };
+  const records = (side: Side) => team.find((t) => t.tcode === code[side]);
+  const stats: BoxScore["stats"] = [];
+  const h = records("home");
+  const a = records("away");
+  if (h && a) {
+    const add = (key: string, f: (r: KovoRecords) => string) => stats.push({ key, home: f(h), away: f(a) });
+    add("vbAttackPct", (r) => `${rate(r.atsp)}%`);
+    add("vbAttack", (r) => made(r.ats, r.att));
+    add("vbBlocks", (r) => str(r.bs));
+    add("vbAces", (r) => str(r.ss));
+    add("vbDigs", (r) => str(r.ds));
+    add("vbSets", (r) => str(r.sets));
+    add("vbReceivePct", (r) => `${rate(r.rsp)}%`);
+    add("vbErrors", (r) => str(r.err));
+  }
+
+  const groups = (side: Side): BoxGroup[] => {
+    const inSets = (p: KovoPlayer) => [p.ynS1, p.ynS2, p.ynS3, p.ynS4, p.ynS5];
+    const rows = player
+      .filter((p) => p.tcode === code[side] && inSets(p).some((s) => s != null && s !== "-2"))
+      .map((p) => ({ p, starter: inSets(p).includes("-1") }))
+      .sort((x, y) => Number(y.starter) - Number(x.starter))
+      .map(({ p, starter }) => ({ name: p.pname, pos: p.position, sub: !starter, stats: kovoLine(p) }));
+    const t = records(side);
+    return rows.length ? [{ key: "players", labels: KOVO_LABELS, rows, totals: t ? kovoLine(t) : undefined }] : [];
+  };
+
+  const info = {
+    crowd: game.spectators ? game.spectators.toLocaleString("en-US") : undefined,
+    duration: game.sptime ? game.sptime.replace(/^0/, "") : undefined, // '01:23'
+  };
+  return { source: "kovo", line, stats, away: groups("away"), home: groups("home"), info };
 }
 
 /* ---------------- K리그 ---------------- */

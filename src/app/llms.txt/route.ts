@@ -30,7 +30,7 @@ export async function GET() {
 
 > 응원하는 팀을 고르면 리그·컵대회·국제대회·e스포츠 경기 일정과 결과, 국내 중계 채널을 내 시간대의 캘린더 하나에 모아 보여 주는 무료 비상업 사이트입니다. A free, non-commercial site that collects fixtures, results and Korean TV listings for the teams you follow into one calendar in your time zone.
 
-- 대상: KBO·K리그·KBL·유럽 5대 리그·UEFA 대회·NBA·MLB·NFL·NHL·F1·LCK 등 ${ko.competitions.length}개 리그·대회, ${ko.teams.length}개 팀
+- 대상: KBO·K리그·KBL·V-리그·유럽 5대 리그·UEFA 대회·NBA·MLB·NFL·NHL·F1·LCK 등 ${ko.competitions.length}개 리그·대회, ${ko.teams.length}개 팀
 - 일정은 공식 데이터에서 매시간 자동으로 갱신됩니다 (경기 당일은 매시간, 평소 하루 두 번)
 - 회원가입 없이 쓸 수 있고, 팀 선택은 브라우저에 저장됩니다. 이메일 로그인은 알림 메일과 기기 간 동기화용입니다
 - 지원 언어: 한국어, English, 中文, 日本語, Español, Français, Deutsch, Português, Русский, العربية
@@ -63,7 +63,7 @@ ${cups.join(", ")}
 
 ## 데이터 출처
 
-football-data.org, ESPN, Jolpica-F1, OpenF1, MLB Stats API, NHL API, LoL Esports, KBO·K리그·KBL 공식 홈페이지. 국내 중계 정보는 각 리그 공식 데이터와 대회별 기본 중계사를 합친 것입니다.
+football-data.org, ESPN, Jolpica-F1, OpenF1, MLB Stats API, NHL API, LoL Esports, KBO·K리그·KBL·KOVO 공식 홈페이지. 국내 중계 정보는 각 리그 공식 데이터와 대회별 기본 중계사를 합친 것입니다.
 `;
   return new Response(text, {
     headers: {
