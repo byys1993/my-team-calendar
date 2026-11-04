@@ -1,4 +1,7 @@
-import type { Locale } from "@/i18n/config";
+import { dateLabel, hasExactTime, matchDateKey, matchTimeLabel } from "@/components/time";
+import type { Messages } from "@/i18n";
+import { INTL_LOCALE, type Locale } from "@/i18n/config";
+import { formatLabel, formatTitle } from "@/i18n/format";
 import type { Db } from "@/lib/db";
 import { F1_SERIES, f1Pick } from "@/lib/f1picks";
 import {
@@ -40,6 +43,20 @@ async function standingTables(db: Db, competition: string): Promise<StandingTabl
 // 이미 시작한 지 2시간이 안 된 경기는 '다가오는 경기'에 남긴다
 const LIVE_MS = 2 * 3600_000;
 const startMs = (m: ScheduleMatch) => (m.startAt ? new Date(m.startAt).getTime() : new Date(`${m.dateOnly}T23:59:00+09:00`).getTime());
+
+// 검색 결과 설명에 넣을 다음 경기 ('11월 6일 (금) 11:00 LA 클리퍼스 vs 덴버 너기츠', 한국 시간).
+// 이미 시작했거나 열릴지 정해지지 않은 경기(진출 시·연기)는 건너뛴다. 팀 페이지는 그 팀을 앞에 쓴다
+export function nextMatchLabel(matches: ScheduleMatch[], team: string | null, m: Messages, locale: Locale, now = new Date()): string | null {
+  const x = matches.find((g) => (g.status === "scheduled" || g.status === "time_tbd") && startMs(g) >= now.getTime());
+  if (!x) return null;
+  const tz = "Asia/Seoul";
+  const intl = INTL_LOCALE[locale];
+  const label = (s: string) => formatLabel(s, m) ?? s;
+  const [a, b] = team && x.away === team ? [x.awayLabel, x.homeLabel] : [x.homeLabel, x.awayLabel];
+  const what = x.title && !x.away ? formatTitle(x.title, m, locale) : `${label(a)} ${m.match.vs} ${label(b)}`;
+  const when = dateLabel(matchDateKey(x, tz), intl);
+  return `${when}${hasExactTime(x) ? ` ${matchTimeLabel(x, intl, "", tz)}` : ""} ${what}`;
+}
 
 export interface TeamPageData {
   team: CatalogTeam;

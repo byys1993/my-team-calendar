@@ -23,6 +23,8 @@ describe("언어 고르기", () => {
       expect(placeholders(m.app.emptyHint), l).toEqual(placeholders(en.app.emptyHint));
       expect(placeholders(m.auth.codeSent), l).toEqual(placeholders(en.auth.codeSent));
       expect(placeholders(m.round.matchday), l).toEqual(["n"]);
+      expect(placeholders(m.teamPage.metaNext), l).toEqual(["next", "team"]);
+      expect(placeholders(m.leaguePage.metaNext), l).toEqual(["league", "next"]);
       expect(m.privacyPage.body.length, l).toBe(en.privacyPage.body.length);
     }
   });

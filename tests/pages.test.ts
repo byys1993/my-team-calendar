@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { upsertMatches } from "@/collector/upsert";
 import type { Db } from "@/lib/db";
-import { getLeaguePage, getTeamPage, sitemapEntries } from "@/lib/pages";
+import { MESSAGES } from "@/i18n";
+import { getLeaguePage, getTeamPage, nextMatchLabel, sitemapEntries } from "@/lib/pages";
+import type { ScheduleMatch } from "@/lib/schedule";
 import { espnMatch, setupDb } from "./helpers";
 
 let db: Db & { close(): Promise<void> };
@@ -30,6 +32,45 @@ beforeEach(async () => {
 afterEach(() => db.close());
 
 const now = new Date("2026-10-23T00:00:00Z");
+
+describe("검색 설명의 다음 경기", () => {
+  const ko = MESSAGES.ko;
+  const game = (over: Partial<ScheduleMatch>) =>
+    ({
+      title: null,
+      home: "man-city",
+      away: "arsenal",
+      homeLabel: "맨시티",
+      awayLabel: "아스널",
+      startAt: "2026-10-25T14:00:00Z",
+      dateOnly: null,
+      status: "scheduled",
+      ...over,
+    }) as ScheduleMatch;
+
+  it("팀 페이지는 그 팀을 앞에, 시각은 한국 시간으로", () => {
+    expect(nextMatchLabel([game({})], "arsenal", ko, "ko", now)).toBe("10월 25일 (일) 23:00 아스널 vs 맨시티");
+    expect(nextMatchLabel([game({})], null, ko, "ko", now)).toBe("10월 25일 (일) 23:00 맨시티 vs 아스널");
+  });
+
+  it("시각이 미정이면 날짜만", () => {
+    const list = [game({ startAt: null, dateOnly: "2026-10-25", status: "time_tbd" })];
+    expect(nextMatchLabel(list, null, ko, "ko", now)).toBe("10월 25일 (일) 맨시티 vs 아스널");
+  });
+
+  it("F1 같은 이벤트는 세션 이름", () => {
+    const list = [game({ title: "@f1:Las Vegas Grand Prix:race", home: null, away: null })];
+    expect(nextMatchLabel(list, "f1", ko, "ko", now)).toMatch(/^10월 25일 \(일\) 23:00 .+결승$/);
+  });
+
+  it("이미 시작한 경기, 열릴지 모르는 경기는 건너뛴다", () => {
+    const later = game({ startAt: "2026-11-01T14:00:00Z" });
+    expect(nextMatchLabel([game({ startAt: "2026-10-22T23:00:00Z" }), later], null, ko, "ko", now)).toContain("11월 1일");
+    expect(nextMatchLabel([game({ status: "conditional" }), later], null, ko, "ko", now)).toContain("11월 1일");
+    expect(nextMatchLabel([game({ status: "postponed" })], null, ko, "ko", now)).toBeNull();
+    expect(nextMatchLabel([], null, ko, "ko", now)).toBeNull();
+  });
+});
 
 describe("팀·리그 페이지", () => {
   it("팀 페이지: 다가오는 경기·최근 결과·순위·같은 리그 팀", async () => {

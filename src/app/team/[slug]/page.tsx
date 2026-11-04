@@ -8,7 +8,7 @@ import { fmt, MESSAGES } from "@/i18n";
 import { INTL_LOCALE, type Locale } from "@/i18n/config";
 import { getLocale } from "@/i18n/server";
 import { getDb } from "@/lib/db";
-import { getTeamPage } from "@/lib/pages";
+import { getTeamPage, nextMatchLabel } from "@/lib/pages";
 import { SITE_URL } from "@/lib/site";
 import { sportsEventList } from "@/lib/jsonld";
 import { formatLabel } from "@/i18n/format";
@@ -28,7 +28,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!data) return {};
   const vars = { team: data.team.name, league: data.competition?.name ?? "", site: m.meta.title };
   const title = fmt(m.teamPage.metaTitle, vars);
-  const description = fmt(m.teamPage.metaDesc, vars);
+  const next = nextMatchLabel(data.upcoming, slug, m, locale);
+  const description = next ? fmt(m.teamPage.metaNext, { ...vars, next }) : fmt(m.teamPage.metaDesc, vars);
   return {
     title,
     description,

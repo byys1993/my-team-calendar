@@ -14,7 +14,7 @@ import { getLocale } from "@/i18n/server";
 import { getDb } from "@/lib/db";
 import { sportsEventList } from "@/lib/jsonld";
 import { f1Driver, f1Team } from "@/lib/f1names";
-import { getLeaguePage, type LeagueNavQuery } from "@/lib/pages";
+import { getLeaguePage, nextMatchLabel, type LeagueNavQuery } from "@/lib/pages";
 import { SITE_URL } from "@/lib/site";
 
 // 리그 페이지: '○○리그 일정·순위' 검색으로 들어오는 입구. 이번 주 경기(라운드·주 단위로 앞뒤 이동), 순위표, 개인 순위, 팀 페이지 링크.
@@ -43,7 +43,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (!data) return {};
   const vars = { league: data.competition.name, site: m.meta.title };
   const title = fmt(m.leaguePage.metaTitle, vars);
-  const description = fmt(m.leaguePage.metaDesc, vars);
+  // 라운드·주를 옮긴 화면은 검색에 나가지 않는 주소라(canonical) 기본 화면만 다음 경기를 넣는다
+  const next = data.nav.isDefault ? nextMatchLabel(data.week, null, m, locale) : null;
+  const description = next ? fmt(m.leaguePage.metaNext, { ...vars, next }) : fmt(m.leaguePage.metaDesc, vars);
   return {
     title,
     description,
