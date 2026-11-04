@@ -20,6 +20,20 @@ const steps: [string, (f: FunnelRow) => number][] = [
   ["문의 보냄", (f) => f.events.contact_sent],
 ];
 
+// 운영자가 해당 기간의 리포트에서 안내받을 확인 거리 (날짜는 한국 시간, from·to 포함). 지난 항목은 지워도 된다
+export const REPORT_TASKS: { from: string; to: string; text: string }[] = [
+  {
+    from: "2026-11-09",
+    to: "2026-11-16",
+    text: "네이버 서치어드바이저: 리포트 → 수집 현황, 콘텐츠 노출/클릭의 '검색 웹문서'를 캡처해 Claude 에게 보여 주세요 (팀·리그 페이지가 잡혔는지, 주말 경기 날 노출이 되풀이되는지)",
+  },
+  {
+    from: "2026-11-16",
+    to: "2026-11-30",
+    text: "Search Console: 실적(지난 28일) 화면을 캡처해 Claude 에게 보여 주세요 (11/4 설명 변경 전: 노출 1,610 · 클릭 1 · 클릭률 0.1% · 평균 8.6위). 제목에 '캘린더 구독'을 넣을지도 같이 정해요",
+  },
+];
+
 const subscribed = (f: FunnelRow) => Math.max(f.events.sub_apple, f.events.sub_google, f.events.sub_copy);
 const pct = (n: number, base: number) => (base ? `${Math.round((n / base) * 100)}%` : "-");
 const delta = (now: number, before: number) => (now === before ? "±0" : now > before ? `+${now - before}` : `${now - before}`);
@@ -62,6 +76,9 @@ export async function buildWeeklyReport(db: Db, siteUrl: string, now = new Date(
   const to = seoulDay(new Date(now.getTime() - DAY));
   const lines: string[] = [];
   lines.push(`마이팀 캘린더 주간 운영 리포트 (${from} ~ ${to})`, "");
+  const today = seoulDay(now);
+  const tasks = REPORT_TASKS.filter((t) => t.from <= today && today <= t.to);
+  if (tasks.length) lines.push("■ 이번 주 확인할 일", ...tasks.map((t) => `  · ${t.text}`), "");
   lines.push("■ 이용 흐름 — 지난 7일 (비율은 방문자 대비, 괄호는 그 전 주와 비교)");
   for (const [name, get] of steps) {
     lines.push(`  ${name}: ${get(week)}명 · ${pct(get(week), week.visitors)} (${delta(get(week), get(prev))})`);

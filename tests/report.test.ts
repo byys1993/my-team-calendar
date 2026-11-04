@@ -41,6 +41,20 @@ describe("주간 운영 리포트", () => {
     expect(rep.text).toContain("Claude");
   });
 
+  it("확인할 일은 정해진 기간의 리포트에만 나온다", async () => {
+    const text = async (day: string) => (await buildWeeklyReport(db, "https://x", seoul(`${day}T09:05:00`))).text;
+    expect(await text("2026-11-02")).not.toContain("이번 주 확인할 일");
+    const naver = await text("2026-11-09");
+    expect(naver).toContain("이번 주 확인할 일");
+    expect(naver).toContain("네이버 서치어드바이저");
+    expect(naver).not.toContain("Search Console");
+    const both = await text("2026-11-16");
+    expect(both).toContain("네이버 서치어드바이저");
+    expect(both).toContain("Search Console");
+    expect(await text("2026-11-30")).toContain("Search Console");
+    expect(await text("2026-12-07")).not.toContain("이번 주 확인할 일");
+  });
+
   it("월요일 9시 이후 한 번만", async () => {
     expect(await weeklyReportDue(db, seoul("2026-10-26T08:59:00"))).toBe(false); // 월요일 9시 전
     expect(await weeklyReportDue(db, seoul("2026-10-27T10:00:00"))).toBe(false); // 화요일
