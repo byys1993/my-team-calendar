@@ -57,6 +57,11 @@ export const fr: Messages = {
     dayMatches: "{date}, {count} matchs",
   },
   picker: {
+    introTitle: "Choisissez les équipes que vous suivez",
+    intro1: "⚽ Les matchs de toutes les ligues et coupes dans un seul calendrier, à votre fuseau horaire",
+    intro2: "📅 Abonnez-vous dans le calendrier du téléphone : les changements se mettent à jour automatiquement",
+    intro3: "🙈 Activez l'anti-spoiler pour masquer les résultats des matchs terminés",
+    introHow: "Touchez une équipe dans un sport ci-dessous ou cherchez-la par son nom.",
     f1All: "Toute la série (toutes les séances)",
     f1Teams: "Écuries",
     f1Drivers: "Pilotes",

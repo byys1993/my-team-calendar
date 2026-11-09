@@ -56,6 +56,11 @@ export const ko: Messages = {
     dayMatches: "{date}, 경기 {count}개",
   },
   picker: {
+    introTitle: "응원하는 팀을 고르면",
+    intro1: "⚽ 여러 리그·대회 경기를 한 캘린더에 모아 내 시간대로 보여 줘요",
+    intro2: "📅 휴대폰 캘린더에 구독하면 일정이 바뀌어도 자동으로 반영돼요",
+    intro3: "🙈 스포일러 방지를 켜면 끝난 경기 결과를 가려 줘요",
+    introHow: "아래 종목에서 팀을 누르거나 팀 이름으로 검색하세요.",
     f1All: "시리즈 전체 (모든 세션)",
     f1Teams: "팀",
     f1Drivers: "드라이버",

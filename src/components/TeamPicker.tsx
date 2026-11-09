@@ -23,6 +23,9 @@ export function TeamPicker({ catalog, selections, onAdd, onRemove, onClear, onCl
   const dialog = useRef<HTMLDialogElement>(null);
   const [sport, setSport] = useState(catalog.sports[0]?.slug ?? "");
   const [query, setQuery] = useState("");
+  // 아직 고른 팀이 없을 때(처음 온 사람) 열리면 이 사이트로 무엇을 할 수 있는지 짧게 알려 준다.
+  // 연 순간을 기준으로 정해 팀을 고르는 동안 설명이 사라지며 목록이 움직이지 않게 한다
+  const [intro] = useState(selections.length === 0);
   const selected = new Map(selections.map((s) => [s.slug, s]));
   const full = selections.length >= MAX_TEAMS;
 
@@ -69,6 +72,17 @@ export function TeamPicker({ catalog, selections, onAdd, onRemove, onClear, onCl
           ✕
         </button>
       </div>
+      {intro && (
+        <div className="notice-box picker-intro">
+          <p className="picker-intro-title">{t.picker.introTitle}</p>
+          <ul>
+            <li>{t.picker.intro1}</li>
+            <li>{t.picker.intro2}</li>
+            <li>{t.picker.intro3}</li>
+          </ul>
+          <p className="muted small">{t.picker.introHow}</p>
+        </div>
+      )}
       <input className="search" type="search" placeholder={t.picker.search} value={query} onChange={(e) => setQuery(e.target.value)} />
       {!q && (
         <div className="tabs" role="tablist">

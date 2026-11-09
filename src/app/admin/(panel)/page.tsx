@@ -30,11 +30,15 @@ export default async function AdminHome() {
   const subscribed = (f: FunnelRow) => Math.max(f.events.sub_apple, f.events.sub_google, f.events.sub_copy);
   const steps: [string, (f: FunnelRow) => number][] = [
     ["방문", (f) => f.visitors],
+    ["  └ 팀을 고르지 않고 선택 창 닫음", (f) => f.events.picker_skip],
     ["팀 고름", (f) => f.events.team_pick],
     ["  └ 팀 페이지·공유 링크로 추가", (f) => f.events.link_add],
     ["내 팀 공유 버튼", (f) => f.events.share],
     ["경기 기록지 열어 봄", (f) => f.events.box_open],
+    ["리그 일정 탭 열기", (f) => f.events.league_tab],
+    ["같은 리그 다른 경기 펼침", (f) => f.events.league_day_open],
     ["캘린더 구독 창 열기", (f) => f.events.sub_open],
+    ["  └ 일정 위 안내 칸에서 엶", (f) => f.events.sub_notice],
     ["캘린더 구독 버튼 누름", subscribed],
     ["로그인", (f) => f.events.login],
     ["알림 메일 켬", (f) => f.events.notify_on],

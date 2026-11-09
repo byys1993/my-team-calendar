@@ -608,7 +608,11 @@ export function CalendarApp({
           onClear={clear}
           f1MainOnly={f1Main.on}
           onF1MainOnly={setF1Main}
-          onClose={() => setPickerOpen(false)}
+          onClose={() => {
+            // 아무 팀도 고르지 않고 닫음 (첫 화면에서 빠져나가는 사람이 얼마나 되는지 보려고)
+            if (selections.length === 0) track("picker_skip");
+            setPickerOpen(false);
+          }}
         />
       )}
     </div>

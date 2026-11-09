@@ -63,4 +63,17 @@ describe("핵심 행동 세기", () => {
     // 1일 기간이면 오늘(22일)만
     expect((await funnel(db, 1, at("2026-10-22T12:00:00"))).events.team_pick).toBe(0);
   });
+
+  it("화면에서 보내는 행동 이름은 모두 받는 목록에 있다 (없으면 서버가 조용히 버린다)", async () => {
+    const { readdirSync, readFileSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const { isEventName } = await import("@/lib/events");
+    const dir = join(process.cwd(), "src", "components");
+    const sent = new Set<string>();
+    for (const file of readdirSync(dir).filter((f) => f.endsWith(".tsx"))) {
+      for (const m of readFileSync(join(dir, file), "utf8").matchAll(/\btrack\("([a-z_]+)"\)/g)) sent.add(m[1]);
+    }
+    expect(sent.size).toBeGreaterThan(10);
+    expect([...sent].filter((name) => !isEventName(name))).toEqual([]);
+  });
 });

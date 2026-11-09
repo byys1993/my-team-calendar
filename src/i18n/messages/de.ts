@@ -57,6 +57,11 @@ export const de: Messages = {
     dayMatches: "{date}, {count} Spiele",
   },
   picker: {
+    introTitle: "Wähle die Teams, die du verfolgst",
+    intro1: "⚽ Spiele aus allen Ligen und Pokalen in einem Kalender, in deiner Zeitzone",
+    intro2: "📅 Im Handy-Kalender abonnieren – Terminänderungen werden automatisch übernommen",
+    intro3: "🙈 Mit dem Spoilerschutz werden Ergebnisse beendeter Spiele ausgeblendet",
+    introHow: "Tippe unten bei einer Sportart auf ein Team oder suche nach dem Namen.",
     f1All: "Ganze Serie (alle Sessions)",
     f1Teams: "Teams",
     f1Drivers: "Fahrer",

@@ -94,6 +94,8 @@ export function SubscribeNotice({ sub }: { sub: Subscription }) {
           onClick={() => {
             sub.setOpen(true);
             track("sub_open");
+            // 안내 칸을 보고 연 사람 (상단 버튼과 구분)
+            track("sub_notice");
           }}
         >
           📅 {sub.notice === "first" ? m.ics.button : m.ics.changedAction}

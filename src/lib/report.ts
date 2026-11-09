@@ -11,9 +11,11 @@ export const REPORT_HOUR_KST = 9;
 
 const steps: [string, (f: FunnelRow) => number][] = [
   ["방문", (f) => f.visitors],
+  ["팀 고르지 않고 선택 창 닫음", (f) => f.events.picker_skip],
   ["팀 고름", (f) => f.events.team_pick],
   ["내 팀 공유", (f) => f.events.share],
   ["캘린더 구독 창 열기", (f) => f.events.sub_open],
+  ["  └ 일정 위 안내 칸에서", (f) => f.events.sub_notice],
   ["캘린더 구독 버튼", (f) => subscribed(f)],
   ["로그인", (f) => f.events.login],
   ["알림 메일 켬", (f) => f.events.notify_on],
@@ -31,6 +33,11 @@ export const REPORT_TASKS: { from: string; to: string; text: string }[] = [
     from: "2026-11-16",
     to: "2026-11-30",
     text: "Search Console: 실적(지난 28일) 화면을 캡처해 Claude 에게 보여 주세요 (11/4 설명 변경 전: 노출 1,610 · 클릭 1 · 클릭률 0.1% · 평균 8.6위). 제목에 '캘린더 구독'을 넣을지도 같이 정해요",
+  },
+  {
+    from: "2026-11-23",
+    to: "2026-11-30",
+    text: "첫 화면 안내 효과: 이 메일을 Claude 에게 보여 주세요. 11/9 팀 선택 창에 사이트 설명을 넣었어요 (넣기 전 팀 고름 6% 안팎). '팀 고르지 않고 선택 창 닫음'과 '안내 칸에서 구독 창 엶'이 어떻게 나오는지 봐요",
   },
 ];
 

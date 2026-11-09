@@ -56,6 +56,11 @@ export const zh: Messages = {
     dayMatches: "{date}，{count} 场比赛",
   },
   picker: {
+    introTitle: "选择你支持的球队",
+    intro1: "⚽ 各联赛、杯赛的比赛汇集在一个日历中，按你的时区显示",
+    intro2: "📅 在手机日历中订阅，赛程变化会自动更新",
+    intro3: "🙈 开启防剧透可隐藏已结束比赛的结果",
+    introHow: "在下方按项目点选球队，或按名称搜索。",
     f1All: "整个赛事（所有环节）",
     f1Teams: "车队",
     f1Drivers: "车手",

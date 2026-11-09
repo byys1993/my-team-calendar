@@ -57,6 +57,11 @@ export const en = {
     dayMatches: "{date}, {count} matches",
   },
   picker: {
+    introTitle: "Pick the teams you follow",
+    intro1: "⚽ Matches from every league and cup in one calendar, in your time zone",
+    intro2: "📅 Subscribe in your phone's calendar and schedule changes update automatically",
+    intro3: "🙈 Turn on spoiler protection to hide results of finished matches",
+    introHow: "Tap a team under a sport below, or search by name.",
     f1All: "Whole series (all sessions)",
     f1Teams: "Teams",
     f1Drivers: "Drivers",
