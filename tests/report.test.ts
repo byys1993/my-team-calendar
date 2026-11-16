@@ -48,9 +48,10 @@ describe("주간 운영 리포트", () => {
     expect(naver).toContain("이번 주 확인할 일");
     expect(naver).toContain("네이버 서치어드바이저");
     expect(naver).not.toContain("Search Console");
-    const both = await text("2026-11-16");
-    expect(both).toContain("네이버 서치어드바이저");
-    expect(both).toContain("Search Console");
+    const after = await text("2026-11-16");
+    expect(after).toContain("네이버 서치어드바이저");
+    expect(after).not.toContain("Search Console");
+    expect(await text("2026-11-23")).toContain("Search Console");
     expect(await text("2026-11-30")).toContain("Search Console");
     expect(await text("2026-12-07")).not.toContain("이번 주 확인할 일");
   });

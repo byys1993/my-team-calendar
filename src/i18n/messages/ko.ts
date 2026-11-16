@@ -339,7 +339,7 @@ export const ko: Messages = {
   },
   teamPage: {
     title: "{team} 경기 일정·결과",
-    metaTitle: "{team} 경기 일정·결과·중계 | {site}",
+    metaTitle: "{team} 일정 캘린더 구독 · 중계·결과 | {site}",
     metaDesc: "{team}({league})의 다가오는 경기 일정과 최근 결과, 중계 채널, 순위를 한 번에 확인하세요. 내 캘린더에 무료로 구독할 수 있습니다.",
     metaNext: "다음 경기 {next} (한국 시간). {team} 일정과 결과, 중계 채널을 한 번에 보고 내 캘린더에 무료로 구독하세요.",
     next: "다음 경기",
@@ -356,7 +356,7 @@ export const ko: Messages = {
   },
   leaguePage: {
     title: "{league} 일정·순위",
-    metaTitle: "{league} 일정·순위·기록 | {site}",
+    metaTitle: "{league} 일정 캘린더 구독 · 순위·기록 | {site}",
     metaDesc: "{league}의 이번 주 경기 일정과 순위표, 개인 기록 TOP 5를 한국 시간으로 확인하세요. 응원 팀을 골라 내 캘린더로 받아 볼 수 있습니다.",
     metaNext: "다음 경기 {next} (한국 시간). {league} 일정과 순위표, 개인 기록 TOP 5를 보고 응원 팀을 내 캘린더로 받아 보세요.",
     week: "이번 주 경기",
