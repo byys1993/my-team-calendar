@@ -175,7 +175,8 @@ export default async function LeaguePage({ params, searchParams }: Props) {
                         <tr key={`${r.rank}-${r.name}-${i}`}>
                           <td className="num">{r.rank}</td>
                           <td className="name">
-                            {r.team ? <Link href={`/team/${r.team}`}>{rowName(r, t.kind)}</Link> : rowName(r, t.kind)}
+                            {/* 페이지가 있는 팀(카탈로그)만 링크: 유럽 대항전 순위표의 다른 리그 팀(espn-…)은 팀 페이지가 없어 404 가 된다 */}
+                            {r.team && teamName[r.team] ? <Link href={`/team/${r.team}`}>{rowName(r, t.kind)}</Link> : rowName(r, t.kind)}
                             {r.sub && <span className="muted"> · {f1Team(r.sub, locale)}</span>}
                           </td>
                           {cols.map((k) => (
