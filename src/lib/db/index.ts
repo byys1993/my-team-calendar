@@ -11,6 +11,7 @@ export function getDb(): Db {
   if (g.__mtcDb) return g.__mtcDb;
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL 환경변수가 없습니다.");
-  g.__mtcDb = createPostgresDb(url, { max: 1 });
+  // 풀러가 연결을 몰래 끊어 응답이 멈추면 15초 뒤 새 연결로 바꾼다 (postgres.ts 의 queryTimeoutMs)
+  g.__mtcDb = createPostgresDb(url, { max: 1, queryTimeoutMs: 15_000 });
   return g.__mtcDb;
 }
