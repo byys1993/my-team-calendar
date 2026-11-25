@@ -13,7 +13,7 @@
 - 운영: https://www.my-team-calendar.com (Vercel Hobby, 서울 리전 icn1)
 - 저장소: github.com/byys1993/my-team-calendar (비공개, `main` push = 배포)
 - DB: Supabase Postgres (서울, Transaction pooler 6543). 모든 public 테이블 RLS 켜짐(정책 없음 → 공개 API 차단, 서버는 테이블 주인이라 영향 없음). **새 테이블을 만들면 마이그레이션에 `enable row level security` 를 꼭 넣는다** (`tests/rls.test.ts` 가 잡아냄).
-- 정기 수집: GitHub Actions `sync-schedules` 매시간(정시 보장 안 됨) → `npm run sync` (일정 + 순위표) → 끝에 `/api/cron/notify` 호출
+- 정기 수집: GitHub Actions `sync-schedules` 를 Cloudflare Worker 가 매시 7분에 실행 요청(GitHub 자체 예약은 6시간마다 예비용) → `npm run sync` (일정 + 순위표). **비공개 저장소라 Actions 는 월 2,000분 무료, 실행마다 1분 단위로 올려 계산** → 평소 실행을 1분 안에 끝내야 한다 (DB 왕복이 길어 대회마다 조회하지 말 것)
 - 알림 메일 정시 호출: Cloudflare Worker `my-team-calendar-cron` 10분마다 (`cloudflare/notify-cron.js`)
 - 메일: Resend (`mail.my-team-calendar.com`, 무료 하루 100통 → 한 번에 최대 80통), 문의 메일은 ImprovMX 로 사용자 Gmail 에 전달
 - 로그인 보호: Cloudflare Turnstile
@@ -22,7 +22,7 @@
 ## 기술 구성
 - Next.js 15 App Router + TypeScript, React 19. 스타일은 `src/app/globals.css` 하나 (색은 CSS 변수, 다크 모드 지원)
 - DB 접근: postgres.js(`prepare: false`, 운영 max 1). **운영에서 한 연결로 여러 조회를 `Promise.all` 로 동시에 보내면 Supabase 풀러에서 응답이 멈춘다(5분 타임아웃, 로컬에선 재현 안 됨) → DB 조회는 항상 차례로 await**. 대량 쓰기는 `jsonb_to_recordset($1::text::jsonb)` 로 한 번에 (값을 JSON 문자열로 넘기고 `::text::jsonb`)
-- 마이그레이션: `db/migrations/NNN_*.sql` 순서대로 1회 적용. **`;` 로 문장을 나누므로 함수 본문·DO 블록 금지**. Vercel 빌드(`vercel-build`)와 Actions 가 `db:setup`(마이그레이션 + 시드)를 실행
+- 마이그레이션: `db/migrations/NNN_*.sql` 순서대로 1회 적용. **`;` 로 문장을 나누므로 함수 본문·DO 블록 금지**. Vercel 빌드(`vercel-build`)가 `db:setup`(마이그레이션 + 시드)를 실행 (수집 Actions 는 하지 않는다)
 - 시드: `data/seed/*.json` (대회·팀·한국어 이름·국내 중계 기본값 `broadcast`). 수정하면 다음 배포/수집 때 반영
 - 다국어 10개(ko,en,zh,ja,es,fr,de,pt,ru,ar): `src/i18n/messages/*.ts` (타입 기준은 en.ts) — **문구를 추가하면 10개 파일 모두에** 넣는다. 라운드 등은 언어 중립 토큰(`@md:9`, `@series:kbo_ks|@game:3`, `@intl:asian_cup` …)으로 저장하고 `src/i18n/format.ts` 가 바꾼다
 

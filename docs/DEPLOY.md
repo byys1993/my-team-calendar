@@ -63,7 +63,7 @@
 - **일정 수집**: GitHub Actions가 매시간 돌고, 실패 기록은 사이트의 `/admin` 현황에서 볼 수 있습니다.
 - **KBL 일정**: `/admin` → CSV 올리기 (비밀번호는 Vercel에 넣은 `ADMIN_PASSWORD`).
 - **Supabase 무료 플랜**은 7일 동안 접속이 없으면 잠시 멈추는데, 매시간 수집이 돌아서 멈추지 않습니다.
-- **비용**: 모두 무료 한도 안입니다. 비공개 저장소의 Actions는 월 2,000분 무료이고, 예상 사용량은 월 1,000분 안팎입니다.
+- **비용**: 모두 무료 한도 안입니다. 비공개 저장소의 Actions는 월 2,000분 무료이고, 실행마다 1분 단위로 올려 계산하므로 매시간 수집을 1분 안에 끝내야 월 1,000분 안팎에 머뭅니다 (2026-11 에 1분을 넘겨 한도에 닿았다).
 - **주소 바꾸기(선택)**: Vercel 프로젝트 → Settings → Domains에서 원하는 도메인을 연결할 수 있습니다 (도메인 비용 별도).
 
 ## 5. 이메일 로그인 켜기 (선택)
@@ -88,14 +88,14 @@
 ## 6. 경기 알림 메일 켜기 (선택, 5번 이후)
 
 로그인한 사람이 계정 메뉴에서 **경기 있는 날 아침** 또는 **매주 월요일**에 내 팀 일정을 메일로 받을 수 있습니다.
-GitHub Actions 의 매시간 수집이 끝나면 사이트의 `/api/cron/notify` 를 불러, 각자의 시간대로 정한 시각이 지난 사람에게 보냅니다.
+Cloudflare Worker 가 10분마다 사이트의 `/api/cron/notify` 를 불러 (8번), 각자의 시간대로 정한 시각이 지난 사람에게 보냅니다.
 
 1. 무작위 문자열을 하나 만듭니다 (`AUTH_SECRET` 만들 때와 같은 방법).
 2. **Vercel** → Settings → Environment Variables → `CRON_SECRET` 에 그 값을 넣고 Redeploy 합니다.
-3. **GitHub** 저장소 → Settings → Secrets and variables → Actions → New repository secret → `CRON_SECRET` 에 같은 값을 넣습니다.
-4. 다음 정시 수집(Actions 의 sync-schedules) 로그 마지막 단계 `send match alert emails` 에 `{"checked":..,"sent":..}` 가 찍히면 됩니다.
+3. **Cloudflare Worker** 에도 같은 값의 `CRON_SECRET` 을 넣습니다 (8번).
+4. Worker 로그에 `notify 200 {"checked":..,"sent":..}` 가 찍히면 됩니다.
 
-`CRON_SECRET` 이 없으면 발송 단계는 건너뜁니다. 한 번 실행에 최대 80통만 보내고 나머지는 다음 시간에 보냅니다
+한 번 호출에 최대 80통만 보내고 나머지는 다음 호출 때 보냅니다
 (Resend 무료 한도 하루 100통에 로그인 코드 메일 몫을 남겨 둠). 받는 사람이 늘면 Resend 유료 플랜이 필요합니다.
 
 ## 7. 로그인 사람 확인 켜기 (Cloudflare Turnstile, 선택)

@@ -1,10 +1,12 @@
 name: sync-schedules
 
+# 매시간 실행은 Cloudflare Worker(cloudflare/notify-cron.js)가 매시 7분에 요청한다 (workflow_dispatch).
+# 아래 GitHub 자체 예약은 Worker 가 멈췄을 때를 위한 예비용으로 6시간마다만 둔다.
+# 비공개 저장소의 Actions 는 한 달 2,000분 무료이고 실행마다 1분 단위로 올려 계산하므로,
+# 평소 실행을 1분 안에 끝내는 것이 중요하다 (2026-11: 1분 10~30초 → 2분씩 계산돼 한도 초과 직전).
 on:
   schedule:
-    # 매시 7분 (정각 혼잡 회피). 대회별 실제 갱신 여부는 scripts/sync.ts 가 판단한다:
-    # 경기 당일·포스트시즌은 매시간, 평상시는 12시간마다.
-    - cron: "7 * * * *"
+    - cron: "37 */6 * * *"
   workflow_dispatch:
     inputs:
       force:
@@ -26,26 +28,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
-      # 평소 10초. npm 저장소가 느린 날 멈춰 있지 않게 5분에 끊는다 (다음 시간 실행이 다시 시도)
-      - run: npm ci --no-audit --no-fund
+      # node_modules 를 통째로 저장해 두고 package-lock.json 이 바뀔 때만 npm ci 를 돈다 (평소 9초 → 2~3초)
+      - id: deps
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node24-${{ hashFiles('package-lock.json') }}
+      # npm 저장소가 느린 날 멈춰 있지 않게 5분에 끊는다 (다음 시간 실행이 다시 시도)
+      - if: steps.deps.outputs.cache-hit != 'true'
+        run: npm ci --no-audit --no-fund
         timeout-minutes: 5
-      # 평소 5초. DB 접속 문제로 멈추면 3분 만에 끊어서 다음 실행이 밀리지 않게 한다
-      - run: npm run db:setup
-        timeout-minutes: 3
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # 마이그레이션·시드(db:setup)는 Vercel 배포 빌드가 매번 실행하므로 여기서는 하지 않는다.
+      # 경기 알림 메일 호출도 Cloudflare Worker 가 10분마다 하므로 여기서는 하지 않는다.
       - run: npm run sync -- ${{ inputs.force && '--force' || '' }}
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
-      # 경기 알림 메일: 수집이 끝난 뒤(실패한 대회가 있어도) 사이트에 발송을 요청한다.
-      # CRON_SECRET 저장소 비밀값이 없으면 건너뛴다 (Vercel 에도 같은 값의 CRON_SECRET 이 있어야 한다).
-      - name: send match alert emails
-        if: ${{ !cancelled() }}
-        timeout-minutes: 2
-        env:
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-        run: |
-          if [ -z "$CRON_SECRET" ]; then echo "CRON_SECRET 없음: 건너뜀"; exit 0; fi
-          curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" https://www.my-team-calendar.com/api/cron/notify

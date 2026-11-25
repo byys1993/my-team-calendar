@@ -31,20 +31,36 @@ export interface SyncOutcome {
 
 // 지금 할 수집: 전체 수집이 12시간 지났으면 full,
 // 경기 당일(±18시간 안에 경기)이나 포스트시즌이면 매시간 recent, 그 외에는 null
-export async function dueMode(db: Db, c: CompetitionRow, now = new Date()): Promise<SyncMode | null> {
-  const [st] = await db.query<{ last_attempt_at: Date | null; last_full_at: Date | null }>(
-    "select last_attempt_at, last_full_at from competition_status where competition_id = $1",
-    [c.id],
+interface DueRow extends CompetitionRow {
+  last_attempt_at: Date | null;
+  last_full_at: Date | null;
+  hot: boolean;
+}
+
+// 대회마다 따로 묻지 않고 한 번에 읽는다. Actions 서버(미국)에서 서울 DB 까지 왕복이 길어
+// 대회 30여 개를 하나씩 물으면 그것만으로 15초가 걸리고, Actions 는 1분 단위로 올려 계산한다.
+async function loadDueRows(db: Db, now: Date, id?: number): Promise<DueRow[]> {
+  return db.query<DueRow>(
+    `select c.id, c.slug, c.postseason, c.type, st.last_attempt_at, st.last_full_at,
+       exists (select 1 from match m where m.competition_id = c.id
+         and m.start_at between $1::timestamptz - interval '6 hours' and $1::timestamptz + interval '18 hours') as hot
+     from competition c left join competition_status st on st.competition_id = c.id
+     where ${id === undefined ? "c.feed = 'auto'" : "c.id = $2"}
+     order by c.id`,
+    id === undefined ? [now.toISOString()] : [now.toISOString(), id],
   );
-  const since = (d: Date | null | undefined) => (d ? (now.getTime() - d.getTime()) / 60_000 : Infinity);
-  if (since(st?.last_full_at) >= NORMAL_INTERVAL_MIN) return "full";
-  const [{ hot }] = await db.query<{ hot: boolean }>(
-    `select exists (select 1 from match where competition_id = $1
-       and start_at between $2::timestamptz - interval '6 hours' and $2::timestamptz + interval '18 hours') as hot`,
-    [c.id, now.toISOString()],
-  );
-  if ((c.postseason || hot) && since(st?.last_attempt_at) >= HOT_INTERVAL_MIN) return "recent";
+}
+
+function pickMode(r: Pick<DueRow, "postseason" | "last_attempt_at" | "last_full_at" | "hot">, now: Date): SyncMode | null {
+  const since = (d: Date | null | undefined) => (d ? (now.getTime() - new Date(d).getTime()) / 60_000 : Infinity);
+  if (since(r.last_full_at) >= NORMAL_INTERVAL_MIN) return "full";
+  if ((r.postseason || r.hot) && since(r.last_attempt_at) >= HOT_INTERVAL_MIN) return "recent";
   return null;
+}
+
+export async function dueMode(db: Db, c: CompetitionRow, now = new Date()): Promise<SyncMode | null> {
+  const [r] = await loadDueRows(db, now, c.id);
+  return pickMode({ last_attempt_at: r?.last_attempt_at ?? null, last_full_at: r?.last_full_at ?? null, hot: r?.hot ?? false, postseason: c.postseason }, now);
 }
 
 // 우선순위대로 소스를 시도하고, 실패하면 다음 소스로 넘어간다. 시도마다 sync_run에 기록한다.
@@ -118,13 +134,12 @@ export async function syncAll(
   opts: { force?: boolean; only?: string[]; log?: (msg: string) => void } = {},
 ): Promise<SyncOutcome[]> {
   const log = opts.log ?? (() => {});
-  const comps = await db.query<CompetitionRow>(
-    "select id, slug, postseason, type from competition where feed = 'auto' order by id",
-  );
+  const now = new Date();
+  const comps = await loadDueRows(db, now);
   const results: SyncOutcome[] = [];
   for (const c of comps) {
     if (opts.only?.length && !opts.only.includes(c.slug)) continue;
-    const mode = opts.force ? "full" : await dueMode(db, c);
+    const mode = opts.force ? "full" : pickMode(c, now);
     if (!mode) {
       log(`${c.slug}: 건너뜀 (아직 갱신 주기가 아님)`);
       continue;
