@@ -21,6 +21,9 @@ export const EVENTS = [
   "league_tab", // 리그 일정 탭을 엶
   "league_tab_pick", // 리그 일정 탭에서 리그를 바꿈
   "league_day_open", // 날짜 패널의 '같은 리그 다른 경기'를 펼침
+  // 첫 방문 예시 화면 (2026-11-25 추가)
+  "demo_view", // 고른 팀이 없어 예시 팀 일정을 보여 줌
+  "demo_pick", // 예시 화면에서 '내 팀 고르기'(또는 팀 선택)를 누름
 ] as const;
 export type EventName = (typeof EVENTS)[number];
 export const isEventName = (v: unknown): v is EventName => EVENTS.includes(v as EventName);

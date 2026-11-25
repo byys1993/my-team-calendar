@@ -19,7 +19,8 @@ import { MonthCalendar } from "./MonthCalendar";
 import { TeamPicker } from "./TeamPicker";
 import { involves, viewOf, type Display, type MatchView } from "./matchView";
 import { teamVars } from "@/lib/palette";
-import { useSelection } from "./selection";
+import { useSelection, type Selection } from "./selection";
+import { demoCandidates, pickDemo } from "./demo";
 import { TimeZoneSelect } from "./TimeZoneSelect";
 import { VisitorBeacon } from "./VisitorStats";
 import { CalendarSubscribe, SubscribeNotice, useSubscription } from "./CalendarSubscribe";
@@ -179,11 +180,39 @@ export function CalendarApp({
     window.history.replaceState(null, "", window.location.pathname);
   }, [loaded, teamsBySlug, add]);
 
+  // 처음 온 사람(고른 팀 없음): 팀 선택 창부터 띄우지 않고, 시즌 중인 예시 팀들의 실제 일정으로 캘린더를 채워 보여 준다.
+  // 예시 팀을 못 고르면(조회 실패 등) 예전처럼 팀 선택 창을 연다. 팀을 하나라도 고르면 예시는 끝난다.
+  const [demo, setDemo] = useState<{ teams: Selection[]; matches: ScheduleMatch[]; ongoing: Set<string> } | null>(null);
+  const demoTried = useRef(false);
   useEffect(() => {
-    // 로그인 확인이 끝난 뒤에도 고른 팀이 없을 때만 팀 선택 창을 연다 (링크로 팀을 추가하는 중이면 열지 않는다)
-    if (addFromLink.current) return;
-    if (loaded && checked && selections.length === 0 && !account?.selections.length) setPickerOpen(true);
-  }, [loaded, checked, selections.length, account]);
+    // 로그인 확인이 끝난 뒤에도 고른 팀이 없을 때만 (링크로 팀을 추가하는 중이면 하지 않는다)
+    if (addFromLink.current || demoTried.current) return;
+    if (!(loaded && checked && selections.length === 0 && !account?.selections.length)) return;
+    demoTried.current = true;
+    const candidates = demoCandidates(locale, (s) => teamsBySlug.has(s));
+    fetch(`/api/matches?teams=${encodeURIComponent(candidates.join(","))}&lang=${locale}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d: { matches: ScheduleMatch[]; ongoing?: string[] }) => {
+        const picked = pickDemo(d.matches, candidates, (s) => teamsBySlug.get(s)?.sport, Date.now());
+        if (picked.length < 2) return setPickerOpen(true);
+        setDemo({
+          teams: picked.map((slug, i) => ({ slug, color: i, enabled: true })),
+          matches: d.matches.filter((m) => picked.some((slug) => involves(m, slug))),
+          ongoing: new Set(d.ongoing ?? []),
+        });
+        track("demo_view");
+      })
+      .catch(() => setPickerOpen(true));
+  }, [loaded, checked, selections.length, account, locale, teamsBySlug]);
+  const demoOn = demo !== null && selections.length === 0;
+  // 화면에 보일 팀·경기 (예시 중이면 예시 팀). 구독·공유·계정 저장·다른 탭은 늘 실제로 고른 팀만 쓴다
+  const shownSel = demoOn ? demo.teams : selections;
+  const shownMatches = demoOn ? demo.matches : matches;
+  const shownOngoing = demoOn ? demo.ongoing : ongoing;
+  const openPicker = () => {
+    if (demoOn) track("demo_pick");
+    setPickerOpen(true);
+  };
 
   const slugKey = selections.map((s) => s.slug).sort().join(",");
   useEffect(() => {
@@ -212,8 +241,8 @@ export function CalendarApp({
   const competitionName = (slug: string) => compsBySlug.get(slug)?.name ?? slug;
 
   const views = useMemo(
-    () => matches.map((m) => viewOf(m, selections, display)).filter((v): v is MatchView => v !== null),
-    [matches, selections, display],
+    () => shownMatches.map((m) => viewOf(m, shownSel, display)).filter((v): v is MatchView => v !== null),
+    [shownMatches, shownSel, display],
   );
 
   const byDay = useMemo(() => {
@@ -235,47 +264,47 @@ export function CalendarApp({
 
   const nextByTeam = useMemo(() => {
     const result = new Map<string, MatchView>();
-    for (const s of selections) {
-      const next = matches
+    for (const s of shownSel) {
+      const next = shownMatches
         .filter((m) => involves(m, s.slug) && m.status !== "cancelled")
         .find((m) => matchSortTime(m) >= nowMs - 2 * 3600_000);
       const v = next && viewOf(next, [s], display, false);
       if (v) result.set(s.slug, v);
     }
     return result;
-  }, [matches, selections, nowMs, display]);
+  }, [shownMatches, shownSel, nowMs, display]);
 
   // 예정 경기가 없는 팀(비시즌·탈락)의 마지막으로 끝난 경기
   const lastByTeam = useMemo(() => {
     const result = new Map<string, ScheduleMatch>();
-    for (const m of matches) {
+    for (const m of shownMatches) {
       if (m.homeScore == null) continue;
       for (const slug of [m.home, m.away]) if (slug) result.set(slug, m); // 시간순이라 마지막 것이 남는다
     }
     return result;
-  }, [matches]);
+  }, [shownMatches]);
 
   // 다음 경기 카드: 켜 둔 팀의 임박한 경기부터, 꺼 둔 팀은 그 뒤, 예정 경기가 없는 팀은 맨 뒤 (같으면 고른 순서)
   const cardOrder = useMemo(() => {
-    const rank = (s: (typeof selections)[number]) => {
+    const rank = (s: Selection) => {
       const v = nextByTeam.get(s.slug);
       return [v ? 0 : 1, s.enabled ? 0 : 1, v ? matchSortTime(v.match) : 0];
     };
-    return [...selections].sort((x, y) => {
+    return [...shownSel].sort((x, y) => {
       const [a, b] = [rank(x), rank(y)];
       return a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
     });
-  }, [selections, nextByTeam]);
+  }, [shownSel, nextByTeam]);
 
   const relevantComps = useMemo(() => {
     const slugs = new Set<string>();
-    for (const s of selections) {
+    for (const s of shownSel) {
       const c = teamsBySlug.get(s.slug)?.competition;
       if (c) slugs.add(c);
     }
-    for (const m of matches) slugs.add(m.competition);
+    for (const m of shownMatches) slugs.add(m.competition);
     return catalog.competitions.filter((c) => slugs.has(c.slug));
-  }, [selections, matches, teamsBySlug, catalog.competitions]);
+  }, [shownSel, shownMatches, teamsBySlug, catalog.competitions]);
 
   const todayKey = now ? toDateKey(now, tz) : "";
   // 모든 대회 중 가장 최근에 일정을 받은 시각
@@ -336,14 +365,34 @@ export function CalendarApp({
               turnstileSiteKey={turnstileSiteKey}
             />
           )}
-          <button type="button" className="primary" onClick={() => setPickerOpen(true)}>
+          <button type="button" className="primary" onClick={openPicker}>
             {t.app.pickTeams}
           </button>
         </div>
       </header>
 
+      {demoOn && (
+        <div className="notice-box demo-notice" role="status">
+          <div>
+            <strong>👀 {t.app.demoTitle}</strong>
+            <p>{fmt(t.app.demoBody, { teams: demo.teams.map((s) => teamShort(s.slug)).join(" · ") })}</p>
+          </div>
+          <button type="button" className="primary" onClick={openPicker}>
+            {t.app.demoPick}
+          </button>
+        </div>
+      )}
+
       <section className="team-bar" aria-label={t.app.pickTeams}>
-        {selections.length === 0 && loaded && <p className="muted">{fmt(t.app.emptyHint, { max: MAX_TEAMS })}</p>}
+        {selections.length === 0 && loaded && !demoOn && <p className="muted">{fmt(t.app.emptyHint, { max: MAX_TEAMS })}</p>}
+        {/* 예시 팀: 눌러도 바뀌지 않는 이름표 */}
+        {demoOn &&
+          demo.teams.map((s) => (
+            <span key={s.slug} className="team-chip demo-chip" style={teamVars(s.color) as React.CSSProperties}>
+              <span className="dot" />
+              {teamName(s.slug)}
+            </span>
+          ))}
         {selections.map((s) => (
           // 색 점을 누르면 색 고르기, 이름을 누르면 켜기/끄기
           <span
@@ -407,7 +456,7 @@ export function CalendarApp({
 
       {view === "records" && <RecordsView catalog={catalog} selections={selections} />}
 
-      {view === "calendar" && selections.length > 0 && (
+      {view === "calendar" && shownSel.length > 0 && (
         <section className="next-cards" aria-label={t.app.upcoming}>
           {cardOrder.map((s) => {
             const v = nextByTeam.get(s.slug);
@@ -450,7 +499,7 @@ export function CalendarApp({
                     last={lastByTeam.get(s.slug)}
                     competition={teamsBySlug.get(s.slug)?.competition ?? null}
                     competitionType={compsBySlug.get(teamsBySlug.get(s.slug)?.competition ?? "")?.type ?? null}
-                    ongoingName={(c) => (ongoing.has(c) ? competitionName(c) : null)}
+                    ongoingName={(c) => (shownOngoing.has(c) ? competitionName(c) : null)}
                   />
                 )}
               </article>
@@ -516,7 +565,7 @@ export function CalendarApp({
 
           <section className="card upcoming" aria-label={t.app.upcoming}>
             <h2>{t.app.upcoming}</h2>
-            {loading && matches.length === 0 && <p className="muted">{t.app.loading}</p>}
+            {loading && shownMatches.length === 0 && <p className="muted">{t.app.loading}</p>}
             {!loading && upcoming.length === 0 && <p className="muted">{t.app.noUpcoming}</p>}
             <ul className="matches">
               {upcoming.slice(0, UPCOMING_LIMIT).map((v) => (
@@ -602,6 +651,7 @@ export function CalendarApp({
           selections={selections}
           onAdd={(slug) => {
             add(slug);
+            setDemo(null);
             track("team_pick");
           }}
           onRemove={remove}

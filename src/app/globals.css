@@ -1202,6 +1202,35 @@ a {
   color: var(--text);
 }
 
+/* 첫 방문 예시 화면 안내 */
+.demo-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin: 0 0 12px;
+}
+
+.demo-notice > div {
+  flex: 1 1 280px;
+}
+
+.demo-notice p {
+  margin: 4px 0 0;
+}
+
+.demo-notice button {
+  white-space: nowrap;
+}
+
+/* 예시 팀 이름표: 눌러도 바뀌지 않는다 */
+.demo-chip {
+  gap: 6px;
+  padding: 4px 12px;
+  border-style: dashed;
+}
+
 /* 캘린더 구독 안내 칸 (처음 / 팀이 바뀐 뒤) */
 .sub-notice {
   display: flex;

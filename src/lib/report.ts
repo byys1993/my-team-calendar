@@ -11,6 +11,8 @@ export const REPORT_HOUR_KST = 9;
 
 const steps: [string, (f: FunnelRow) => number][] = [
   ["방문", (f) => f.visitors],
+  ["예시 화면 봄", (f) => f.events.demo_view],
+  ["  └ 예시에서 팀 고르기 누름", (f) => f.events.demo_pick],
   ["팀 고르지 않고 선택 창 닫음", (f) => f.events.picker_skip],
   ["팀 고름", (f) => f.events.team_pick],
   ["내 팀 공유", (f) => f.events.share],

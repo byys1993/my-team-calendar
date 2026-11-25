@@ -30,6 +30,8 @@ export default async function AdminHome() {
   const subscribed = (f: FunnelRow) => Math.max(f.events.sub_apple, f.events.sub_google, f.events.sub_copy);
   const steps: [string, (f: FunnelRow) => number][] = [
     ["방문", (f) => f.visitors],
+    ["  └ 예시 화면 봄 (11/25~)", (f) => f.events.demo_view],
+    ["  └ 예시 화면에서 팀 고르기 누름", (f) => f.events.demo_pick],
     ["  └ 팀을 고르지 않고 선택 창 닫음", (f) => f.events.picker_skip],
     ["팀 고름", (f) => f.events.team_pick],
     ["  └ 팀 페이지·공유 링크로 추가", (f) => f.events.link_add],
