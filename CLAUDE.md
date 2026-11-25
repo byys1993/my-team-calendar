@@ -11,9 +11,9 @@
 ## 서비스
 응원 팀을 고르면 리그·컵·국제대회·e스포츠 일정이 한 캘린더에 모이는 비상업 사이트.
 - 운영: https://www.my-team-calendar.com (Vercel Hobby, 서울 리전 icn1)
-- 저장소: github.com/byys1993/my-team-calendar (비공개, `main` push = 배포)
+- 저장소: github.com/byys1993/my-team-calendar (2026-11-25 부터 **공개**, `main` push = 배포). 공개라서 비밀값·개인정보(실명·개인 이메일·방문자 개인 정보)는 코드·문서·커밋에 넣지 않는다. 커밋 이메일은 GitHub 가림 주소 `64086712+byys1993@users.noreply.github.com` (각 PC 저장소에서 `git config user.email` 로 설정)
 - DB: Supabase Postgres (서울, Transaction pooler 6543). 모든 public 테이블 RLS 켜짐(정책 없음 → 공개 API 차단, 서버는 테이블 주인이라 영향 없음). **새 테이블을 만들면 마이그레이션에 `enable row level security` 를 꼭 넣는다** (`tests/rls.test.ts` 가 잡아냄).
-- 정기 수집: GitHub Actions `sync-schedules` 를 Cloudflare Worker 가 매시 7분에 실행 요청(GitHub 자체 예약은 6시간마다 예비용) → `npm run sync` (일정 + 순위표). **비공개 저장소라 Actions 는 월 2,000분 무료, 실행마다 1분 단위로 올려 계산** → 평소 실행을 1분 안에 끝내야 한다 (DB 왕복이 길어 대회마다 조회하지 말 것). 테스트 Actions(3~5분)는 `main` push·PR 에서만, 문서(.md)만 바뀌면 건너뜀. 워크플로·문서만 고친 커밋은 메시지에 `[skip ci]` 를 넣어 테스트를 아낀다
+- 정기 수집: GitHub Actions `sync-schedules` 를 Cloudflare Worker 가 매시 7분에 실행 요청(GitHub 자체 예약은 6시간마다 예비용) → `npm run sync` (일정 + 순위표). 공개 저장소라 Actions 시간 제한은 없지만, 수집은 짧게 유지한다 (DB 왕복이 길어 대회마다 조회하지 말 것. 비공개였던 2026-11 에 월 2,000분 한도에 닿은 적 있음). 테스트 Actions(3~5분)는 `main` push·PR 에서만, 문서(.md)만 바뀌면 건너뜀. 워크플로·문서만 고친 커밋은 메시지에 `[skip ci]` 를 넣어 테스트를 아낀다
 - 알림 메일 정시 호출: Cloudflare Worker `my-team-calendar-cron` 10분마다 (`cloudflare/notify-cron.js`)
 - 메일: Resend (`mail.my-team-calendar.com`, 무료 하루 100통 → 한 번에 최대 80통), 문의 메일은 ImprovMX 로 사용자 Gmail 에 전달
 - 로그인 보호: Cloudflare Turnstile
