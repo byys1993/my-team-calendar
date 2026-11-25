@@ -13,7 +13,7 @@
 - 운영: https://www.my-team-calendar.com (Vercel Hobby, 서울 리전 icn1)
 - 저장소: github.com/byys1993/my-team-calendar (비공개, `main` push = 배포)
 - DB: Supabase Postgres (서울, Transaction pooler 6543). 모든 public 테이블 RLS 켜짐(정책 없음 → 공개 API 차단, 서버는 테이블 주인이라 영향 없음). **새 테이블을 만들면 마이그레이션에 `enable row level security` 를 꼭 넣는다** (`tests/rls.test.ts` 가 잡아냄).
-- 정기 수집: GitHub Actions `sync-schedules` 를 Cloudflare Worker 가 매시 7분에 실행 요청(GitHub 자체 예약은 6시간마다 예비용) → `npm run sync` (일정 + 순위표). **비공개 저장소라 Actions 는 월 2,000분 무료, 실행마다 1분 단위로 올려 계산** → 평소 실행을 1분 안에 끝내야 한다 (DB 왕복이 길어 대회마다 조회하지 말 것)
+- 정기 수집: GitHub Actions `sync-schedules` 를 Cloudflare Worker 가 매시 7분에 실행 요청(GitHub 자체 예약은 6시간마다 예비용) → `npm run sync` (일정 + 순위표). **비공개 저장소라 Actions 는 월 2,000분 무료, 실행마다 1분 단위로 올려 계산** → 평소 실행을 1분 안에 끝내야 한다 (DB 왕복이 길어 대회마다 조회하지 말 것). 테스트 Actions(3~5분)는 `main` push·PR 에서만, 문서(.md)만 바뀌면 건너뜀. 워크플로·문서만 고친 커밋은 메시지에 `[skip ci]` 를 넣어 테스트를 아낀다
 - 알림 메일 정시 호출: Cloudflare Worker `my-team-calendar-cron` 10분마다 (`cloudflare/notify-cron.js`)
 - 메일: Resend (`mail.my-team-calendar.com`, 무료 하루 100통 → 한 번에 최대 80통), 문의 메일은 ImprovMX 로 사용자 Gmail 에 전달
 - 로그인 보호: Cloudflare Turnstile
