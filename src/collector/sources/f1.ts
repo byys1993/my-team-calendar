@@ -1,5 +1,5 @@
 import type { Fetcher, Podium, SourceAdapter, SourceMatch, SourceTeam } from "../types";
-import { getJson, sleep } from "./http";
+import { getJsonRetry, sleep } from "./http";
 
 // F1 세션은 모두 '시리즈'(시드의 f1 팀)의 이벤트로 저장한다. 그랑프리의 연습·예선·스프린트 예선·스프린트·결승.
 // 사용자는 시리즈 전체나 팀·드라이버를 고른다 (src/lib/f1picks.ts). 팀·드라이버의 순위는 results(전체 순위)에서 찾는다.
@@ -126,20 +126,21 @@ export function addResults(matches: SourceMatch[], results: { kind: SessionKind;
   });
 }
 
-export function jolpica(fetcher: Fetcher = fetch, opts: { delayMs?: number } = {}): SourceAdapter {
+export function jolpica(fetcher: Fetcher = fetch, opts: { delayMs?: number; retryWaitMs?: number } = {}): SourceAdapter {
   const delayMs = opts.delayMs ?? 300;
+  const getJson = <T,>(url: string) => getJsonRetry<T>(fetcher, url, { waitMs: opts.retryWaitMs });
   const base = "https://api.jolpi.ca/ergast/f1";
   return {
     source: "jolpica",
     async fetchMatches(season) {
       const s = encodeURIComponent(season);
-      const json = await getJson<{ MRData: { RaceTable: { Races: JolpicaRace[] } } }>(fetcher, `${base}/${s}/races/?limit=100`);
+      const json = await getJson<{ MRData: { RaceTable: { Races: JolpicaRace[] } } }>(`${base}/${s}/races/?limit=100`);
       // 끝난 세션의 전체 순위 (결승·스프린트·예선). 한 쪽에 100줄씩이라 시즌 전체를 쪽을 넘기며 받는다.
       const results: { kind: SessionKind; races: JolpicaResultRace[] }[] = [];
       for (const q of RESULT_QUERIES) {
         for (let page = 0; page < MAX_PAGES; page++) {
           if (delayMs) await sleep(delayMs);
-          const r = await getJson<ResultPage>(fetcher, `${base}/${s}/${q.path}/?limit=${PAGE}&offset=${page * PAGE}`);
+          const r = await getJson<ResultPage>(`${base}/${s}/${q.path}/?limit=${PAGE}&offset=${page * PAGE}`);
           results.push({ kind: q.kind, races: r.MRData.RaceTable.Races });
           if ((page + 1) * PAGE >= Number(r.MRData.total)) break;
         }
@@ -195,7 +196,17 @@ export function parseOpenF1(sessions: OpenF1Session[], meetings: OpenF1Meeting[]
     });
 }
 
-export function openF1(fetcher: Fetcher = fetch, now = () => new Date()): SourceAdapter {
+export function openF1(
+  fetcher: Fetcher = fetch,
+  now = () => new Date(),
+  opts: { delayMs?: number; retryWaitMs?: number } = {},
+): SourceAdapter {
+  // 초당 3회 제한이라 요청 사이를 조금 띄운다
+  const delayMs = opts.delayMs ?? 400;
+  const getJson = async <T,>(url: string) => {
+    if (delayMs) await sleep(delayMs);
+    return getJsonRetry<T>(fetcher, url, { waitMs: opts.retryWaitMs });
+  };
   return {
     source: "openf1",
     async fetchMatches() {
@@ -203,9 +214,9 @@ export function openF1(fetcher: Fetcher = fetch, now = () => new Date()): Source
       const year = now().getUTCFullYear();
       const result: SourceMatch[] = [];
       for (const y of [year, year + 1]) {
-        const sessions = await getJson<OpenF1Session[]>(fetcher, `https://api.openf1.org/v1/sessions?year=${y}`);
+        const sessions = await getJson<OpenF1Session[]>(`https://api.openf1.org/v1/sessions?year=${y}`);
         if (sessions.length === 0) continue;
-        const meetings = await getJson<OpenF1Meeting[]>(fetcher, `https://api.openf1.org/v1/meetings?year=${y}`);
+        const meetings = await getJson<OpenF1Meeting[]>(`https://api.openf1.org/v1/meetings?year=${y}`);
         result.push(...parseOpenF1(sessions, meetings));
       }
       return result;
